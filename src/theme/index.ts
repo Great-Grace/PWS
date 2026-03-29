@@ -17,11 +17,13 @@ export const colors = {
   accent: '#FF8C42',
   accentLight: '#FFB07A',
 
-  // Feel Scale Colors (1=very cold → 5=very hot)
+  // Feel Scale Colors (1=very cold → 7=very hot)
   feelVeryCold: '#4A90D9',
   feelCold: '#7EC4FF',
+  feelChilly: '#A8D8EA',
   feelNeutral: '#6DD47E',
   feelWarm: '#FFB347',
+  feelHot: '#FF8C42',
   feelVeryHot: '#FF6B6B',
 
   // Confidence
@@ -81,9 +83,9 @@ export const fontWeight = {
   bold: '700' as const,
 };
 
-// Feel score labels
-export const FEEL_LABELS = ['', '매우 추움', '추움', '적당', '더움', '매우 더움'] as const;
-export const FEEL_COLORS = ['', colors.feelVeryCold, colors.feelCold, colors.feelNeutral, colors.feelWarm, colors.feelVeryHot] as const;
+// Feel score labels (1-7 scale)
+export const FEEL_LABELS = ['', '아주 추움', '추움', '쌀쌀', '딱 좋음', '더움', '땀날듯', '완전 더움'] as const;
+export const FEEL_COLORS = ['', colors.feelVeryCold, colors.feelCold, colors.feelChilly, colors.feelNeutral, colors.feelWarm, colors.feelHot, colors.feelVeryHot] as const;
 
 export const HUMID_LABELS = ['', '매우 건조', '건조', '보통', '눅눅', '매우 눅눅'] as const;
 export const WIND_LABELS = ['바람 없음', '약간', '많이'] as const;

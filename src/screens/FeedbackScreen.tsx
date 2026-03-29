@@ -1,17 +1,20 @@
 // ============================================================
-// Feedback Screen — 5단계 체감 피드백 입력
+// Feedback Screen — 7단계 체감 피드백 입력 (v1.2)
+// · feel_score 1-7 확장
+// · 현재 슬롯(아침/낮/저녁) 자동 감지 및 표시
+// · 이미 제출한 슬롯이면 경고
 // ============================================================
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   colors,
   spacing,
@@ -29,35 +32,56 @@ import {
   OUTDOOR_LABELS,
 } from '../theme';
 import { useFeedbackStore } from '../stores/feedbackStore';
-import type { FeedbackInput } from '../types';
+import { getSlotFromHour, getSlotLabel } from '../utils/formulas';
+import type { FeedbackInput, FeedbackSlot } from '../types';
 
 export default function FeedbackScreen({ navigation }: any) {
-  const { submitFeedback, isSaving } = useFeedbackStore();
+  const { submitFeedback, isSaving, todayFeedback } = useFeedbackStore();
+
+  // 현재 슬롯 감지
+  const currentSlot: FeedbackSlot | null = useMemo(
+    () => getSlotFromHour(new Date().getHours()),
+    []
+  );
+  const alreadyDoneThisSlot = useMemo(
+    () => currentSlot
+      ? todayFeedback.some(f => f.feedback_slot === currentSlot)
+      : false,
+    [currentSlot, todayFeedback]
+  );
 
   // Required
-  const [feelScore, setFeelScore] = useState<number | null>(null);
-  const [humidFeel, setHumidFeel] = useState<number | null>(null);
-  const [windFeel, setWindFeel] = useState<number | null>(null);
-  const [clothing, setClothing] = useState<number | null>(null);
-  const [activity, setActivity] = useState<number | null>(null);
+  const [feelScore,  setFeelScore]  = useState<number | null>(null);
+  const [humidFeel,  setHumidFeel]  = useState<number | null>(null);
+  const [windFeel,   setWindFeel]   = useState<number | null>(null);
+  const [clothing,   setClothing]   = useState<number | null>(null);
+  const [activity,   setActivity]   = useState<number | null>(null);
 
   // Optional
-  const [sunExposure, setSunExposure] = useState<number | null>(null);
-  const [sleep, setSleep] = useState<number | null>(null);
+  const [sunExposure,  setSunExposure]  = useState<number | null>(null);
+  const [sleep,        setSleep]        = useState<number | null>(null);
   const [outdoorHours, setOutdoorHours] = useState<number | null>(null);
 
   const [showOptional, setShowOptional] = useState(false);
 
   const canSubmit =
-    feelScore !== null &&
-    humidFeel !== null &&
-    windFeel !== null &&
-    clothing !== null &&
-    activity !== null;
+    feelScore  !== null &&
+    humidFeel  !== null &&
+    windFeel   !== null &&
+    clothing   !== null &&
+    activity   !== null;
 
   const handleSubmit = async () => {
     if (!canSubmit) {
       Alert.alert('필수 항목을 모두 선택해주세요');
+      return;
+    }
+    if (alreadyDoneThisSlot && currentSlot) {
+      Alert.alert(
+        `${getSlotLabel(currentSlot)} 피드백 완료`,
+        '이 시간대 피드백은 이미 저장되었어요. 다음 시간대에 다시 입력해주세요.',
+        [{ text: '확인', onPress: () => navigation.goBack() }]
+      );
       return;
     }
 
@@ -65,17 +89,17 @@ export default function FeedbackScreen({ navigation }: any) {
       const input: FeedbackInput = {
         feel_score: feelScore as FeedbackInput['feel_score'],
         humid_feel: humidFeel as FeedbackInput['humid_feel'],
-        wind_feel: windFeel as FeedbackInput['wind_feel'],
-        clothing: clothing as FeedbackInput['clothing'],
-        activity: activity as FeedbackInput['activity'],
+        wind_feel:  windFeel  as FeedbackInput['wind_feel'],
+        clothing:   clothing  as FeedbackInput['clothing'],
+        activity:   activity  as FeedbackInput['activity'],
       };
 
-      if (sunExposure !== null) input.sun_exposure = sunExposure as FeedbackInput['sun_exposure'];
-      if (sleep !== null) input.sleep = sleep as FeedbackInput['sleep'];
+      if (sunExposure  !== null) input.sun_exposure  = sunExposure  as FeedbackInput['sun_exposure'];
+      if (sleep        !== null) input.sleep         = sleep        as FeedbackInput['sleep'];
       if (outdoorHours !== null) input.outdoor_hours = outdoorHours as FeedbackInput['outdoor_hours'];
 
       await submitFeedback(input);
-      Alert.alert('완료! 🎉', '오늘의 피드백이 저장되었습니다', [
+      Alert.alert('완료! 🎉', '피드백이 저장되고 예측이 업데이트됐어요', [
         { text: '확인', onPress: () => navigation.goBack() },
       ]);
     } catch (error: any) {
@@ -89,29 +113,44 @@ export default function FeedbackScreen({ navigation }: any) {
         <Text style={styles.title}>오늘의 체감 피드백</Text>
         <Text style={styles.subtitle}>직관적으로 느낀 대로 선택해주세요</Text>
 
-        {/* Feel Score — 5-step (Required) */}
+        {/* 현재 슬롯 배지 */}
+        {currentSlot && (
+          <View style={[
+            styles.slotBadge,
+            alreadyDoneThisSlot && styles.slotBadgeDone,
+          ]}>
+            <Text style={styles.slotBadgeText}>
+              {alreadyDoneThisSlot
+                ? `✅ ${getSlotLabel(currentSlot)} 피드백 완료`
+                : `📍 ${getSlotLabel(currentSlot)} 피드백`}
+            </Text>
+          </View>
+        )}
+
+        {/* Feel Score — 7-step (Required) */}
         <SelectorGroup
           label="🌡️ 오늘 체감 온도"
           required
-          options={[1, 2, 3, 4, 5]}
-          labels={FEEL_LABELS.slice(1)}
-          chipColors={FEEL_COLORS.slice(1) as string[]}
+          options={[1, 2, 3, 4, 5, 6, 7]}
+          labels={FEEL_LABELS.slice(1) as unknown as string[]}
+          chipColors={FEEL_COLORS.slice(1) as unknown as string[]}
           value={feelScore}
           onChange={setFeelScore}
           size="large"
+          wrap
         />
 
-        {/* Humid Feel (Required) */}
+        {/* Humid Feel */}
         <SelectorGroup
           label="💧 습도 체감"
           required
           options={[1, 2, 3, 4, 5]}
-          labels={HUMID_LABELS.slice(1)}
+          labels={HUMID_LABELS.slice(1) as unknown as string[]}
           value={humidFeel}
           onChange={setHumidFeel}
         />
 
-        {/* Wind Feel (Required) */}
+        {/* Wind Feel */}
         <SelectorGroup
           label="💨 바람 체감"
           required
@@ -121,22 +160,22 @@ export default function FeedbackScreen({ navigation }: any) {
           onChange={setWindFeel}
         />
 
-        {/* Clothing (Required) */}
+        {/* Clothing */}
         <SelectorGroup
           label="👔 옷차림"
           required
           options={[1, 2, 3]}
-          labels={CLOTHING_LABELS.slice(1)}
+          labels={CLOTHING_LABELS.slice(1) as unknown as string[]}
           value={clothing}
           onChange={setClothing}
         />
 
-        {/* Activity (Required) */}
+        {/* Activity */}
         <SelectorGroup
           label="🏃 활동 수준"
           required
           options={[1, 2, 3]}
-          labels={ACTIVITY_LABELS.slice(1)}
+          labels={ACTIVITY_LABELS.slice(1) as unknown as string[]}
           value={activity}
           onChange={setActivity}
         />
@@ -160,15 +199,13 @@ export default function FeedbackScreen({ navigation }: any) {
               value={sunExposure}
               onChange={setSunExposure}
             />
-
             <SelectorGroup
               label="😴 수면 상태"
               options={[1, 2, 3]}
-              labels={SLEEP_LABELS.slice(1)}
+              labels={SLEEP_LABELS.slice(1) as unknown as string[]}
               value={sleep}
               onChange={setSleep}
             />
-
             <SelectorGroup
               label="🚶 야외 시간"
               options={[0, 1, 2, 3]}
@@ -183,7 +220,7 @@ export default function FeedbackScreen({ navigation }: any) {
         <TouchableOpacity
           style={[
             styles.submitButton,
-            !canSubmit && styles.submitButtonDisabled,
+            (!canSubmit || alreadyDoneThisSlot) && styles.submitButtonDisabled,
           ]}
           onPress={handleSubmit}
           disabled={!canSubmit || isSaving}
@@ -200,7 +237,7 @@ export default function FeedbackScreen({ navigation }: any) {
   );
 }
 
-// Reusable selector component
+// ---- Reusable Selector Component ----
 function SelectorGroup({
   label,
   required,
@@ -210,6 +247,7 @@ function SelectorGroup({
   value,
   onChange,
   size,
+  wrap,
 }: {
   label: string;
   required?: boolean;
@@ -219,6 +257,7 @@ function SelectorGroup({
   value: number | null;
   onChange: (v: number) => void;
   size?: 'large';
+  wrap?: boolean;
 }) {
   return (
     <View style={styles.selectorGroup}>
@@ -226,7 +265,7 @@ function SelectorGroup({
         {label}
         {required && <Text style={styles.requiredMark}> *</Text>}
       </Text>
-      <View style={styles.selectorRow}>
+      <View style={[styles.selectorRow, wrap && styles.selectorRowWrap]}>
         {options.map((opt, i) => {
           const isSelected = value === opt;
           const bgColor =
@@ -242,10 +281,8 @@ function SelectorGroup({
               style={[
                 styles.selectorChip,
                 size === 'large' && styles.selectorChipLarge,
-                {
-                  backgroundColor: bgColor,
-                  borderColor: isSelected ? bgColor : colors.border,
-                },
+                wrap && styles.selectorChipWrap,
+                { backgroundColor: bgColor, borderColor: isSelected ? bgColor : colors.border },
               ]}
               onPress={() => onChange(opt)}
               activeOpacity={0.7}
@@ -285,7 +322,28 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: fontSize.md,
     color: colors.textSecondary,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
+  },
+
+  // Slot badge
+  slotBadge: {
+    backgroundColor: colors.primaryDark,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    alignSelf: 'flex-start',
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  slotBadgeDone: {
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.success,
+  },
+  slotBadgeText: {
+    fontSize: fontSize.sm,
+    color: colors.textPrimary,
+    fontWeight: fontWeight.semibold,
   },
 
   // Selector
@@ -305,6 +363,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.xs,
   },
+  selectorRowWrap: {
+    flexWrap: 'wrap',
+  },
   selectorChip: {
     flex: 1,
     paddingVertical: 12,
@@ -314,6 +375,11 @@ const styles = StyleSheet.create({
   },
   selectorChipLarge: {
     paddingVertical: 16,
+  },
+  selectorChipWrap: {
+    flex: 0,
+    minWidth: '13%',
+    flexGrow: 1,
   },
   selectorText: {
     fontSize: fontSize.xs,

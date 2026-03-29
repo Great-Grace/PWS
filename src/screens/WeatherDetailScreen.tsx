@@ -7,8 +7,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../theme';
 import { useWeatherStore } from '../stores/weatherStore';
 import { formatTemp, formatHour, formatDay, getWeatherEmoji } from '../utils/formulas';
