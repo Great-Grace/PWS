@@ -1,62 +1,17 @@
 
 // ============================================================
-// Auth Store — Zustand + expo-web-browser OAuth
+// Auth Store — Zustand + Supabase email/password (테스트 빌드)
 // ============================================================
 import { create } from 'zustand';
 import { supabase } from '../config/supabase';
 import type { User } from '../types';
 import { Session } from '@supabase/supabase-js';
-import * as WebBrowser from 'expo-web-browser';
-import * as AuthSession from 'expo-auth-session';
 import { computeBMI, computeBMIBucket, computeBMIOffset } from '../utils/formulas';
 
+const TEST_PASSWORD = 'pws_tester_2024';
 
-// ---- OAuth Helper ----
-// React Native에서는 signInWithOAuth가 브라우저를 직접 열지 못함
-// expo-web-browser로 인앱 브라우저를 열어 OAuth 수행
-async function performOAuth(provider: 'google' | 'kakao') {
-  const redirectTo = AuthSession.makeRedirectUri({
-    scheme: 'pws'
-  });
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo,
-      skipBrowserRedirect: true,
-    },
-  });
-
-  if (error) {
-    console.error('Supabase OAuth Error:', error);
-    throw new Error(error.message + '\n\n(Supabase에 만능 Redirect URLs 설정이 완료되었는지 확인하세요. [ psw://* , exp://* 등 ])');
-  }
-  if (!data.url) throw new Error('OAuth URL을 가져오지 못했습니다');
-
-  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-  
-  if (result.type !== 'success' || !result.url) {
-    return; // 사용자 취소
-  }
-
-  // redirect URL에서 토큰 파싱
-  const url = new URL(result.url);
-  const params = new URLSearchParams(
-    url.hash ? url.hash.substring(1) : url.search.substring(1)
-  );
-
-  const access_token = params.get('access_token');
-  const refresh_token = params.get('refresh_token');
-
-  if (access_token && refresh_token) {
-    const { error: sessionError } = await supabase.auth.setSession({
-      access_token,
-      refresh_token,
-    });
-    if (sessionError) throw sessionError;
-  } else {
-    throw new Error('인증 토큰을 받지 못했습니다');
-  }
+function testerEmail(testerId: string) {
+  return `${testerId.trim().toLowerCase()}@test.pws`;
 }
 
 // ---- Store ----
@@ -67,7 +22,7 @@ interface AuthState {
   isOnboarded: boolean;
 
   initialize: () => Promise<void>;
-  signInWithOAuth: (provider: 'google' | 'kakao') => Promise<void>;
+  signInWithTesterId: (testerId: string) => Promise<void>;
   signOut: () => Promise<void>;
   fetchUserProfile: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
@@ -113,18 +68,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     });
 
-    // Store cleanup function for potential future use
     (globalThis as any).__pwsAuthSubscription?.unsubscribe();
     (globalThis as any).__pwsAuthSubscription = subscription;
   },
 
-  signInWithOAuth: async (provider: 'google' | 'kakao') => {
-    try {
-      await performOAuth(provider);
-    } catch (error: any) {
-      console.error(`${provider} sign-in error:`, error);
-      throw error;
+  signInWithTesterId: async (testerId: string) => {
+    const email = testerEmail(testerId);
+
+    // 기존 테스터면 바로 로그인
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: TEST_PASSWORD,
+    });
+
+    if (!signInError) return;
+
+    // 신규 테스터면 회원가입
+    if (signInError.message.includes('Invalid login credentials')) {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password: TEST_PASSWORD,
+      });
+      if (signUpError) throw new Error(signUpError.message);
+      return;
     }
+
+    throw new Error(signInError.message);
   },
 
   signOut: async () => {
@@ -145,8 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     if (error) {
       if (error.code === 'PGRST116') {
-        // completeOnboarding의 낙관적 업데이트와의 race condition 방지:
-        // 이미 onboarding이 완료된 상태라면 이 오래된 응답으로 덮어쓰지 않는다.
+        // completeOnboarding의 낙관적 업데이트와의 race condition 방지
         if (!get().isOnboarded) {
           set({ user: null, isOnboarded: false });
         }
