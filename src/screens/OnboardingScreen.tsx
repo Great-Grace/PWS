@@ -25,8 +25,6 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 export default function OnboardingScreen() {
   const { completeOnboarding } = useAuthStore();
 
-  const [nickname, setNickname] = useState('');
-  
   // Location
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
@@ -53,10 +51,6 @@ export default function OnboardingScreen() {
   };
 
   const handleComplete = async () => {
-    if (!nickname.trim()) {
-      Alert.alert('닉네임을 입력해주세요');
-      return;
-    }
     if (!selectedProvince || !selectedDistrict) {
       Alert.alert('위치를 선택해주세요', '날씨를 예측할 지역구가 필요합니다.');
       return;
@@ -68,7 +62,7 @@ export default function OnboardingScreen() {
       const coords = DISTRICT_COORDS[addressString] ?? { lat: 37.5665, lng: 126.9780 };
 
       await completeOnboarding({
-        nickname: nickname.trim(),
+        nickname: '',
         lat: coords.lat,
         lng: coords.lng,
         climate_zone: addressString,
@@ -95,20 +89,6 @@ export default function OnboardingScreen() {
         <Text style={styles.subtitle}>
           정확한 체감 예측을 위한 기본 정보를 입력해주세요
         </Text>
-
-        {/* Nickname */}
-        <View style={styles.section}>
-          <Text style={styles.label}>닉네임 *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="예: 날씨친구"
-            placeholderTextColor={colors.textTertiary}
-            value={nickname}
-            onChangeText={setNickname}
-            maxLength={20}
-            autoCorrect={false}
-          />
-        </View>
 
         {/* Location (Accordion) */}
         <View style={styles.section}>

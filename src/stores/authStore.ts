@@ -20,6 +20,7 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   isOnboarded: boolean;
+  testerId: string | null; // 로그인 시 입력한 ID → 닉네임으로 재사용
 
   initialize: () => Promise<void>;
   signInWithTesterId: (testerId: string) => Promise<void>;
@@ -43,6 +44,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: true,
   isOnboarded: false,
+  testerId: null,
 
   initialize: async () => {
     try {
@@ -81,7 +83,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       password: TEST_PASSWORD,
     });
 
-    if (!signInError) return;
+    if (!signInError) {
+      set({ testerId });
+      return;
+    }
 
     // 신규 테스터면 회원가입
     if (signInError.message.includes('Invalid login credentials')) {
@@ -90,6 +95,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password: TEST_PASSWORD,
       });
       if (signUpError) throw new Error(signUpError.message);
+      set({ testerId });
       return;
     }
 
@@ -150,7 +156,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const userRecord: Record<string, any> = {
       id: session.user.id,
       email: session.user.email!,
-      nickname: data.nickname,
+      nickname: (() => {
+        if (get().testerId) return get().testerId!;
+        // 앱 재시작 시 testerId가 날아간 경우, 이메일에서 역추출
+        const email = session.user.email ?? '';
+        return email.endsWith('@test.pws') ? email.replace('@test.pws', '') : (data.nickname || '테스터');
+      })(),
       default_lat: data.lat,
       default_lng: data.lng,
       climate_zone: data.climate_zone,

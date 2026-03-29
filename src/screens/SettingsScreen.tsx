@@ -30,6 +30,11 @@ export default function SettingsScreen() {
   const [heightCm, setHeightCm] = useState('');
   const [weightKg, setWeightKg] = useState('');
 
+  // Tester Feedback State
+  const [isFeedbackModalVisible, setFeedbackModalVisible] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [isSendingFeedback, setSendingFeedback] = useState(false);
+
   const handleToggle = async (
     key: 'notify_enabled' | 'notify_outfit' | 'notify_rain',
     value: boolean
@@ -62,6 +67,27 @@ export default function SettingsScreen() {
       Alert.alert('저장 완료', '체형 데이터가 업데이트 되었습니다.\n새로운 체감 보정값이 24시간 내로 전체 예측에 적용됩니다.');
     } catch {
       Alert.alert('저장에 실패했습니다');
+    }
+  };
+
+  const handleSendFeedback = async () => {
+    if (!feedbackText.trim()) {
+      Alert.alert('내용을 입력해주세요');
+      return;
+    }
+    setSendingFeedback(true);
+    try {
+      const { error } = await supabase
+        .from('tester_feedback')
+        .insert({ user_id: user?.id, message: feedbackText.trim() });
+      if (error) throw error;
+      setFeedbackText('');
+      setFeedbackModalVisible(false);
+      Alert.alert('전송 완료', '피드백을 보내주셔서 감사합니다!');
+    } catch {
+      Alert.alert('전송 실패', '잠시 후 다시 시도해주세요.');
+    } finally {
+      setSendingFeedback(false);
     }
   };
 
@@ -155,6 +181,19 @@ export default function SettingsScreen() {
           <InfoRow label="마지막 수정" value={user?.updated_at?.split('T')[0] || '-'} />
         </View>
 
+        {/* Tester Feedback */}
+        <SectionHeader title="테스터 피드백" />
+        <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.feedbackButton}
+            onPress={() => setFeedbackModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.feedbackButtonText}>앱 피드백 보내기</Text>
+            <Text style={styles.feedbackButtonArrow}>→</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Actions */}
         <View style={styles.actions}>
           <TouchableOpacity
@@ -174,6 +213,52 @@ export default function SettingsScreen() {
 
         <Text style={styles.version}>PWS v1.0.0</Text>
       </ScrollView>
+
+      {/* Tester Feedback Modal */}
+      <Modal
+        visible={isFeedbackModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setFeedbackModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>앱 피드백</Text>
+            <Text style={styles.modalDesc}>
+              버그, 불편한 점, 개선 아이디어 무엇이든 자유롭게 남겨주세요.
+            </Text>
+            <TextInput
+              style={styles.feedbackInput}
+              placeholder="내용을 입력해주세요..."
+              placeholderTextColor={colors.textTertiary}
+              value={feedbackText}
+              onChangeText={setFeedbackText}
+              multiline
+              numberOfLines={5}
+              textAlignVertical="top"
+              maxLength={500}
+            />
+            <Text style={styles.feedbackCount}>{feedbackText.length}/500</Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => { setFeedbackModalVisible(false); setFeedbackText(''); }}
+              >
+                <Text style={styles.modalButtonTextCancel}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSubmit, isSendingFeedback && styles.submitButtonDisabled]}
+                onPress={handleSendFeedback}
+                disabled={isSendingFeedback}
+              >
+                <Text style={styles.modalButtonTextSubmit}>
+                  {isSendingFeedback ? '전송 중...' : '보내기'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* BMI Input Modal */}
       <Modal
@@ -364,6 +449,42 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     textAlign: 'center',
     marginTop: spacing.xl,
+  },
+  feedbackInput: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: fontSize.md,
+    color: colors.textPrimary,
+    minHeight: 120,
+    marginBottom: spacing.xs,
+  },
+  feedbackCount: {
+    fontSize: fontSize.xs,
+    color: colors.textTertiary,
+    textAlign: 'right',
+    marginBottom: spacing.lg,
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  feedbackButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  feedbackButtonText: {
+    fontSize: fontSize.md,
+    color: colors.primary,
+    fontWeight: fontWeight.medium,
+  },
+  feedbackButtonArrow: {
+    fontSize: fontSize.md,
+    color: colors.primary,
   },
   valueAction: {
     color: colors.primary,
