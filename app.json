@@ -1,7 +1,8 @@
 {
   "expo": {
     "name": "app",
-    "slug": "app",
+    "slug": "pws",
+    "scheme": "pws",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,19 +13,38 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wxxtae.pws",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.wxxtae.pws",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      },
-      "predictiveBackGestureEnabled": false
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-dev-client",
+      "expo-font",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5e146f93-f4ce-4364-9bb3-5deadabd01a0"
+      }
+    },
+    "owner": "woos-organization",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/5e146f93-f4ce-4364-9bb3-5deadabd01a0"
     }
   }
 }
