@@ -13,6 +13,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -109,6 +110,7 @@ export default function FeedbackScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>오늘의 체감 피드백</Text>
         <Text style={styles.subtitle}>직관적으로 느낀 대로 선택해주세요</Text>
@@ -327,17 +329,17 @@ const styles = StyleSheet.create({
 
   // Slot badge
   slotBadge: {
-    backgroundColor: colors.primaryDark,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     alignSelf: 'flex-start',
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: colors.border,
   },
   slotBadgeDone: {
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: colors.surface,
     borderColor: colors.success,
   },
   slotBadgeText: {
@@ -391,7 +393,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
   },
   selectorTextSelected: {
-    color: colors.textPrimary,
+    color: colors.textInverse,
     fontWeight: fontWeight.bold,
   },
 

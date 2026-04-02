@@ -100,10 +100,13 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
   fetchTodayStatus: async () => {
     set({ isLoading: true });
     try {
+      const userId = useAuthStore.getState().session?.user.id;
+      if (!userId) return;
       const today = formatDate(new Date());
       const { data, error } = await supabase
         .from('feedback_entries')
         .select('*')
+        .eq('user_id', userId)
         .eq('feedback_date', today)
         .order('feedback_slot');
 
@@ -174,9 +177,10 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) throw new Error('Not authenticated');
 
-      const today   = formatDate(new Date());
-      const now     = new Date();
-      const slot    = getSlotFromHour(now.getHours());
+      const today        = formatDate(new Date());
+      const now          = new Date();
+      const slot         = getSlotFromHour(now.getHours());
+      const feedbackSlot: FeedbackSlot = slot ?? 'afternoon';
       const current = useWeatherStore.getState().getCurrent();
 
       // ---- DB 레코드 조립 ----
@@ -188,7 +192,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
         wind_feel:     input.wind_feel,
         clothing:      input.clothing,
         activity:      input.activity,
-        feedback_slot: slot ?? 'afternoon', // 슬롯 외 시간(새벽 등)은 afternoon 기본
+        feedback_slot: feedbackSlot,
       };
 
       if (input.sun_exposure  !== undefined) record.sun_exposure  = input.sun_exposure;
@@ -305,9 +309,12 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
 
   // ---- 기간 내 피드백 히스토리 ----
   fetchHistory: async (startDate: string, endDate: string) => {
+    const userId = useAuthStore.getState().session?.user.id;
+    if (!userId) return [];
     const { data, error } = await supabase
       .from('feedback_entries')
       .select('*')
+      .eq('user_id', userId)
       .gte('feedback_date', startDate)
       .lte('feedback_date', endDate)
       .order('feedback_date', { ascending: false })
@@ -322,9 +329,12 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
   // ---- 슬롯별 피드백 카운트 ----
   fetchFeedbackCount: async () => {
     try {
+      const userId = useAuthStore.getState().session?.user.id;
+      if (!userId) return;
       const { data, error } = await supabase
         .from('feedback_entries')
-        .select('feedback_slot');
+        .select('feedback_slot')
+        .eq('user_id', userId);
 
       if (error || !data) return;
 

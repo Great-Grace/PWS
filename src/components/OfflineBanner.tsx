@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.bold,
-    color: colors.textPrimary,
+    color: colors.textInverse,
   },
   subtitle: {
     fontSize: fontSize.xs,

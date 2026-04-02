@@ -109,11 +109,12 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              if (!user?.id) return;
               // 1. Delete user record (cascades to feedback_entries etc.)
               const { error: deleteError } = await supabase
                 .from('users')
                 .delete()
-                .eq('id', user?.id);
+                .eq('id', user.id);
 
               if (deleteError) throw deleteError;
 
@@ -138,7 +139,7 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>⚙️ 설정</Text>
+        <Text style={styles.title}>설정</Text>
 
         {/* Profile Section */}
         <SectionHeader title="프로필" />
@@ -364,7 +365,7 @@ function ToggleRow({
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: colors.surfaceElevated, true: colors.primaryDark }}
+        trackColor={{ false: colors.surfaceElevated, true: colors.primary }}
         thumbColor={value ? colors.primary : colors.textTertiary}
       />
     </View>

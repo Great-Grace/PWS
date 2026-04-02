@@ -3,11 +3,12 @@
 // Navigation: Auth Stack + Main Tab Navigator
 // ============================================================
 import React, { useEffect } from 'react';
-import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts, NotoSerifKR_400Regular, NotoSerifKR_700Bold } from '@expo-google-fonts/noto-serif-kr';
 import { colors, fontSize } from './src/theme';
 import { useAuthStore } from './src/stores/authStore';
 import ErrorBoundary from './src/components/ErrorBoundary';
@@ -23,7 +24,7 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
+const Tab   = createBottomTabNavigator();
 
 // ---- Main Tab Navigator ----
 function MainTabs() {
@@ -32,61 +33,27 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 4,
+          backgroundColor: colors.background,
+          borderTopColor:  colors.border,
+          height: 56,
+          paddingBottom: 6,
+          paddingTop: 6,
         },
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor:   colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
         tabBarLabelStyle: {
-          fontSize: fontSize.xs,
-          fontWeight: '600',
+          fontSize:   fontSize.xs,
+          fontWeight: '500',
         },
+        tabBarIconStyle: { display: 'none' },
+        tabBarItemStyle: { justifyContent: 'center' },
       }}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarLabel: '홈',
-          tabBarIcon: () => <TabIcon emoji="🏠" />,
-        }}
-      />
-      <Tab.Screen
-        name="Feedback"
-        component={FeedbackScreen}
-        options={{
-          tabBarLabel: '피드백',
-          tabBarIcon: () => <TabIcon emoji="📝" />,
-        }}
-      />
-      <Tab.Screen
-        name="History"
-        component={HistoryScreen}
-        options={{
-          tabBarLabel: '기록',
-          tabBarIcon: () => <TabIcon emoji="📅" />,
-        }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          tabBarLabel: '설정',
-          tabBarIcon: () => <TabIcon emoji="⚙️" />,
-        }}
-      />
+      <Tab.Screen name="Home"     component={HomeScreen}     options={{ tabBarLabel: '홈' }} />
+      <Tab.Screen name="Feedback" component={FeedbackScreen} options={{ tabBarLabel: '피드백' }} />
+      <Tab.Screen name="History"  component={HistoryScreen}  options={{ tabBarLabel: '기록' }} />
+      <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarLabel: '설정' }} />
     </Tab.Navigator>
-  );
-}
-
-function TabIcon({ emoji }: { emoji: string }) {
-  return (
-    <View style={styles.tabIcon}>
-      <Text style={styles.tabIconText}>{emoji}</Text>
-    </View>
   );
 }
 
@@ -94,15 +61,19 @@ function TabIcon({ emoji }: { emoji: string }) {
 export default function App() {
   const { session, isLoading, isOnboarded, initialize } = useAuthStore();
 
+  const [fontsLoaded] = useFonts({
+    NotoSerifKR_400Regular,
+    NotoSerifKR_700Bold,
+  });
+
   useEffect(() => {
     initialize();
   }, []);
 
-  // Loading
-  if (isLoading) {
+  if (isLoading || !fontsLoaded) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.textTertiary} />
       </View>
     );
   }
@@ -114,10 +85,10 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator
             screenOptions={{
-              headerStyle: { backgroundColor: colors.background },
-              headerTintColor: colors.textPrimary,
-              headerTitleStyle: { fontWeight: '600' },
-              contentStyle: { backgroundColor: colors.background },
+              headerStyle:       { backgroundColor: colors.background },
+              headerTintColor:   colors.textPrimary,
+              headerTitleStyle:  { fontWeight: '600', fontSize: fontSize.md },
+              contentStyle:      { backgroundColor: colors.background },
               headerShadowVisible: false,
             }}
           >
@@ -156,16 +127,9 @@ export default function App() {
 
 const styles = StyleSheet.create({
   loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    flex:            1,
+    justifyContent:  'center',
+    alignItems:      'center',
     backgroundColor: colors.background,
-  },
-  tabIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabIconText: {
-    fontSize: 20,
   },
 });

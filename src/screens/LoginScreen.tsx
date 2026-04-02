@@ -15,7 +15,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius, serifFont } from '../theme';
 import { useAuthStore } from '../stores/authStore';
 
 const TESTER_ID_REGEX = /^[a-z0-9_]{2,20}$/;
@@ -48,15 +48,14 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <KeyboardAvoidingView
         style={styles.inner}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Hero */}
         <View style={styles.hero}>
-          <Text style={styles.emoji}>🌤️</Text>
-          <Text style={styles.title}>나만의 날씨</Text>
+          <Text style={styles.title}>나만의{'\n'}날씨</Text>
           <Text style={styles.subtitle}>
             같은 기온도 사람마다 다르게 느끼니까{'\n'}
             당신만의 체감 날씨를 알려드릴게요
@@ -65,9 +64,9 @@ export default function LoginScreen() {
 
         {/* Features */}
         <View style={styles.features}>
-          <FeatureItem emoji="🎯" text="체감 피드백을 학습해요" />
-          <FeatureItem emoji="👔" text="맞춤 옷차림을 추천해요" />
-          <FeatureItem emoji="🔔" text="매일 아침 브리핑을 보내요" />
+          <FeatureItem text="체감 피드백을 학습해요" />
+          <FeatureItem text="맞춤 옷차림을 추천해요" />
+          <FeatureItem text="매일 아침 브리핑을 보내요" />
         </View>
 
         {/* Tester ID Input */}
@@ -106,10 +105,10 @@ export default function LoginScreen() {
   );
 }
 
-function FeatureItem({ emoji, text }: { emoji: string; text: string }) {
+function FeatureItem({ text }: { text: string }) {
   return (
     <View style={styles.featureRow}>
-      <Text style={styles.featureEmoji}>{emoji}</Text>
+      <View style={styles.featureDot} />
       <Text style={styles.featureText}>{text}</Text>
     </View>
   );
@@ -129,15 +128,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  emoji: {
-    fontSize: 80,
-    marginBottom: spacing.lg,
-  },
   title: {
-    fontSize: fontSize.xxl + 8,
-    fontWeight: fontWeight.bold,
+    fontFamily: serifFont,
+    fontSize: fontSize.display,
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
+    lineHeight: Math.round(fontSize.display * 1.2),
+    marginBottom: spacing.md,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: fontSize.md,
@@ -154,8 +151,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
   },
-  featureEmoji: {
-    fontSize: 24,
+  featureDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.textTertiary,
+    marginTop: 8,
   },
   featureText: {
     fontSize: fontSize.md,

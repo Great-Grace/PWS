@@ -86,7 +86,7 @@ export default function HistoryScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>📅 피드백 기록</Text>
+        <Text style={styles.title}>피드백 기록</Text>
 
         <Calendar
           theme={{
@@ -207,9 +207,9 @@ const styles = StyleSheet.create({
 
   slotTabs:          { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.md },
   slotTab:           { flex: 1, paddingVertical: spacing.xs, borderRadius: borderRadius.md, backgroundColor: colors.surfaceElevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
-  slotTabActive:     { backgroundColor: colors.primaryDark, borderColor: colors.primary },
+  slotTabActive:     { backgroundColor: colors.primary, borderColor: colors.primary },
   slotTabText:       { fontSize: fontSize.xs, color: colors.textSecondary, fontWeight: fontWeight.medium },
-  slotTabTextActive: { color: colors.textPrimary, fontWeight: fontWeight.bold },
+  slotTabTextActive: { color: colors.textInverse, fontWeight: fontWeight.bold },
 
   detailRow:  { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
   chip:       { flex: 1, backgroundColor: colors.surfaceElevated, borderRadius: borderRadius.md, padding: spacing.sm, alignItems: 'center', borderWidth: 1, borderColor: colors.border },

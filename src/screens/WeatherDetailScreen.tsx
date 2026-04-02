@@ -21,7 +21,7 @@ export default function WeatherDetailScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Hourly Section */}
-        <Text style={styles.sectionTitle}>⏰ 시간별 예보 (24시간)</Text>
+        <Text style={styles.sectionTitle}>시간별 예보 (24시간)</Text>
         <View style={styles.section}>
           {hourly.map((h, i) => (
             <View key={i} style={styles.hourlyRow}>
@@ -33,18 +33,18 @@ export default function WeatherDetailScreen() {
               </Text>
               <Text style={styles.hourlyTemp}>{formatTemp(h.temp)}</Text>
               <View style={styles.hourlyMeta}>
-                <Text style={styles.metaText}>💧{h.humidity}%</Text>
-                <Text style={styles.metaText}>💨{h.wind_speed.toFixed(1)}</Text>
+                <Text style={styles.metaText}>습도 {h.humidity}%</Text>
+                <Text style={styles.metaText}>{h.wind_speed.toFixed(1)}m/s</Text>
               </View>
               {h.pop > 0.1 && (
-                <Text style={styles.popText}>🌧️{Math.round(h.pop * 100)}%</Text>
+                <Text style={styles.popText}>강수 {Math.round(h.pop * 100)}%</Text>
               )}
             </View>
           ))}
         </View>
 
         {/* Daily Section */}
-        <Text style={styles.sectionTitle}>📅 주간 예보 (7일)</Text>
+        <Text style={styles.sectionTitle}>주간 예보 (7일)</Text>
         <View style={styles.section}>
           {daily.map((d, i) => (
             <View key={i} style={styles.dailyRow}>
@@ -70,7 +70,7 @@ export default function WeatherDetailScreen() {
                 <Text style={styles.dailyTempHigh}>{formatTemp(d.temp_max)}</Text>
               </View>
               {d.pop > 0.1 && (
-                <Text style={styles.popText}>🌧️{Math.round(d.pop * 100)}%</Text>
+                <Text style={styles.popText}>강수 {Math.round(d.pop * 100)}%</Text>
               )}
             </View>
           ))}
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   tempBarFill: {
     position: 'absolute',
     height: '100%',
-    backgroundColor: colors.accent,
+    backgroundColor: colors.textSecondary,
     borderRadius: borderRadius.full,
   },
 });
