@@ -21,10 +21,10 @@ import type { FeedbackEntry, FeedbackSlot } from '../types';
 
 // Korean locale
 LocaleConfig.locales['ko'] = {
-  monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-  monthNamesShort: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-  dayNames: ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'],
-  dayNamesShort: ['일','월','화','수','목','금','토'],
+  monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+  monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+  dayNames: ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'],
+  dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
   today: '오늘',
 };
 LocaleConfig.defaultLocale = 'ko';
@@ -33,17 +33,17 @@ const SLOT_ORDER: FeedbackSlot[] = ['morning', 'afternoon', 'evening'];
 
 export default function HistoryScreen() {
   const { fetchHistory, feedbackCount } = useFeedbackStore();
-  const [entries, setEntries]           = useState<FeedbackEntry[]>([]);
+  const [entries, setEntries] = useState<FeedbackEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date()));
-  const [currentYear,  setCurrentYear]  = useState(new Date().getFullYear());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
-  const [markedDates,  setMarkedDates]  = useState<any>({});
-  const [activeSlot,   setActiveSlot]   = useState<FeedbackSlot>('morning');
+  const [markedDates, setMarkedDates] = useState<any>({});
+  const [activeSlot, setActiveSlot] = useState<FeedbackSlot>('morning');
 
   const loadMonth = useCallback(async (year: number, month: number) => {
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-    const lastDay   = new Date(year, month, 0).getDate();
-    const endDate   = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
 
     const data = await fetchHistory(startDate, endDate);
     setEntries(data);
@@ -57,7 +57,7 @@ export default function HistoryScreen() {
 
     const marks: any = {};
     Object.entries(dateMap).forEach(([date, dayEntries]) => {
-      const rep   = dayEntries.find(e => e.feedback_slot === 'morning') ?? dayEntries[0];
+      const rep = dayEntries.find(e => e.feedback_slot === 'morning') ?? dayEntries[0];
       const color = FEEL_COLORS[rep.feel_score] || colors.primary;
       marks[date] = { marked: true, dotColor: color, selectedColor: color };
     });
@@ -90,15 +90,15 @@ export default function HistoryScreen() {
 
         <Calendar
           theme={{
-            calendarBackground:         colors.card,
-            textSectionTitleColor:      colors.textSecondary,
+            calendarBackground: colors.card,
+            textSectionTitleColor: colors.textSecondary,
             selectedDayBackgroundColor: colors.primary,
-            selectedDayTextColor:       colors.textPrimary,
-            todayTextColor:             colors.primary,
-            dayTextColor:               colors.textPrimary,
-            textDisabledColor:          colors.textTertiary,
-            monthTextColor:             colors.textPrimary,
-            arrowColor:                 colors.primary,
+            selectedDayTextColor: colors.textPrimary,
+            todayTextColor: colors.primary,
+            dayTextColor: colors.textPrimary,
+            textDisabledColor: colors.textTertiary,
+            monthTextColor: colors.textPrimary,
+            arrowColor: colors.primary,
           }}
           style={styles.calendar}
           onDayPress={(day: DateData) => {
@@ -113,7 +113,7 @@ export default function HistoryScreen() {
             ...markedDates,
             [selectedDate]: {
               ...markedDates[selectedDate],
-              selected:      true,
+              selected: true,
               selectedColor: markedDates[selectedDate]?.dotColor || colors.primary,
             },
           }}
@@ -151,11 +151,11 @@ export default function HistoryScreen() {
                   />
                   <DetailChip label="옷차림" value={
                     displayEntry.clothing === 1 ? '얇게' :
-                    displayEntry.clothing === 2 ? '보통' : '두껍게'
+                      displayEntry.clothing === 2 ? '보통' : '두껍게'
                   } />
                   <DetailChip label="활동" value={
                     displayEntry.activity === 1 ? '정적' :
-                    displayEntry.activity === 2 ? '보통' : '활발'
+                      displayEntry.activity === 2 ? '보통' : '활발'
                   } />
                 </View>
                 {displayEntry.actual_temp !== null && (
@@ -192,9 +192,9 @@ function DetailChip({ label, value, color }: { label: string; value: string; col
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  scroll:    { padding: spacing.lg, paddingBottom: spacing.xxl },
-  title:     { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.textPrimary, marginBottom: spacing.md },
-  calendar:  { borderRadius: borderRadius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, marginBottom: spacing.md },
+  scroll: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  title: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.textPrimary, marginBottom: spacing.md },
+  calendar: { borderRadius: borderRadius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, marginBottom: spacing.md },
 
   detail: {
     backgroundColor: colors.card,
@@ -205,18 +205,19 @@ const styles = StyleSheet.create({
   },
   detailDate: { fontSize: fontSize.md, color: colors.textSecondary, marginBottom: spacing.sm },
 
-  slotTabs:          { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.md },
-  slotTab:           { flex: 1, paddingVertical: spacing.xs, borderRadius: borderRadius.md, backgroundColor: colors.surfaceElevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
-  slotTabActive:     { backgroundColor: colors.primary, borderColor: colors.primary },
-  slotTabText:       { fontSize: fontSize.xs, color: colors.textSecondary, fontWeight: fontWeight.medium },
+  slotTabs: { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.md },
+  slotTab: { flex: 1, paddingVertical: spacing.xs, borderRadius: borderRadius.md, backgroundColor: colors.surfaceElevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  slotTabActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  slotTabText: { fontSize: fontSize.xs, color: colors.textSecondary, fontWeight: fontWeight.medium },
   slotTabTextActive: { color: colors.textInverse, fontWeight: fontWeight.bold },
 
-  detailRow:  { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
-  chip:       { flex: 1, backgroundColor: colors.surfaceElevated, borderRadius: borderRadius.md, padding: spacing.sm, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
-  chipLabel:  { fontSize: fontSize.xs, color: colors.textTertiary },
-  chipValue:  { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.textPrimary, marginTop: 2 },
+  detailRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
+  chip: { flex: 1, backgroundColor: colors.surfaceElevated, borderRadius: borderRadius.md, padding: spacing.sm, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  chipLabel: { fontSize: fontSize.xs, color: colors.textTertiary },
+  chipValue: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.textPrimary, marginTop: 2 },
   detailMeta: { fontSize: fontSize.sm, color: colors.textTertiary },
 
-  noData:     { backgroundColor: colors.card, borderRadius: borderRadius.xl, padding: spacing.xl, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  noData: { backgroundColor: colors.card, borderRadius: borderRadius.xl, padding: spacing.xl, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   noDataText: { fontSize: fontSize.md, color: colors.textTertiary },
 });
+
