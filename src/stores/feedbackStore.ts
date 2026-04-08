@@ -1,19 +1,19 @@
 // ============================================================
-// Feedback Store — Zustand (v1.2)
+// Feedback Store — Zustand (v1.3)
 // · 3-slot 구조 (morning / afternoon / evening)
+// · 하루 리셋 05:00 기준 (getPwsDate)
+// · 슬롯 항상 input.slot 기준 (UI에서 명시적 선택)
 // · 온디바이스 퍼셉트론 SGD 업데이트
-// · fetchTodayPrediction: DB 배치 대신 온디바이스 실시간 계산
 // ============================================================
 import { create } from 'zustand';
 import { supabase } from '../config/supabase';
 import type { FeedbackEntry, FeedbackInput, HourlyForecast } from '../types';
 import type { FeedbackSlot } from '../types';
 import {
-  formatDate,
+  getPwsDate,
   computeFeedbackOffsets,
   computeEnvBase,
   getSeason,
-  getSlotFromHour,
   computeWeatherFeatures,
   featuresToArray,
   updateWeights,
@@ -52,7 +52,6 @@ interface FeedbackState {
   fetchTodayStatus:    () => Promise<void>;
   fetchTodayPrediction:() => Promise<void>;
   submitFeedback:      (input: FeedbackInput) => Promise<void>;
-  updateTodayFeedback: (entryId: string, input: Partial<FeedbackInput>) => Promise<void>;
   fetchHistory:        (startDate: string, endDate: string) => Promise<FeedbackEntry[]>;
   fetchFeedbackCount:  () => Promise<void>;
 }
@@ -102,7 +101,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
     try {
       const userId = useAuthStore.getState().session?.user.id;
       if (!userId) return;
-      const today = formatDate(new Date());
+      const today = getPwsDate();
       const { data, error } = await supabase
         .from('feedback_entries')
         .select('*')
@@ -174,25 +173,26 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
   submitFeedback: async (input: FeedbackInput) => {
     set({ isSaving: true });
     try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const authUser = useAuthStore.getState().session?.user;
       if (!authUser) throw new Error('Not authenticated');
 
-      const today        = formatDate(new Date());
+      const today        = getPwsDate();
       const now          = new Date();
-      const slot         = getSlotFromHour(now.getHours());
-      const feedbackSlot: FeedbackSlot = slot ?? 'afternoon';
+      // UI에서 항상 slot을 명시 — 없으면 안전 폴백
+      const feedbackSlot: FeedbackSlot = input.slot ?? 'afternoon';
       const current = useWeatherStore.getState().getCurrent();
 
       // ---- DB 레코드 조립 ----
       const record: Record<string, any> = {
-        user_id:       authUser.id,
-        feedback_date: today,
-        feel_score:    input.feel_score,
-        humid_feel:    input.humid_feel,
-        wind_feel:     input.wind_feel,
-        clothing:      input.clothing,
-        activity:      input.activity,
-        feedback_slot: feedbackSlot,
+        user_id:        authUser.id,
+        feedback_date:  today,
+        feel_score:     input.feel_score,
+        humid_feel:     input.humid_feel,
+        wind_feel:      input.wind_feel,
+        clothing:       input.clothing,
+        clothing_items: input.clothing_items?.length ? input.clothing_items : null,
+        activity:       input.activity,
+        feedback_slot:  feedbackSlot,
       };
 
       if (input.sun_exposure  !== undefined) record.sun_exposure  = input.sun_exposure;
@@ -243,9 +243,9 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
       if (error) throw error;
 
       // ---- 온디바이스 SGD 업데이트 ----
-      if (slot && current && userProfile) {
+      if (current && userProfile) {
         const dayOfYear  = getDayOfYear(now);
-        const weightKey  = `weight_${slot}` as typeof SLOT_CONFIG[number]['weightKey'];
+        const weightKey  = `weight_${feedbackSlot}` as typeof SLOT_CONFIG[number]['weightKey'];
         const rawW       = userProfile[weightKey] as number[] | null;
         const weights    = rawW ? new Float32Array(rawW) : initWeights();
 
@@ -274,6 +274,18 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
         }));
       }
 
+      // ---- 옷장 로컬 즉시 반영 ----
+      if (input.clothing_items?.length && userProfile) {
+        const newWardrobe = { ...userProfile.wardrobe };
+        for (const item of input.clothing_items) {
+          newWardrobe[item] = (newWardrobe[item] ?? 0) + 1;
+        }
+        useAuthStore.setState(state => ({
+          user: state.user ? { ...state.user, wardrobe: newWardrobe } : null,
+        }));
+        // DB 백그라운드 sync는 Supabase 트리거(update_user_wardrobe)가 처리
+      }
+
       // ---- 상태 갱신 (병렬) ----
       await Promise.all([
         get().fetchTodayStatus(),
@@ -282,25 +294,6 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
       ]);
     } catch (error) {
       console.error('Submit feedback error:', error);
-      throw error;
-    } finally {
-      set({ isSaving: false });
-    }
-  },
-
-  // ---- 당일 특정 슬롯 피드백 수정 ----
-  updateTodayFeedback: async (entryId: string, input: Partial<FeedbackInput>) => {
-    set({ isSaving: true });
-    try {
-      const { error } = await supabase
-        .from('feedback_entries')
-        .update(input)
-        .eq('id', entryId);
-
-      if (error) throw error;
-      await get().fetchTodayStatus();
-    } catch (error) {
-      console.error('Update feedback error:', error);
       throw error;
     } finally {
       set({ isSaving: false });

@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, DateData, LocaleConfig } from 'react-native-calendars';
 import { colors, spacing, fontSize, fontWeight, borderRadius, FEEL_LABELS, FEEL_COLORS } from '../theme';
 import { useFeedbackStore } from '../stores/feedbackStore';
-import { formatDate, getSlotLabel } from '../utils/formulas';
+import { getPwsDate, getSlotLabel } from '../utils/formulas';
 import type { FeedbackEntry, FeedbackSlot } from '../types';
 
 // Korean locale
@@ -34,7 +34,7 @@ const SLOT_ORDER: FeedbackSlot[] = ['morning', 'afternoon', 'evening'];
 export default function HistoryScreen() {
   const { fetchHistory, feedbackCount } = useFeedbackStore();
   const [entries, setEntries] = useState<FeedbackEntry[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date()));
+  const [selectedDate, setSelectedDate] = useState<string>(getPwsDate());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [markedDates, setMarkedDates] = useState<any>({});
@@ -170,7 +170,7 @@ export default function HistoryScreen() {
         ) : (
           <View style={styles.noData}>
             <Text style={styles.noDataText}>
-              {selectedDate === formatDate(new Date())
+              {selectedDate === getPwsDate()
                 ? '오늘 아직 피드백을 입력하지 않았어요'
                 : '이 날에는 피드백이 없어요'}
             </Text>

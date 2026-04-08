@@ -21,10 +21,6 @@ import { computeBMI, computeBMIBucket, computeBMIOffset } from '../utils/formula
 
 export default function SettingsScreen() {
   const { user, updateProfile, signOut } = useAuthStore();
-  const [notifyEnabled, setNotifyEnabled] = useState(user?.notify_enabled ?? true);
-  const [notifyOutfit, setNotifyOutfit] = useState(user?.notify_outfit ?? true);
-  const [notifyRain, setNotifyRain] = useState(user?.notify_rain ?? true);
-
   // BMI Modal State
   const [isBmiModalVisible, setBmiModalVisible] = useState(false);
   const [heightCm, setHeightCm] = useState('');
@@ -41,9 +37,6 @@ export default function SettingsScreen() {
   ) => {
     try {
       await updateProfile({ [key]: value });
-      if (key === 'notify_enabled') setNotifyEnabled(value);
-      if (key === 'notify_outfit') setNotifyOutfit(value);
-      if (key === 'notify_rain') setNotifyRain(value);
     } catch {
       Alert.alert('설정 저장에 실패했습니다');
     }
@@ -122,8 +115,8 @@ export default function SettingsScreen() {
               // (서버 사이드에 delete_own_account RPC가 없으면 signOut만 수행)
               try {
                 await supabase.rpc('delete_own_account');
-              } catch {
-                // RPC 미구현 시 무시 — 최소한 로그아웃은 수행
+              } catch (rpcErr) {
+                console.warn('delete_own_account RPC failed:', rpcErr);
               }
 
               await signOut();
@@ -159,17 +152,17 @@ export default function SettingsScreen() {
         <View style={styles.card}>
           <ToggleRow
             label="알림 활성화"
-            value={notifyEnabled}
+            value={user?.notify_enabled ?? true}
             onToggle={(v) => handleToggle('notify_enabled', v)}
           />
           <ToggleRow
             label="옷차림 추천 포함"
-            value={notifyOutfit}
+            value={user?.notify_outfit ?? true}
             onToggle={(v) => handleToggle('notify_outfit', v)}
           />
           <ToggleRow
             label="비 예보 알림"
-            value={notifyRain}
+            value={user?.notify_rain ?? true}
             onToggle={(v) => handleToggle('notify_rain', v)}
           />
           <InfoRow label="알림 시간" value={user?.notify_time?.slice(0, 5) || '07:30'} />

@@ -8,7 +8,7 @@ import type { User } from '../types';
 import { Session } from '@supabase/supabase-js';
 import { computeBMI, computeBMIBucket, computeBMIOffset } from '../utils/formulas';
 
-const TEST_PASSWORD = 'pws_tester_2024';
+const TEST_PASSWORD = process.env.EXPO_PUBLIC_TEST_PASSWORD ?? 'pws_tester_2024';
 
 function testerEmail(testerId: string) {
   return `${testerId.trim().toLowerCase()}@test.pws`;

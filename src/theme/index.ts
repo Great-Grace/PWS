@@ -117,3 +117,35 @@ export const ACTIVITY_LABELS = ['', '정적/실내', '보통', '야외/활발'] 
 export const SUN_LABELS      = ['주로 실내', '반반', '야외 직사광'] as const;
 export const SLEEP_LABELS    = ['', '못 잠', '보통', '잘 잠'] as const;
 export const OUTDOOR_LABELS  = ['거의 안 나감', '1~2시간', '3~5시간', '6시간+'] as const;
+
+// ---- 오늘의 옷차림 — 아이템별 정의 ----
+// clo: ISO 9920 CLO 단위 (단열값). 두꺼울수록 높음.
+export interface ClothingItemDef {
+  id: string;
+  label: string;
+  clo: number;
+}
+
+export const CLOTHING_ITEM_DEFS: ClothingItemDef[] = [
+  { id: 'sleeveless',    label: '민소매',         clo: 0.04 },
+  { id: 'tshirt',        label: '반팔 티셔츠',    clo: 0.09 },
+  { id: 'longsleeve',    label: '긴팔 티셔츠',    clo: 0.12 },
+  { id: 'shirt',         label: '셔츠/블라우스',  clo: 0.15 },
+  { id: 'knit_thin',     label: '얇은 니트',      clo: 0.20 },
+  { id: 'sweatshirt',    label: '맨투맨',         clo: 0.24 },
+  { id: 'hoodie',        label: '후드티',         clo: 0.28 },
+  { id: 'hoodie_zip',    label: '후드집업',       clo: 0.28 },
+  { id: 'knit_thick',    label: '두꺼운 니트',    clo: 0.36 },
+  { id: 'fleece',        label: '플리스',         clo: 0.36 },
+  { id: 'light_jacket',  label: '바람막이',       clo: 0.22 },
+  { id: 'cardigan',      label: '가디건',         clo: 0.25 },
+  { id: 'blazer',        label: '블레이저/자켓',  clo: 0.35 },
+  { id: 'light_padding', label: '경량 패딩',      clo: 0.55 },
+  { id: 'padding',       label: '패딩',           clo: 0.90 },
+  { id: 'heavy_coat',    label: '두꺼운 코트',    clo: 1.00 },
+] as const;
+
+// CLO 합산 → clothing 척도 1-3 변환 임계값
+// thin(<0.18), normal(0.18–0.40), thick(≥0.40)
+export const CLO_THIN_MAX   = 0.18;
+export const CLO_NORMAL_MAX = 0.40;

@@ -5,7 +5,8 @@
 // · 7-level feel label (humidity-aware)
 // ============================================================
 
-import type { BMIBucket } from '../types';
+import type { BMIBucket, ClothingItemId, FeedbackSlot } from '../types';
+import { CLOTHING_ITEM_DEFS, CLO_THIN_MAX, CLO_NORMAL_MAX } from '../theme';
 
 // ============================================================
 // 기존 유틸리티 함수 (유지)
@@ -50,18 +51,6 @@ export function getSeason(date: Date): 'spring' | 'summer' | 'autumn' | 'winter'
   return 'winter';
 }
 
-/** Confidence → 한국어 레이블 */
-export function getConfidenceLabel(
-  confidence: 'cold_start' | 'low' | 'medium' | 'high'
-): string {
-  switch (confidence) {
-    case 'cold_start': return '데이터 수집 중';
-    case 'low':        return '예측 시작';
-    case 'medium':     return '보통';
-    case 'high':       return '높음';
-  }
-}
-
 /** 기온 표시 포맷 */
 export function formatTemp(temp: number): string {
   return `${Math.round(temp)}°`;
@@ -89,6 +78,18 @@ export function formatDate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * PWS 기준 날짜 반환 — 하루 리셋 기준: 05:00
+ * 00:00~04:59는 전날로 취급
+ */
+export function getPwsDate(date: Date = new Date()): string {
+  const d = new Date(date);
+  if (d.getHours() < 5) {
+    d.setDate(d.getDate() - 1);
+  }
+  return formatDate(d);
+}
+
 /** Unix timestamp → 시간 표시 */
 export function formatHour(unixTimestamp: number): string {
   const date = new Date(unixTimestamp * 1000);
@@ -103,57 +104,59 @@ export function formatDay(unixTimestamp: number): string {
 }
 
 // ============================================================
+// 옷차림 아이템 → CLO 합산 → clothing 척도 1-3 변환
+// ============================================================
+
+/**
+ * 선택된 아이템 목록의 CLO 합산값 계산
+ */
+export function computeTotalClo(items: ClothingItemId[]): number {
+  return items.reduce((sum, id) => {
+    const def = CLOTHING_ITEM_DEFS.find(d => d.id === id);
+    return sum + (def ? def.clo : 0);
+  }, 0);
+}
+
+/**
+ * CLO 합산 → clothing 척도 1(얇게) / 2(보통) / 3(두껍게)
+ * 임계값: thin < 0.18, normal 0.18-0.40, thick ≥ 0.40
+ */
+export function cloToClothingScale(totalClo: number): 1 | 2 | 3 {
+  if (totalClo < CLO_THIN_MAX)   return 1;
+  if (totalClo < CLO_NORMAL_MAX) return 2;
+  return 3;
+}
+
+/**
+ * 선택된 아이템 목록 → clothing 척도 (1-3) 자동 계산
+ */
+export function computeClothingFromItems(items: ClothingItemId[]): 1 | 2 | 3 {
+  if (!items.length) return 2; // 기본값: 보통
+  return cloToClothingScale(computeTotalClo(items));
+}
+
+// ============================================================
 // 슬롯 유틸리티
 // ============================================================
 
-export type FeedbackSlot = 'morning' | 'afternoon' | 'evening';
-
 /**
- * 현재 시간 → 피드백 슬롯 자동 분류
- * 06-11시 → morning, 11-16시 → afternoon, 16-22시 → evening
- * 그 외 → null (새벽/심야는 슬롯 미분류)
+ * 현재 시각 → 가장 가까운 피드백 슬롯
+ * 05-10시 → morning, 11-15시 → afternoon, 16-04시(+1일) → evening
+ * 항상 슬롯을 반환 (null 없음)
  */
-export function getSlotFromHour(hour: number): FeedbackSlot | null {
-  if (hour >= 6  && hour < 11) return 'morning';
+export function getDefaultSlot(hour: number): FeedbackSlot {
+  if (hour >= 5  && hour < 11) return 'morning';
   if (hour >= 11 && hour < 16) return 'afternoon';
-  if (hour >= 16 && hour < 22) return 'evening';
-  return null;
+  return 'evening'; // 16시 이후 및 00-04시(전날 evening 시간대)
 }
 
-/** 슬롯 → 한국어 레이블 */
+/** 슬롯 → 기준 시각 레이블 */
 export function getSlotLabel(slot: FeedbackSlot): string {
   switch (slot) {
-    case 'morning':   return '오전 8시';
-    case 'afternoon': return '오후 1시';
-    case 'evening':   return '오후 6시';
+    case 'morning':   return '아침';
+    case 'afternoon': return '낮';
+    case 'evening':   return '저녁';
   }
-}
-
-// ============================================================
-// 7-level Feel Label (humidity-aware)
-// ============================================================
-
-export interface FeelInfo {
-  label: string;
-  emoji: string;
-}
-
-/**
- * 예측값(1.0-7.0) + 현재 습도 → 7단계 체감 레이블
- * 습도 70% 초과 시 4.0-5.0 구간을 '후덥지근해요'로 분기
- */
-export function getFeelInfo(feel: number, humidity?: number): FeelInfo {
-  if (feel <= 1.5) return { label: '아주 추워요',    emoji: '🥶' };
-  if (feel <= 2.4) return { label: '추워요',         emoji: '🧥' };
-  if (feel <= 3.2) return { label: '쌀쌀해요',       emoji: '😬' };
-  if (feel <= 4.0) return { label: '딱 좋아요',      emoji: '😊' };
-  if (feel <= 5.0) {
-    return (humidity !== undefined && humidity > 70)
-      ? { label: '후덥지근해요', emoji: '😓' }
-      : { label: '더워요',       emoji: '😰' };
-  }
-  if (feel <= 6.0) return { label: '땀날 것 같아요', emoji: '🥵' };
-  return               { label: '완전 더워요',    emoji: '🔥' };
 }
 
 // ============================================================

@@ -76,9 +76,7 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
               wind_speed: cached.wind_mps,
               weather_code: cached.weather_code,
               weather_desc: cached.weather_desc,
-              weather_icon: '',
               uv_index: cached.uv_index,
-              solar_rad: cached.solar_rad,
               tmrt_api: cached.tmrt_api,
             },
             hourly: cached.hourly_json as HourlyForecast[],
@@ -111,9 +109,7 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
           wind_speed: raw.current.wind_speed,
           weather_code: raw.current.weather[0].id,
           weather_desc: raw.current.weather[0].description,
-          weather_icon: raw.current.weather[0].icon,
           uv_index: raw.current.uvi || 0,
-          solar_rad: raw.current.solar_rad,
         },
         hourly: raw.hourly.slice(0, 24).map((h: any) => ({
           dt: h.dt,
@@ -123,7 +119,6 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
           wind_speed: h.wind_speed,
           weather_code: h.weather[0].id,
           weather_desc: h.weather[0].description,
-          weather_icon: h.weather[0].icon,
           pop: h.pop || 0,
         })),
         daily: raw.daily.slice(0, 7).map((d: any) => ({
@@ -134,7 +129,6 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
           wind_speed: d.wind_speed,
           weather_code: d.weather[0].id,
           weather_desc: d.weather[0].description,
-          weather_icon: d.weather[0].icon,
           pop: d.pop || 0,
           uv_index: d.uvi || 0,
         })),
@@ -163,7 +157,6 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
           weather_code: weatherData.current.weather_code,
           weather_desc: weatherData.current.weather_desc,
           uv_index: weatherData.current.uv_index,
-          solar_rad: weatherData.current.solar_rad,
           hourly_json: weatherData.hourly,
           daily_json: weatherData.daily,
         }, { onConflict: 'lat,lng' })

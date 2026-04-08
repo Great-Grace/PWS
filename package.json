@@ -11,7 +11,6 @@
     "clear-cache": "npx expo start -c"
   },
   "dependencies": {
-    "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/noto-serif-kr": "^0.4.3",
     "@react-native-community/netinfo": "11.4.1",
     "@react-navigation/bottom-tabs": "^7.15.7",

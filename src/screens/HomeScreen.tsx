@@ -20,22 +20,94 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   colors, spacing, fontSize, fontWeight, borderRadius,
   FEEL_HEADLINE, FEEL_LABELS,
+  CLOTHING_ITEM_DEFS,
 } from '../theme';
+import type { Wardrobe } from '../types';
 import { useAuthStore } from '../stores/authStore';
 import { useWeatherStore } from '../stores/weatherStore';
 import { useFeedbackStore } from '../stores/feedbackStore';
-import { getSlotFromHour } from '../utils/formulas';
+import { getDefaultSlot } from '../utils/formulas';
 import { COLD_START_THRESHOLD } from '../utils/constants';
 import type { FeedbackSlot } from '../types';
 
-// ---- 기온 기반 옷차림 추천 ----
-function getOutfit(temp: number): { top: string; bottom: string; outer: string | null } {
-  if (temp < 5)  return { top: '두꺼운 니트',    bottom: '기모 바지',  outer: '롱패딩'      };
-  if (temp < 10) return { top: '캐시미어 니트',  bottom: '울 슬랙스',  outer: '울 코트'     };
-  if (temp < 15) return { top: '얇은 니트',      bottom: '슬랙스',     outer: '가벼운 코트' };
-  if (temp < 20) return { top: '얇은 셔츠',      bottom: '면바지',     outer: '가디건'      };
-  if (temp < 25) return { top: '반팔 티셔츠',    bottom: '면바지',     outer: null          };
-  return           { top: '반팔 티셔츠',          bottom: '반바지',     outer: null          };
+// ---- 기온 구간별 권장 CLO 범위 ----
+// CLO 목표값: 더울수록 낮게, 추울수록 높게
+function targetCloRange(temp: number): { min: number; max: number } {
+  if (temp < 0)  return { min: 1.20, max: 99  };
+  if (temp < 5)  return { min: 0.80, max: 1.30 };
+  if (temp < 10) return { min: 0.55, max: 0.90 };
+  if (temp < 15) return { min: 0.35, max: 0.60 };
+  if (temp < 20) return { min: 0.20, max: 0.40 };
+  if (temp < 25) return { min: 0.09, max: 0.25 };
+  return                { min: 0.00, max: 0.15 };
+}
+
+// ---- 옷장 기반 상의 추천 ----
+// 1. 사용자 옷장에서 목표 CLO 범위에 맞는 아이템을 착용 횟수 기준으로 정렬
+// 2. 없으면 전체 카탈로그에서 가장 가까운 아이템 폴백
+function getOutfitFromWardrobe(
+  temp: number,
+  wardrobe: Wardrobe,
+): { top: string; bottom: string; outer: string | null } {
+  const { min, max } = targetCloRange(temp);
+
+  // 옷장에 있는 아이템 (착용 기록 있는 것)
+  const ownedItems = CLOTHING_ITEM_DEFS.filter(
+    def => (wardrobe[def.id as keyof Wardrobe] ?? 0) > 0
+  );
+
+  // 목표 CLO 범위에 드는 아이템 중 착용 횟수가 많은 것 우선
+  const candidates = ownedItems
+    .filter(def => def.clo >= min && def.clo <= max)
+    .sort((a, b) =>
+      (wardrobe[b.id as keyof Wardrobe] ?? 0) - (wardrobe[a.id as keyof Wardrobe] ?? 0)
+    );
+
+  let topLabel: string;
+  if (candidates.length > 0) {
+    // 상위 2개 아이템을 조합해서 표시
+    const pick = candidates.slice(0, 2).map(c => c.label);
+    topLabel = pick.join(' + ');
+  } else if (ownedItems.length > 0) {
+    // 범위 내 없으면 CLO가 가장 가까운 옷장 아이템
+    const midClo = (min + max) / 2;
+    const closest = ownedItems.reduce((prev, curr) =>
+      Math.abs(curr.clo - midClo) < Math.abs(prev.clo - midClo) ? curr : prev
+    );
+    topLabel = closest.label;
+  } else {
+    // 옷장 데이터 없음 → 카탈로그 기반 폴백
+    topLabel = getDefaultTop(temp);
+  }
+
+  return {
+    top:    topLabel,
+    bottom: getDefaultBottom(temp),
+    outer:  getDefaultOuter(temp),
+  };
+}
+
+function getDefaultTop(temp: number): string {
+  if (temp < 5)  return '두꺼운 니트';
+  if (temp < 10) return '캐시미어 니트';
+  if (temp < 15) return '얇은 니트';
+  if (temp < 20) return '얇은 셔츠';
+  return '반팔 티셔츠';
+}
+
+function getDefaultBottom(temp: number): string {
+  if (temp < 5)  return '기모 바지';
+  if (temp < 10) return '울 슬랙스';
+  if (temp < 15) return '슬랙스';
+  return '면바지';
+}
+
+function getDefaultOuter(temp: number): string | null {
+  if (temp < 5)  return '롱패딩';
+  if (temp < 10) return '울 코트';
+  if (temp < 15) return '가벼운 코트';
+  if (temp < 20) return '가디건';
+  return null;
 }
 
 // ---- 신뢰도 → 퍼센트 ----
@@ -108,14 +180,14 @@ export default function HomeScreen({ navigation }: any) {
   const todayDaily = weather?.daily?.[0];
   const hourly     = weather?.hourly || [];
 
-  const currentSlot: FeedbackSlot | null = getSlotFromHour(new Date().getHours());
+  const currentSlot: FeedbackSlot = getDefaultSlot(new Date().getHours());
   const doneSlotsSet = new Set(todayFeedback.map(f => f.feedback_slot));
   const allSlotsDone = doneSlotsSet.size >= 3;
 
   // 헤드라인용 슬롯 예측: 현재 → 오후 → 오전 → 저녁
   const primaryForecast = useMemo(() => {
     if (!prediction) return null;
-    return prediction[currentSlot ?? 'afternoon']
+    return prediction[currentSlot]
       ?? prediction.afternoon
       ?? prediction.morning
       ?? prediction.evening;
@@ -152,7 +224,9 @@ export default function HomeScreen({ navigation }: any) {
   const BAR_MAX_H = 52;
   const BAR_MIN_H = 12;
 
-  const outfit = current ? getOutfit(current.temp) : null;
+  const outfit = current
+    ? getOutfitFromWardrobe(current.temp, user?.wardrobe ?? {})
+    : null;
   const pop    = todayDaily ? Math.round(todayDaily.pop * 100) : null;
 
   return (
@@ -195,7 +269,11 @@ export default function HomeScreen({ navigation }: any) {
 
         {/* ── 날씨 카드 ── */}
         {current ? (
-          <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('WeatherDetail')}
+            activeOpacity={0.85}
+          >
             <Text style={styles.cardCaption}>현재 날씨</Text>
 
             <View style={styles.weatherTop}>
@@ -249,7 +327,7 @@ export default function HomeScreen({ navigation }: any) {
                 </View>
               </>
             )}
-          </View>
+          </TouchableOpacity>
         ) : weatherError ? (
           <View style={[styles.card, styles.errorCard]}>
             <Text style={styles.errorText}>날씨 데이터를 불러오지 못했습니다</Text>
@@ -260,7 +338,12 @@ export default function HomeScreen({ navigation }: any) {
         {/* ── 추천 옷차림 카드 ── */}
         {outfit && (
           <View style={styles.card}>
-            <Text style={styles.cardCaption}>추천 옷차림</Text>
+            <View style={styles.outfitCardHeader}>
+              <Text style={styles.cardCaption}>추천 옷차림</Text>
+              {user?.wardrobe && Object.keys(user.wardrobe).length > 0 && (
+                <Text style={styles.wardrobeHint}>내 옷장 기반</Text>
+              )}
+            </View>
             {[
               { label: '상의',   value: outfit.top    },
               { label: '하의',   value: outfit.bottom  },
@@ -389,6 +472,8 @@ const styles = StyleSheet.create({
   errorDetail: { fontSize: fontSize.xs, color: colors.textTertiary },
 
   // Outfit card
+  outfitCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
+  wardrobeHint:     { fontSize: fontSize.xs, color: colors.textTertiary },
   outfitRow:       { flexDirection: 'row', alignItems: 'baseline', paddingVertical: spacing.sm },
   outfitRowDivider:{ borderBottomWidth: 1, borderBottomColor: colors.divider },
   outfitLabel:     { fontSize: fontSize.sm, color: colors.textTertiary, width: 48 },
