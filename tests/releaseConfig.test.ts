@@ -6,6 +6,7 @@ const gradleProperties = readFileSync('android/gradle.properties', 'utf8');
 const androidManifest = readFileSync('android/app/src/main/AndroidManifest.xml', 'utf8');
 const appJson = readFileSync('app.json', 'utf8');
 const appInfo = readFileSync('src/config/appInfo.ts', 'utf8');
+const supabaseConfig = readFileSync('src/config/supabase.ts', 'utf8');
 
 const releaseBlockMatch = buildGradle.match(/release \{[\s\S]*?\n        \}/);
 assert.ok(releaseBlockMatch, 'Android release build block should exist');
@@ -51,6 +52,17 @@ assert.ok(
 assert.ok(
   appInfo.includes("APP_VERSION = '1.0.0'"),
   'In-app tester release version should display 1.0.0'
+);
+
+assert.equal(
+  /const supabaseUrl = resolveRequiredPublicEnv\(process\.env[\s\S]*export function createSupabaseClient/.test(supabaseConfig),
+  false,
+  'Supabase env validation must not run before lazy client creation because EAS Update without env should not white-screen before ErrorBoundary'
+);
+
+assert.ok(
+  supabaseConfig.includes('function getSupabaseClient') || supabaseConfig.includes('getSupabaseClient()'),
+  'Supabase client creation should remain lazy so missing OTA env fails inside handled app flows, not at import time'
 );
 
 console.log('releaseConfig test passed');

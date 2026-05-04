@@ -1,4 +1,4 @@
-import { createClient, processLock } from '@supabase/supabase-js';
+import { createClient, processLock, type SupabaseClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { resolveRequiredPublicEnv } from '../utils/env';
 import {
@@ -8,8 +8,7 @@ import {
   splitSecureStoreValue,
 } from '../utils/secureStoreChunks';
 
-const supabaseUrl = resolveRequiredPublicEnv(process.env, 'EXPO_PUBLIC_SUPABASE_URL');
-const supabaseAnonKey = resolveRequiredPublicEnv(process.env, 'EXPO_PUBLIC_SUPABASE_ANON_KEY');
+let cachedClient: SupabaseClient | null = null;
 
 async function clearChunkedValue(key: string) {
   await Promise.all(
@@ -54,12 +53,30 @@ const ExpoSecureStoreAdapter = {
   },
 };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: ExpoSecureStoreAdapter,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false, // React Native에서는 URL 기반 세션 감지 비활성화
-    lock: processLock,
+export function createSupabaseClient(): SupabaseClient {
+  const supabaseUrl = resolveRequiredPublicEnv(process.env, 'EXPO_PUBLIC_SUPABASE_URL');
+  const supabaseAnonKey = resolveRequiredPublicEnv(process.env, 'EXPO_PUBLIC_SUPABASE_ANON_KEY');
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      storage: ExpoSecureStoreAdapter,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false, // React Native에서는 URL 기반 세션 감지 비활성화
+      lock: processLock,
+    },
+  });
+}
+
+export function getSupabaseClient(): SupabaseClient {
+  cachedClient ??= createSupabaseClient();
+  return cachedClient;
+}
+
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, property) {
+    const client = getSupabaseClient();
+    const value = Reflect.get(client, property);
+    return typeof value === 'function' ? value.bind(client) : value;
   },
 });
