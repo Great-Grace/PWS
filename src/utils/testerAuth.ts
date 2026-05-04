@@ -1,12 +1,18 @@
 export const TESTER_AUTH_CONFIG_ERROR =
   '테스터 로그인 설정이 비어 있습니다. 관리자에게 문의해주세요.';
 
+declare const __DEV__: boolean;
+
 export interface TesterAuthConfig {
   password: string;
   allowAutoSignup: boolean;
 }
 
-export type DevTesterMode = 'strict-parity' | 'onboarding-qa' | null;
+export type DevTesterMode = 'figma-parity' | 'onboarding-qa' | 'simple-login' | null;
+
+const LOCAL_TESTER_SESSION_PREFIX = 'dev-';
+const FIGMA_PARITY_TESTER_ID = 'pws_dev';
+const ONBOARDING_QA_TESTER_ID = 'pws_onboard';
 
 export function resolveTesterAuthConfig(rawPassword: string | undefined): TesterAuthConfig {
   const password = rawPassword?.trim();
@@ -25,9 +31,26 @@ export function normalizeTesterId(testerId: string): string {
   return testerId.trim().toLowerCase();
 }
 
+export function testerSessionId(testerId: string): string {
+  return `${LOCAL_TESTER_SESSION_PREFIX}${normalizeTesterId(testerId)}`;
+}
+
+function isDevRuntime(): boolean {
+  return typeof __DEV__ !== 'undefined' && __DEV__;
+}
+
+export function isLocalTesterSessionId(userId: string | undefined, devRuntime = isDevRuntime()): boolean {
+  return devRuntime && !!userId && userId.startsWith(LOCAL_TESTER_SESSION_PREFIX);
+}
+
+export function isFigmaParitySessionId(userId: string | undefined, devRuntime = isDevRuntime()): boolean {
+  return devRuntime && userId === testerSessionId(FIGMA_PARITY_TESTER_ID);
+}
+
 export function resolveDevTesterMode(testerId: string): DevTesterMode {
   const normalized = normalizeTesterId(testerId);
-  if (normalized === 'pws_dev') return 'strict-parity';
-  if (normalized === 'pws_onboard') return 'onboarding-qa';
-  return null;
+  if (!normalized) return null;
+  if (normalized === FIGMA_PARITY_TESTER_ID) return 'figma-parity';
+  if (normalized === ONBOARDING_QA_TESTER_ID) return 'onboarding-qa';
+  return 'simple-login';
 }

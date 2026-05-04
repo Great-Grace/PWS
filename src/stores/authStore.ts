@@ -7,7 +7,13 @@ import { supabase } from '../config/supabase';
 import type { User } from '../types';
 import { Session } from '@supabase/supabase-js';
 import { computeBMI, computeBMIBucket, computeBMIOffset } from '../utils/formulas';
-import { normalizeTesterId, resolveDevTesterMode, resolveTesterAuthConfig } from '../utils/testerAuth';
+import {
+  isLocalTesterSessionId,
+  normalizeTesterId,
+  resolveDevTesterMode,
+  resolveTesterAuthConfig,
+  testerSessionId,
+} from '../utils/testerAuth';
 import { logSafeError } from '../utils/safeLog';
 
 function testerEmail(testerId: string) {
@@ -15,14 +21,15 @@ function testerEmail(testerId: string) {
 }
 
 function createDevSession(testerId: string): Session {
+  const sessionId = testerSessionId(testerId);
   return {
-    access_token: `dev-${testerId}`,
-    refresh_token: `dev-${testerId}`,
+    access_token: sessionId,
+    refresh_token: sessionId,
     expires_in: 60 * 60 * 24 * 365,
     expires_at: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365,
     token_type: 'bearer',
     user: {
-      id: `dev-${testerId}`,
+      id: sessionId,
       aud: 'authenticated',
       role: 'authenticated',
       email: testerEmail(testerId),
@@ -35,7 +42,7 @@ function createDevSession(testerId: string): Session {
 
 function createDevUser(testerId: string): User {
   return {
-    id: `dev-${testerId}`,
+    id: testerSessionId(testerId),
     email: testerEmail(testerId),
     nickname: testerId,
     default_lat: 37.5665,
@@ -128,11 +135,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const normalized = normalizeTesterId(testerId);
     const devTesterMode = __DEV__ ? resolveDevTesterMode(normalized) : null;
 
-    if (devTesterMode) {
+    if (__DEV__ && devTesterMode) {
       set({
         session: createDevSession(normalized),
-        user: devTesterMode === 'strict-parity' ? createDevUser(normalized) : null,
-        isOnboarded: devTesterMode === 'strict-parity',
+        user: devTesterMode === 'onboarding-qa' ? null : createDevUser(normalized),
+        isOnboarded: devTesterMode !== 'onboarding-qa',
         testerId: normalized,
       });
       return;
@@ -173,9 +180,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
+    const session = get().session;
+    if (isLocalTesterSessionId(session?.user.id)) {
+      set({ session: null, user: null, isOnboarded: false, testerId: null });
+      return;
+    }
+
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-    set({ session: null, user: null, isOnboarded: false });
+    set({ session: null, user: null, isOnboarded: false, testerId: null });
   },
 
   fetchUserProfile: async () => {
@@ -251,7 +264,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // DB 저장 전에 state 반영 → 스피너 없이 즉시 메인으로 이동
     set({ user: userRecord as User, isOnboarded: true });
 
-    if (__DEV__ && session.user.id.startsWith('dev-')) {
+    if (isLocalTesterSessionId(session.user.id)) {
       return;
     }
 

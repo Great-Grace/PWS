@@ -16,6 +16,7 @@ import { useFeedbackStore } from '../stores/feedbackStore';
 import { useAuthStore } from '../stores/authStore';
 import { getPwsDate, getSlotLabel } from '../utils/formulas';
 import type { ClothingItemId, FeedbackEntry, FeedbackSlot } from '../types';
+import { isFigmaParitySessionId } from '../utils/testerAuth';
 
 LocaleConfig.locales.ko = {
   monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
@@ -27,7 +28,6 @@ LocaleConfig.locales.ko = {
 LocaleConfig.defaultLocale = 'ko';
 
 const SLOT_ORDER: FeedbackSlot[] = ['morning', 'afternoon', 'evening'];
-const isDevLocalUser = (userId: string | undefined) => __DEV__ && !!userId && userId.startsWith('dev-');
 const HISTORY_FEEL_LABELS = ['-', '매우 추움', '추움', '선선함', '적당함', '따뜻함', '더움', '매우 더움'];
 const REAL_FEEL_SCALE = { min: 1, mid: 4, max: 7 };
 const FIGMA_FEEL_SCALE = { min: 0, mid: 2, max: 5 };
@@ -204,7 +204,7 @@ function getMaxStreak(entries: FeedbackEntry[]) {
 export default function HistoryScreen() {
   const { fetchHistory, feedbackCount } = useFeedbackStore();
   const { session } = useAuthStore();
-  const figmaParityMode = isDevLocalUser(session?.user.id);
+  const figmaParityMode = isFigmaParitySessionId(session?.user.id);
 
   const [entries, setEntries] = useState<FeedbackEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState(getPwsDate());

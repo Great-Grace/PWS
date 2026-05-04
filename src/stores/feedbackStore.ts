@@ -24,6 +24,7 @@ import { resolvePredictionConfidence } from '../utils/prediction';
 import { useWeatherStore } from './weatherStore';
 import { useAuthStore } from './authStore';
 import { logSafeError } from '../utils/safeLog';
+import { isLocalTesterSessionId } from '../utils/testerAuth';
 
 // ---- 로컬 예측 타입 (온디바이스 계산 결과) ----
 export interface SlotForecast {
@@ -87,10 +88,6 @@ const SLOT_CONFIG = [
   { slot: 'evening'   as FeedbackSlot, targetHour: 18, weightKey: 'weight_evening'   as const },
 ];
 
-function isDevLocalUser(userId: string | undefined) {
-  return __DEV__ && !!userId && userId.startsWith('dev-');
-}
-
 export const useFeedbackStore = create<FeedbackState>((set, get) => ({
   todayFeedback:       [],
   prediction:          null,
@@ -106,7 +103,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
     try {
       const userId = useAuthStore.getState().session?.user.id;
       if (!userId) return;
-      if (isDevLocalUser(userId)) {
+      if (isLocalTesterSessionId(userId)) {
         set({ todayFeedback: [] });
         return;
       }
@@ -185,7 +182,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
     try {
       const authUser = useAuthStore.getState().session?.user;
       if (!authUser) throw new Error('Not authenticated');
-      const isLocalDev = isDevLocalUser(authUser.id);
+      const isLocalDev = isLocalTesterSessionId(authUser.id);
 
       const today        = getPwsDate();
       const now          = new Date();
@@ -319,7 +316,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
   fetchHistory: async (startDate: string, endDate: string) => {
     const userId = useAuthStore.getState().session?.user.id;
     if (!userId) return [];
-    if (isDevLocalUser(userId)) {
+    if (isLocalTesterSessionId(userId)) {
       set({ recentEntries: [] });
       return [];
     }
@@ -343,7 +340,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
     try {
       const userId = useAuthStore.getState().session?.user.id;
       if (!userId) return;
-      if (isDevLocalUser(userId)) {
+      if (isLocalTesterSessionId(userId)) {
         set({
           feedbackCount: 0,
           feedbackCountBySlot: { morning: 0, afternoon: 0, evening: 0 },

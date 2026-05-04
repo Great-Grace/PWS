@@ -31,6 +31,7 @@ import { useAuthStore } from '../stores/authStore';
 import { getDefaultSlot, computeClothingFromItems } from '../utils/formulas';
 import type { FeedbackInput, FeedbackSlot, ClothingItemId } from '../types';
 import AppDialog, { AppDialogState } from '../components/AppDialog';
+import { isFigmaParitySessionId } from '../utils/testerAuth';
 
 // ---- 슬롯 메타 ----
 const SLOT_META: { slot: FeedbackSlot; label: string; timeHint: string }[] = [
@@ -42,8 +43,6 @@ const SLOT_META: { slot: FeedbackSlot; label: string; timeHint: string }[] = [
 const FEEDBACK_FEEL_LABELS = ['매우 추움', '추움', '선선함', '적당함', '따뜻함', '더움', '매우 더움'];
 const FEEDBACK_HUMID_LABELS = ['건조함', '쾌적함', '습함', '매우 습함'];
 const FEEDBACK_WIND_LABELS = ['바람 없음', '약한 바람', '보통 바람', '강한 바람'];
-const isDevLocalUser = (userId: string | undefined) => __DEV__ && !!userId && userId.startsWith('dev-');
-
 // ---- 슬롯 입력 상태 타입 ----
 interface SlotDraft {
   feelScore:     number | null;
@@ -87,7 +86,7 @@ const CLOTHING_SECTIONS = {
 export default function FeedbackScreen({ navigation }: any) {
   const { submitFeedback, isSaving, todayFeedback } = useFeedbackStore();
   const { session } = useAuthStore();
-  const figmaParityMode = isDevLocalUser(session?.user.id);
+  const figmaParityMode = isFigmaParitySessionId(session?.user.id);
 
   const defaultSlot = useMemo(
     () => (figmaParityMode ? 'afternoon' : getDefaultSlot(new Date().getHours())),

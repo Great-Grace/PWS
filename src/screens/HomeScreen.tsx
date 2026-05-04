@@ -29,8 +29,10 @@ import {
   type WeatherGuideRow,
   type WeatherReadyCard,
 } from '../utils/weatherCopy';
-
-const isDevLocalUser = (userId: string | undefined) => __DEV__ && !!userId && userId.startsWith('dev-');
+import {
+  isFigmaParitySessionId,
+  isLocalTesterSessionId,
+} from '../utils/testerAuth';
 
 const FIGMA_HOME_WEATHER = {
   temp: 22,
@@ -97,11 +99,12 @@ export default function HomeScreen({ navigation }: any) {
 
   const lat = useMemo(() => user?.default_lat || 37.5665, [user?.default_lat]);
   const lng = useMemo(() => user?.default_lng || 126.978, [user?.default_lng]);
-  const figmaParityMode = isDevLocalUser(session?.user.id);
+  const localTesterMode = isLocalTesterSessionId(session?.user.id);
+  const figmaParityMode = isFigmaParitySessionId(session?.user.id);
 
   const refreshHomeData = useCallback(
     async (force = false) => {
-      if (figmaParityMode) {
+      if (localTesterMode) {
         await fetchTodayPrediction();
         return;
       }
@@ -123,7 +126,7 @@ export default function HomeScreen({ navigation }: any) {
       fetchTodayPrediction,
       lat,
       lng,
-      figmaParityMode,
+      localTesterMode,
     ]
   );
 
