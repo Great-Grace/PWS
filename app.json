@@ -15,16 +15,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.wxxtae.pws",
-      "runtimeVersion": {
-        "policy": "sdkVersion"
-      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.wxxtae.pws",
-      "runtimeVersion": "1.0.0",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -48,6 +44,9 @@
     "owner": "woos-organization",
     "updates": {
       "url": "https://u.expo.dev/5e146f93-f4ce-4364-9bb3-5deadabd01a0"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
     }
   }
 }
