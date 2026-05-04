@@ -104,24 +104,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (session) {
         await get().fetchUserProfile();
       }
+
+      // onAuthStateChange 리스너 등록 (중복 방지)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        set({ session });
+        if (session) {
+          await get().fetchUserProfile();
+        } else {
+          set({ user: null, isOnboarded: false });
+        }
+      });
+
+      (globalThis as any).__pwsAuthSubscription?.unsubscribe();
+      (globalThis as any).__pwsAuthSubscription = subscription;
     } catch (error) {
       logSafeError('Auth init error:', error);
     } finally {
       set({ isLoading: false });
     }
-
-    // onAuthStateChange 리스너 등록 (중복 방지)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      set({ session });
-      if (session) {
-        await get().fetchUserProfile();
-      } else {
-        set({ user: null, isOnboarded: false });
-      }
-    });
-
-    (globalThis as any).__pwsAuthSubscription?.unsubscribe();
-    (globalThis as any).__pwsAuthSubscription = subscription;
   },
 
   signInWithTesterId: async (testerId: string) => {

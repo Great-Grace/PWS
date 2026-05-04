@@ -2,7 +2,7 @@
 // PWS — App Entry Point
 // Navigation: Auth Stack + Main Tab Navigator
 // ============================================================
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View, StyleSheet, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -105,10 +105,20 @@ export default function App() {
     NotoSerifKR_400Regular,
     NotoSerifKR_700Bold,
   });
+  const [bootTimedOut, setBootTimedOut] = useState(false);
 
   useEffect(() => {
     initialize();
   }, []);
+
+  useEffect(() => {
+    if ((!isLoading && fontsLoaded) || fontError) return;
+    const timeout = setTimeout(() => {
+      logSafeError('[App] boot initialization timed out', 'continuing to login shell');
+      setBootTimedOut(true);
+    }, 8000);
+    return () => clearTimeout(timeout);
+  }, [isLoading, fontsLoaded, fontError]);
 
   useEffect(() => {
     if (fontError) {
@@ -116,7 +126,7 @@ export default function App() {
     }
   }, [fontError]);
 
-  if (shouldHoldBootScreen({ isLoading, fontsLoaded, fontError })) {
+  if (shouldHoldBootScreen({ isLoading, fontsLoaded, fontError, bootTimedOut })) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={colors.primary} />
