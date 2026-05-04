@@ -37,7 +37,9 @@ export default function OfflineBanner() {
         { paddingTop: insets.top + spacing.sm, transform: [{ translateY: slideAnim }] },
       ]}
     >
-      <Text style={styles.icon}>📡</Text>
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>오프라인</Text>
+      </View>
       <View style={styles.textContainer}>
         <Text style={styles.title}>오프라인 상태</Text>
         <Text style={styles.subtitle}>인터넷 연결을 확인해주세요</Text>
@@ -53,7 +55,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 9999,
-    backgroundColor: colors.error,
+    backgroundColor: '#7F1D1D',
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: 0, // dynamic via insets
@@ -62,9 +64,17 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: borderRadius.md,
     borderBottomRightRadius: borderRadius.md,
   },
-  icon: {
-    fontSize: 20,
+  badge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     marginRight: spacing.sm,
+  },
+  badgeText: {
+    fontSize: fontSize.xs,
+    color: colors.textInverse,
+    fontWeight: fontWeight.bold,
   },
   textContainer: {
     flex: 1,
@@ -76,6 +86,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: fontSize.xs,
-    color: 'rgba(240, 242, 255, 0.8)',
+    color: 'rgba(255,255,255,0.75)',
   },
 });

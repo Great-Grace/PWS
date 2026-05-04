@@ -141,13 +141,13 @@ export function computeClothingFromItems(items: ClothingItemId[]): 1 | 2 | 3 {
 
 /**
  * 현재 시각 → 가장 가까운 피드백 슬롯
- * 05-10시 → morning, 11-15시 → afternoon, 16-04시(+1일) → evening
+ * 06-09시 → morning, 10-17시 → afternoon, 18-05시 → evening
  * 항상 슬롯을 반환 (null 없음)
  */
 export function getDefaultSlot(hour: number): FeedbackSlot {
-  if (hour >= 5  && hour < 11) return 'morning';
-  if (hour >= 11 && hour < 16) return 'afternoon';
-  return 'evening'; // 16시 이후 및 00-04시(전날 evening 시간대)
+  if (hour >= 6  && hour < 10) return 'morning';
+  if (hour >= 10 && hour < 18) return 'afternoon';
+  return 'evening';
 }
 
 /** 슬롯 → 기준 시각 레이블 */

@@ -12,7 +12,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   StatusBar,
 } from 'react-native';
@@ -23,27 +22,27 @@ import {
   fontSize,
   fontWeight,
   borderRadius,
-  FEEL_LABELS,
-  FEEL_COLORS,
-  HUMID_LABELS,
-  WIND_LABELS,
-  ACTIVITY_LABELS,
-  SUN_LABELS,
-  SLEEP_LABELS,
-  OUTDOOR_LABELS,
   CLOTHING_ITEM_DEFS,
   CLOTHING_LABELS,
 } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFeedbackStore } from '../stores/feedbackStore';
+import { useAuthStore } from '../stores/authStore';
 import { getDefaultSlot, computeClothingFromItems } from '../utils/formulas';
 import type { FeedbackInput, FeedbackSlot, ClothingItemId } from '../types';
+import AppDialog, { AppDialogState } from '../components/AppDialog';
 
 // ---- 슬롯 메타 ----
 const SLOT_META: { slot: FeedbackSlot; label: string; timeHint: string }[] = [
-  { slot: 'morning',   label: '아침', timeHint: '오전' },
-  { slot: 'afternoon', label: '낮',   timeHint: '낮'   },
-  { slot: 'evening',   label: '저녁', timeHint: '저녁' },
+  { slot: 'morning',   label: '아침', timeHint: '06-10시' },
+  { slot: 'afternoon', label: '낮',   timeHint: '10-18시' },
+  { slot: 'evening',   label: '저녁', timeHint: '18-22시' },
 ];
+
+const FEEDBACK_FEEL_LABELS = ['매우 추움', '추움', '선선함', '적당함', '따뜻함', '더움', '매우 더움'];
+const FEEDBACK_HUMID_LABELS = ['건조함', '쾌적함', '습함', '매우 습함'];
+const FEEDBACK_WIND_LABELS = ['바람 없음', '약한 바람', '보통 바람', '강한 바람'];
+const isDevLocalUser = (userId: string | undefined) => __DEV__ && !!userId && userId.startsWith('dev-');
 
 // ---- 슬롯 입력 상태 타입 ----
 interface SlotDraft {
@@ -56,14 +55,19 @@ interface SlotDraft {
   sleep:         number | null;
   outdoorHours:  number | null;
   showOptional:  boolean;
+  openClothingSection: 'top' | 'outer' | 'bottom' | null;
 }
 
 function emptyDraft(): SlotDraft {
   return {
-    feelScore: null, humidFeel: null, windFeel: null,
-    clothingItems: [], activity: null,
+    feelScore: 4,
+    humidFeel: 2,
+    windFeel: 1,
+    clothingItems: [],
+    activity: 2,
     sunExposure: null, sleep: null, outdoorHours: null,
     showOptional: false,
+    openClothingSection: null,
   };
 }
 
@@ -73,14 +77,26 @@ function initDrafts(): DraftMap {
   return { morning: emptyDraft(), afternoon: emptyDraft(), evening: emptyDraft() };
 }
 
+const CLOTHING_SECTIONS = {
+  top: ['sleeveless', 'tshirt', 'longsleeve', 'shirt', 'knit_thin', 'sweatshirt', 'hoodie', 'hoodie_zip', 'knit_thick', 'fleece'],
+  outer: ['light_jacket', 'cardigan', 'blazer', 'light_padding', 'padding', 'heavy_coat'],
+  bottom: ['shorts', 'pants', 'slacks', 'jeans'],
+} as const;
+
 // ---- 화면 ----
 export default function FeedbackScreen({ navigation }: any) {
   const { submitFeedback, isSaving, todayFeedback } = useFeedbackStore();
+  const { session } = useAuthStore();
+  const figmaParityMode = isDevLocalUser(session?.user.id);
 
-  const defaultSlot = useMemo(() => getDefaultSlot(new Date().getHours()), []);
+  const defaultSlot = useMemo(
+    () => (figmaParityMode ? 'afternoon' : getDefaultSlot(new Date().getHours())),
+    [figmaParityMode]
+  );
   const [activeSlot, setActiveSlot] = useState<FeedbackSlot>(defaultSlot);
   const [drafts, setDrafts] = useState<DraftMap>(initDrafts);
   const [submitting, setSubmitting] = useState<FeedbackSlot | null>(null);
+  const [dialog, setDialog] = useState<AppDialogState | null>(null);
 
   const draft = drafts[activeSlot];
   const doneSlotsSet = useMemo(
@@ -89,16 +105,14 @@ export default function FeedbackScreen({ navigation }: any) {
   );
 
   const computedClothing = useMemo(
-    () => draft.clothingItems.length ? computeClothingFromItems(draft.clothingItems) : null,
+    () => draft.clothingItems.length ? computeClothingFromItems(draft.clothingItems) : 2,
     [draft.clothingItems]
   );
 
   const canSubmit =
     draft.feelScore     !== null &&
     draft.humidFeel     !== null &&
-    draft.windFeel      !== null &&
-    draft.clothingItems.length > 0 &&
-    draft.activity      !== null;
+    draft.windFeel      !== null;
 
   // 현재 슬롯 draft 업데이트 헬퍼
   const updateDraft = useCallback((patch: Partial<SlotDraft>) => {
@@ -119,13 +133,21 @@ export default function FeedbackScreen({ navigation }: any) {
   }, [activeSlot]);
 
   const handleSubmit = async () => {
-    if (!canSubmit || computedClothing === null) {
-      Alert.alert('필수 항목을 모두 선택해주세요');
+    if (!canSubmit) {
+      setDialog({
+        title: '필수 항목을 확인해주세요',
+        message: '기온, 습도, 바람 체감을 모두 선택하면 기록을 저장할 수 있어요.',
+        primaryLabel: '확인',
+      });
       return;
     }
     if (doneSlotsSet.has(activeSlot)) {
       const slotName = SLOT_META.find(m => m.slot === activeSlot)?.label ?? '';
-      Alert.alert(`${slotName} 피드백 완료`, '이 시간대 피드백은 이미 저장됐어요.');
+      setDialog({
+        title: `${slotName} 피드백 완료`,
+        message: '이 시간대 피드백은 이미 저장됐어요.',
+        primaryLabel: '확인',
+      });
       return;
     }
 
@@ -135,9 +157,9 @@ export default function FeedbackScreen({ navigation }: any) {
         feel_score:     draft.feelScore    as FeedbackInput['feel_score'],
         humid_feel:     draft.humidFeel    as FeedbackInput['humid_feel'],
         wind_feel:      draft.windFeel     as FeedbackInput['wind_feel'],
-        clothing:       computedClothing,
+        clothing:       computedClothing as FeedbackInput['clothing'],
         clothing_items: draft.clothingItems,
-        activity:       draft.activity     as FeedbackInput['activity'],
+        activity:       (draft.activity ?? 2) as FeedbackInput['activity'],
         slot:           activeSlot,
       };
       if (draft.sunExposure  !== null) input.sun_exposure  = draft.sunExposure  as FeedbackInput['sun_exposure'];
@@ -151,17 +173,28 @@ export default function FeedbackScreen({ navigation }: any) {
 
       const remaining = SLOT_META.filter(m => !doneSlotsSet.has(m.slot) && m.slot !== activeSlot);
       if (remaining.length > 0) {
-        Alert.alert('저장 완료 🎉', `${remaining.map(m => m.label).join('·')} 피드백도 남아있어요`, [
-          { text: '계속 입력', onPress: () => setActiveSlot(remaining[0].slot) },
-          { text: '완료', onPress: () => navigation.goBack() },
-        ]);
+        setDialog({
+          title: '저장 완료',
+          message: `${remaining.map(m => m.label).join('·')} 피드백도 남아있어요`,
+          secondaryLabel: '완료',
+          onSecondary: () => navigation.goBack(),
+          primaryLabel: '계속 입력',
+          onPrimary: () => setActiveSlot(remaining[0].slot),
+        });
       } else {
-        Alert.alert('모두 완료! 🎉', '오늘 세 시간대 피드백이 모두 저장됐어요', [
-          { text: '확인', onPress: () => navigation.goBack() },
-        ]);
+        setDialog({
+          title: '모두 완료',
+          message: '오늘 세 시간대 피드백이 모두 저장됐어요',
+          primaryLabel: '확인',
+          onPrimary: () => navigation.goBack(),
+        });
       }
     } catch (error: any) {
-      Alert.alert('오류', error.message || '저장에 실패했습니다');
+      setDialog({
+        title: '저장하지 못했어요',
+        message: error.message || '잠시 후 다시 시도해주세요.',
+        primaryLabel: '확인',
+      });
     } finally {
       setSubmitting(null);
     }
@@ -174,58 +207,164 @@ export default function FeedbackScreen({ navigation }: any) {
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        <Text style={styles.title}>오늘의 체감 피드백</Text>
-        <Text style={styles.subtitle}>시간대를 선택하고 체감 온도를 기록해주세요</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>오늘 체감 기록</Text>
+          <Text style={styles.subtitle}>날씨가 어떻게 느껴지셨나요?</Text>
+        </View>
 
         {/* ── 슬롯 탭 ── */}
-        <View style={styles.slotTabRow}>
-          {SLOT_META.map(({ slot, label, timeHint }) => {
-            const done     = doneSlotsSet.has(slot);
-            const isActive = activeSlot === slot;
-            const hasDraft = !done && (
-              drafts[slot].feelScore !== null ||
-              drafts[slot].clothingItems.length > 0
-            );
-            return (
-              <TouchableOpacity
-                key={slot}
-                style={[
-                  styles.slotTab,
-                  isActive && styles.slotTabActive,
-                  done      && styles.slotTabDone,
-                ]}
-                onPress={() => setActiveSlot(slot)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.slotTabIcon}>
-                  {done ? '✅' : hasDraft ? '✏️' : '○'}
-                </Text>
-                <Text style={[styles.slotTabLabel, isActive && styles.slotTabLabelActive]}>
-                  {label}
-                </Text>
-                <Text style={[styles.slotTabHint, isActive && styles.slotTabHintActive]}>
-                  {timeHint}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+        <View style={styles.slotSection}>
+          <Text style={styles.sectionLabel}>시간대</Text>
+          <View style={styles.slotTabRow}>
+            {SLOT_META.map(({ slot, label, timeHint }) => {
+              const done     = doneSlotsSet.has(slot);
+              const isActive = activeSlot === slot;
+              const tabContent = (
+                <>
+                  <SlotMark active={isActive} done={done} slot={slot} />
+                  <Text style={[styles.slotTabLabel, isActive && styles.slotTabLabelActive]}>
+                    {label}
+                  </Text>
+                  <Text style={[styles.slotTabHint, isActive && styles.slotTabHintActive]}>
+                    {timeHint}
+                  </Text>
+                </>
+              );
+              return (
+                <TouchableOpacity
+                  key={slot}
+                  style={[styles.slotTabTouch, done && !isActive && styles.slotTabDone]}
+                  onPress={() => setActiveSlot(slot)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${label} ${timeHint}`}
+                  accessibilityState={{ selected: isActive, disabled: done }}
+                  activeOpacity={0.78}
+                >
+                  {isActive ? (
+                    <LinearGradient
+                      colors={['#00A6F4', '#155DFC']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.slotTab}
+                    >
+                      {tabContent}
+                    </LinearGradient>
+                  ) : (
+                    <View style={styles.slotTab}>{tabContent}</View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         {doneSlotsSet.has(activeSlot) ? (
           <View style={styles.doneBanner}>
-            <Text style={styles.doneBannerText}>
-              ✅ {SLOT_META.find(m => m.slot === activeSlot)?.label} 피드백이 저장됐어요
-            </Text>
-          </View>
+          <Text style={styles.doneBannerText}>
+            {SLOT_META.find(m => m.slot === activeSlot)?.label} 피드백이 저장됐어요
+          </Text>
+        </View>
         ) : null}
+
+        {/* ── 오늘의 옷차림 ── */}
+        <View style={styles.clothingSection}>
+          <View style={styles.clothingHeader}>
+            <Text style={styles.selectorLabel}>
+              오늘 옷차림
+            </Text>
+            {computedClothing !== null && !figmaParityMode && (
+              <View style={styles.cloBadge}>
+                <Text style={styles.cloBadgeText}>{CLOTHING_LABELS[computedClothing]}</Text>
+              </View>
+            )}
+          </View>
+          <AccordionSection
+            label="상의"
+            open={draft.openClothingSection === 'top'}
+            onPress={() => updateDraft({ openClothingSection: draft.openClothingSection === 'top' ? null : 'top' })}
+          >
+            <View style={styles.clothingGrid}>
+              {CLOTHING_ITEM_DEFS.filter(item => CLOTHING_SECTIONS.top.includes(item.id as any)).map(item => {
+                const selected = draft.clothingItems.includes(item.id as ClothingItemId);
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.clothingChip, selected && styles.clothingChipOn]}
+                    onPress={() => toggleClothing(item.id as ClothingItemId)}
+                    accessibilityRole="button"
+                    accessibilityLabel={item.label}
+                    accessibilityState={{ selected }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.clothingChipText, selected && styles.clothingChipTextOn]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </AccordionSection>
+
+          <AccordionSection
+            label="아우터"
+            open={draft.openClothingSection === 'outer'}
+            onPress={() => updateDraft({ openClothingSection: draft.openClothingSection === 'outer' ? null : 'outer' })}
+          >
+            <View style={styles.clothingGrid}>
+              {CLOTHING_ITEM_DEFS.filter(item => CLOTHING_SECTIONS.outer.includes(item.id as any)).map(item => {
+                const selected = draft.clothingItems.includes(item.id as ClothingItemId);
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.clothingChip, selected && styles.clothingChipOn]}
+                    onPress={() => toggleClothing(item.id as ClothingItemId)}
+                    accessibilityRole="button"
+                    accessibilityLabel={item.label}
+                    accessibilityState={{ selected }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.clothingChipText, selected && styles.clothingChipTextOn]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </AccordionSection>
+
+          <AccordionSection
+            label="하의"
+            open={draft.openClothingSection === 'bottom'}
+            onPress={() => updateDraft({ openClothingSection: draft.openClothingSection === 'bottom' ? null : 'bottom' })}
+          >
+            <View style={styles.clothingGrid}>
+              {CLOTHING_ITEM_DEFS.filter(item => CLOTHING_SECTIONS.bottom.includes(item.id as any)).map((item) => {
+                const selected = draft.clothingItems.includes(item.id as ClothingItemId);
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.clothingChip, selected && styles.clothingChipOn]}
+                    onPress={() => toggleClothing(item.id as ClothingItemId)}
+                    accessibilityRole="button"
+                    accessibilityLabel={item.label}
+                    accessibilityState={{ selected }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.clothingChipText, selected && styles.clothingChipTextOn]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </AccordionSection>
+        </View>
 
         {/* ── 체감 온도 ── */}
         <SelectorGroup
-          label="🌡️ 체감 온도"
-          required
+          label="기온 체감"
           options={[1, 2, 3, 4, 5, 6, 7]}
-          labels={FEEL_LABELS.slice(1) as unknown as string[]}
-          chipColors={FEEL_COLORS.slice(1) as unknown as string[]}
+          labels={FEEDBACK_FEEL_LABELS}
           value={draft.feelScore}
           onChange={v => updateDraft({ feelScore: v })}
           size="large"
@@ -234,143 +373,180 @@ export default function FeedbackScreen({ navigation }: any) {
 
         {/* ── 습도 체감 ── */}
         <SelectorGroup
-          label="💧 습도 체감"
-          required
-          options={[1, 2, 3, 4, 5]}
-          labels={HUMID_LABELS.slice(1) as unknown as string[]}
+          label="습도 체감"
+          options={[1, 2, 3, 4]}
+          labels={FEEDBACK_HUMID_LABELS}
           value={draft.humidFeel}
           onChange={v => updateDraft({ humidFeel: v })}
+          tint="sky"
         />
 
         {/* ── 바람 체감 ── */}
         <SelectorGroup
-          label="💨 바람 체감"
-          required
-          options={[0, 1, 2]}
-          labels={WIND_LABELS as unknown as string[]}
+          label="바람 체감"
+          options={[0, 1, 2, 3]}
+          labels={FEEDBACK_WIND_LABELS}
           value={draft.windFeel}
           onChange={v => updateDraft({ windFeel: v })}
+          wrap
         />
-
-        {/* ── 오늘의 옷차림 ── */}
-        <View style={styles.selectorGroup}>
-          <View style={styles.clothingHeader}>
-            <Text style={styles.selectorLabel}>
-              👕 오늘의 옷차림
-              <Text style={styles.requiredMark}> *</Text>
-            </Text>
-            {computedClothing !== null && (
-              <View style={styles.cloBadge}>
-                <Text style={styles.cloBadgeText}>{CLOTHING_LABELS[computedClothing]}</Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.clothingHint}>중복 선택 가능 · 입은 옷을 모두 선택해주세요</Text>
-          <View style={styles.clothingGrid}>
-            {CLOTHING_ITEM_DEFS.map(item => {
-              const selected = draft.clothingItems.includes(item.id as ClothingItemId);
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  style={[styles.clothingChip, selected && styles.clothingChipOn]}
-                  onPress={() => toggleClothing(item.id as ClothingItemId)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.clothingChipText, selected && styles.clothingChipTextOn]}>
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* ── 활동 수준 ── */}
-        <SelectorGroup
-          label="🏃 활동 수준"
-          required
-          options={[1, 2, 3]}
-          labels={ACTIVITY_LABELS.slice(1) as unknown as string[]}
-          value={draft.activity}
-          onChange={v => updateDraft({ activity: v })}
-        />
-
-        {/* ── 추가 정보 (선택) ── */}
-        <TouchableOpacity
-          style={styles.optionalToggle}
-          onPress={() => updateDraft({ showOptional: !draft.showOptional })}
-        >
-          <Text style={styles.optionalToggleText}>
-            {draft.showOptional ? '▼' : '▶'} 추가 정보 (선택)
-          </Text>
-        </TouchableOpacity>
-
-        {draft.showOptional && (
-          <View style={styles.optionalSection}>
-            <SelectorGroup
-              label="☀️ 햇빛 노출"
-              options={[0, 1, 2]}
-              labels={SUN_LABELS as unknown as string[]}
-              value={draft.sunExposure}
-              onChange={v => updateDraft({ sunExposure: v })}
-            />
-            <SelectorGroup
-              label="😴 수면 상태"
-              options={[1, 2, 3]}
-              labels={SLEEP_LABELS.slice(1) as unknown as string[]}
-              value={draft.sleep}
-              onChange={v => updateDraft({ sleep: v })}
-            />
-            <SelectorGroup
-              label="🚶 야외 시간"
-              options={[0, 1, 2, 3]}
-              labels={OUTDOOR_LABELS as unknown as string[]}
-              value={draft.outdoorHours}
-              onChange={v => updateDraft({ outdoorHours: v })}
-            />
-          </View>
-        )}
 
         {/* ── 제출 ── */}
         <TouchableOpacity
-          style={[
-            styles.submitButton,
-            (!canSubmit || doneSlotsSet.has(activeSlot)) && styles.submitButtonDisabled,
-          ]}
+          style={styles.submitTouch}
           onPress={handleSubmit}
           disabled={!canSubmit || isSavingThisSlot || doneSlotsSet.has(activeSlot)}
+          accessibilityRole="button"
+          accessibilityLabel={doneSlotsSet.has(activeSlot) ? '저장 완료' : '기록 저장하기'}
+          accessibilityState={{ disabled: !canSubmit || isSavingThisSlot || doneSlotsSet.has(activeSlot) }}
           activeOpacity={0.8}
         >
           {isSavingThisSlot ? (
-            <ActivityIndicator color={colors.textInverse} />
+            <View style={[styles.submitButton, styles.submitButtonLoading]}>
+              <ActivityIndicator color={colors.accent} />
+            </View>
+          ) : !canSubmit || doneSlotsSet.has(activeSlot) ? (
+            <View style={[styles.submitButton, styles.submitButtonDisabled]}>
+              <Text style={[styles.submitText, styles.submitTextDisabled]}>
+                {doneSlotsSet.has(activeSlot) ? '저장 완료' : '기록 저장하기'}
+              </Text>
+              <View style={[styles.submitArrowBox, styles.submitArrowBoxDisabled]}>
+                <ChevronMark color={colors.mutedButtonText} />
+              </View>
+            </View>
           ) : (
-            <Text style={styles.submitText}>
-              {doneSlotsSet.has(activeSlot) ? '저장 완료' : '피드백 저장하기'}
-            </Text>
+            <View style={styles.submitButton}>
+              <Text style={styles.submitText}>기록 저장하기</Text>
+              <View style={styles.submitArrowBox}>
+                <ChevronMark color={colors.textPrimary} />
+              </View>
+            </View>
           )}
         </TouchableOpacity>
 
       </ScrollView>
+      <AppDialog dialog={dialog} onClose={() => setDialog(null)} />
     </SafeAreaView>
   );
 }
 
 // ---- 공용 셀렉터 ----
+function SlotMark({ active, done, slot }: { active: boolean; done: boolean; slot: FeedbackSlot }) {
+  const iconColor = active ? colors.textInverse : done ? '#00865A' : '#A8A29E';
+  return (
+    <View style={[styles.slotMark, active && styles.slotMarkActive, done && !active && styles.slotMarkDone]}>
+      {slot === 'morning' ? <MorningMark color={iconColor} /> : null}
+      {slot === 'afternoon' ? <SunMark color={iconColor} /> : null}
+      {slot === 'evening' ? <EveningMark color={iconColor} /> : null}
+    </View>
+  );
+}
+
+function MorningMark({ color }: { color: string }) {
+  return (
+    <View style={styles.markCanvas}>
+      <View style={[styles.sparkVertical, { backgroundColor: color }]} />
+      <View style={[styles.sparkHorizontal, { backgroundColor: color }]} />
+      <View style={[styles.sparkDot, styles.sparkDotTopRight, { backgroundColor: color }]} />
+      <View style={[styles.sparkDot, styles.sparkDotBottomLeft, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function SunMark({ color }: { color: string }) {
+  return (
+    <View style={styles.markCanvas}>
+      <View style={[styles.sunCore, { backgroundColor: color }]} />
+      <View style={[styles.sunRay, styles.sunRayTop, { backgroundColor: color }]} />
+      <View style={[styles.sunRay, styles.sunRayBottom, { backgroundColor: color }]} />
+      <View style={[styles.sunRaySide, styles.sunRayLeft, { backgroundColor: color }]} />
+      <View style={[styles.sunRaySide, styles.sunRayRight, { backgroundColor: color }]} />
+      <View style={[styles.sunRay, styles.sunRayTopLeft, { backgroundColor: color }]} />
+      <View style={[styles.sunRay, styles.sunRayTopRight, { backgroundColor: color }]} />
+      <View style={[styles.sunRay, styles.sunRayBottomLeft, { backgroundColor: color }]} />
+      <View style={[styles.sunRay, styles.sunRayBottomRight, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function EveningMark({ color }: { color: string }) {
+  return (
+    <View style={styles.markCanvas}>
+      <View style={[styles.eveningPill, { backgroundColor: color }]} />
+      <View style={[styles.eveningPill, styles.eveningPillSmall, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function AccordionSection({
+  label,
+  open,
+  onPress,
+  children,
+}: {
+  label: string;
+  open: boolean;
+  onPress: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={styles.accordionSection}>
+      <TouchableOpacity
+        style={styles.accordionHeader}
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${label} ${open ? '닫기' : '열기'}`}
+        accessibilityState={{ expanded: open }}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.accordionLabel}>{label}</Text>
+        <AccordionChevronMark open={open} />
+      </TouchableOpacity>
+      {open ? <View style={styles.accordionBody}>{children}</View> : null}
+    </View>
+  );
+}
+
+function ChevronMark({ color }: { color: string }) {
+  return (
+    <View
+      style={[
+        styles.chevronMark,
+        {
+          borderTopColor: color,
+          borderRightColor: color,
+        },
+      ]}
+    />
+  );
+}
+
+function AccordionChevronMark({ open }: { open: boolean }) {
+  return (
+    <View
+      style={[
+        styles.accordionChevronMark,
+        open && styles.accordionChevronMarkOpen,
+      ]}
+    />
+  );
+}
+
 function SelectorGroup({
-  label, required, options, labels, chipColors, value, onChange, size, wrap,
+  label, required, options, labels, value, onChange, size, wrap, tint,
 }: {
   label: string;
   required?: boolean;
   options: number[];
   labels: string[];
-  chipColors?: string[];
   value: number | null;
   onChange: (v: number) => void;
   size?: 'large';
   wrap?: boolean;
+  tint?: 'sky';
 }) {
   return (
-    <View style={styles.selectorGroup}>
+    <View style={[styles.selectorGroup, tint === 'sky' && styles.selectorGroupSky]}>
       <Text style={styles.selectorLabel}>
         {label}
         {required && <Text style={styles.requiredMark}> *</Text>}
@@ -378,28 +554,46 @@ function SelectorGroup({
       <View style={[styles.selectorRow, wrap && styles.selectorRowWrap]}>
         {options.map((opt, i) => {
           const selected = value === opt;
-          const bg = selected
-            ? (chipColors ? chipColors[i] : colors.primary)
-            : colors.surface;
           return (
             <TouchableOpacity
-              key={opt}
+              key={`${opt}-${i}`}
               style={[
-                styles.chip,
+                styles.chipTouch,
                 size === 'large' && styles.chipLarge,
                 wrap && styles.chipWrap,
-                { backgroundColor: bg, borderColor: selected ? bg : colors.border },
+                selected && styles.chipTouchSelected,
               ]}
               onPress={() => onChange(opt)}
+              accessibilityRole="button"
+              accessibilityLabel={`${label} ${labels[i]}`}
+              accessibilityState={{ selected }}
               activeOpacity={0.7}
             >
-              <Text style={[
-                styles.chipText,
-                size === 'large' && styles.chipTextLarge,
-                selected && styles.chipTextSelected,
-              ]}>
-                {labels[i]}
-              </Text>
+              {selected ? (
+                <LinearGradient
+                  colors={['#00A6F4', '#155DFC']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.chip}
+                >
+                  <Text style={[
+                    styles.chipText,
+                    size === 'large' && styles.chipTextLarge,
+                    styles.chipTextSelected,
+                  ]}>
+                    {labels[i]}
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.chip}>
+                  <Text style={[
+                    styles.chipText,
+                    size === 'large' && styles.chipTextLarge,
+                  ]}>
+                    {labels[i]}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -410,83 +604,274 @@ function SelectorGroup({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  scroll:    { padding: spacing.lg, paddingBottom: spacing.xxl * 2 },
+  scroll:    { paddingHorizontal: 0, paddingTop: 0, paddingBottom: 128 },
 
-  title:    { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.textPrimary, marginBottom: spacing.xs },
-  subtitle: { fontSize: fontSize.md, color: colors.textSecondary, marginBottom: spacing.lg },
+  header: {
+    minHeight: 109,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 20,
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F4',
+  },
+  title:    { fontSize: 24, lineHeight: 32, fontWeight: fontWeight.semibold, color: colors.textPrimary },
+  subtitle: { marginTop: 4, fontSize: 14, lineHeight: 20, color: '#79716B', fontWeight: fontWeight.regular },
 
   // Slot tabs
-  slotTabRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
-  slotTab: {
-    flex: 1, alignItems: 'center', paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md, backgroundColor: colors.surface,
-    borderWidth: 1, borderColor: colors.border,
+  slotSection: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 24,
+    backgroundColor: colors.background,
   },
-  slotTabActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  slotTabDone:   { borderColor: colors.success },
-  slotTabIcon:   { fontSize: 16, marginBottom: 2 },
-  slotTabLabel:  { fontSize: fontSize.md, color: colors.textSecondary, fontWeight: fontWeight.semibold },
+  sectionLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: fontWeight.semibold,
+    color: '#44403B',
+    marginBottom: 16,
+  },
+  slotTabRow: { flexDirection: 'row', gap: 12 },
+  slotTabTouch: {
+    flex: 1,
+    minHeight: 107,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: '#F5F5F4',
+    shadowColor: '#000000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
+    overflow: 'hidden',
+  },
+  slotTab: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    minHeight: 107,
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+  },
+  slotTabDone:   { borderColor: '#A7F3D0', backgroundColor: '#ECFDF5' },
+  slotMark: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 9,
+    backgroundColor: '#F5F5F4',
+  },
+  slotMarkActive: { backgroundColor: 'rgba(255,255,255,0.2)' },
+  slotMarkDone: { backgroundColor: '#D1FAE5' },
+  markCanvas: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  sparkVertical: { position: 'absolute', width: 2, height: 15, borderRadius: 1 },
+  sparkHorizontal: { position: 'absolute', width: 15, height: 2, borderRadius: 1 },
+  sparkDot: { position: 'absolute', width: 3, height: 3, borderRadius: 1.5 },
+  sparkDotTopRight: { right: 2, top: 3 },
+  sparkDotBottomLeft: { left: 2, bottom: 3 },
+  sunCore: { width: 8, height: 8, borderRadius: 4 },
+  sunRay: { position: 'absolute', width: 2, height: 5, borderRadius: 1 },
+  sunRaySide: { position: 'absolute', width: 5, height: 2, borderRadius: 1 },
+  sunRayTop: { top: 0, left: 9 },
+  sunRayBottom: { bottom: 0, left: 9 },
+  sunRayLeft: { left: 0, top: 9 },
+  sunRayRight: { right: 0, top: 9 },
+  sunRayTopLeft: { top: 2, left: 3, transform: [{ rotate: '-45deg' }] },
+  sunRayTopRight: { top: 2, right: 3, transform: [{ rotate: '45deg' }] },
+  sunRayBottomLeft: { bottom: 2, left: 3, transform: [{ rotate: '45deg' }] },
+  sunRayBottomRight: { bottom: 2, right: 3, transform: [{ rotate: '-45deg' }] },
+  eveningPill: { width: 8, height: 16, borderRadius: 5 },
+  eveningPillSmall: { position: 'absolute', width: 3, height: 12, right: 4, opacity: 0.5 },
+  slotTabLabel:  { fontSize: 16, lineHeight: 24, color: colors.textPrimary, fontWeight: fontWeight.semibold },
   slotTabLabelActive: { color: colors.textInverse },
-  slotTabHint:   { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 2 },
-  slotTabHintActive:  { color: 'rgba(255,255,255,0.7)' },
+  slotTabHint:   { fontSize: 12, lineHeight: 16, color: '#79716B', marginTop: 3, fontWeight: fontWeight.regular },
+  slotTabHintActive:  { color: 'rgba(255,255,255,0.8)' },
 
   // Done banner
   doneBanner: {
-    backgroundColor: '#F0FBF4', borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-    marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.success,
+    backgroundColor: '#ECFDF5', borderRadius: 13,
+    paddingHorizontal: 14, paddingVertical: 10,
+    marginHorizontal: 24,
+    marginBottom: 14,
+    borderWidth: 1, borderColor: '#A7F3D0',
   },
-  doneBannerText: { fontSize: fontSize.sm, color: colors.success, textAlign: 'center' },
+  doneBannerText: { fontSize: 12, lineHeight: 17, color: '#00865A', textAlign: 'center', fontWeight: fontWeight.semibold },
 
   // Selector group
-  selectorGroup: { marginBottom: spacing.lg },
-  selectorLabel: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.textPrimary, marginBottom: spacing.sm },
+  selectorGroup: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 24,
+    backgroundColor: colors.background,
+  },
+  selectorGroupSky: { backgroundColor: 'rgba(240,249,255,0.32)' },
+  selectorLabel: { fontSize: 14, lineHeight: 20, fontWeight: fontWeight.semibold, color: '#44403B', marginBottom: 16 },
   requiredMark:  { color: colors.error },
-  selectorRow:     { flexDirection: 'row', gap: spacing.xs },
+  selectorRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   selectorRowWrap: { flexWrap: 'wrap' },
 
   // Generic chip
-  chip: {
-    flex: 1, paddingVertical: 12,
-    borderRadius: borderRadius.md, alignItems: 'center', borderWidth: 1,
+  chipTouch: {
+    flex: 0,
+    flexGrow: 0,
+    height: 44,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: '#F5F5F4',
+    overflow: 'hidden',
   },
-  chipLarge:   { paddingVertical: 16 },
-  chipWrap:    { flex: 0, minWidth: '13%', flexGrow: 1 },
-  chipText:    { fontSize: fontSize.xs, color: colors.textSecondary, fontWeight: fontWeight.medium, textAlign: 'center' },
-  chipTextLarge:    { fontSize: fontSize.sm },
-  chipTextSelected: { color: colors.textInverse, fontWeight: fontWeight.bold },
+  chipTouchSelected: {
+    borderColor: '#00A6F4',
+    shadowColor: '#00A6F4',
+    shadowOpacity: 0.14,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  chip: {
+    flex: 1,
+    minHeight: 42,
+    paddingHorizontal: 17,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chipLarge:   { height: 44 },
+  chipWrap:    { flex: 0, flexGrow: 0 },
+  chipText:    { fontSize: 14, lineHeight: 20, color: '#57534E', fontWeight: fontWeight.regular, textAlign: 'center' },
+  chipTextLarge:    { fontSize: 14 },
+  chipTextSelected: { color: colors.textInverse, fontWeight: fontWeight.semibold },
 
   // Clothing
+  clothingSection: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 24,
+    backgroundColor: 'rgba(255,251,235,0.32)',
+  },
   clothingHeader: {
     flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between', marginBottom: 4,
+    justifyContent: 'space-between',
   },
-  clothingHint:  { fontSize: fontSize.xs, color: colors.textTertiary, marginBottom: spacing.sm },
   cloBadge: {
-    backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.full,
+    backgroundColor: colors.accentSurface, borderRadius: borderRadius.full,
     paddingHorizontal: spacing.sm, paddingVertical: 3,
   },
-  cloBadgeText: { fontSize: fontSize.xs, color: colors.textSecondary, fontWeight: fontWeight.semibold },
+  cloBadgeText: { fontSize: fontSize.xs, color: colors.accent, fontWeight: fontWeight.semibold },
   clothingGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   clothingChip: {
-    paddingHorizontal: spacing.sm, paddingVertical: 8,
+    paddingHorizontal: 12, paddingVertical: 9,
     borderRadius: borderRadius.full, borderWidth: 1,
-    borderColor: colors.border, backgroundColor: colors.surface,
+    borderColor: '#F5F5F4', backgroundColor: colors.surface,
   },
-  clothingChipOn:     { backgroundColor: colors.primary, borderColor: colors.primary },
-  clothingChipText:   { fontSize: fontSize.sm, color: colors.textSecondary, fontWeight: fontWeight.medium },
-  clothingChipTextOn: { color: colors.textInverse, fontWeight: fontWeight.bold },
+  clothingChipOn:     { backgroundColor: colors.accent, borderColor: colors.accent },
+  clothingChipText:   { fontSize: 13, lineHeight: 18, color: '#57534E', fontWeight: fontWeight.regular },
+  clothingChipTextOn: { color: colors.textInverse, fontWeight: fontWeight.semibold },
+  accordionSection: {
+    marginTop: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F5F5F4',
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
+  },
+  accordionHeader: {
+    minHeight: 60,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  accordionLabel: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.textPrimary,
+    fontWeight: fontWeight.semibold,
+  },
+  accordionChevronMark: {
+    width: 9,
+    height: 9,
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: '#A8A29E',
+    transform: [{ rotate: '45deg' }],
+  },
+  accordionChevronMarkOpen: {
+    transform: [{ rotate: '-135deg' }],
+  },
+  accordionBody: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F4',
+  },
 
   // Optional
-  optionalToggle:     { paddingVertical: spacing.md },
-  optionalToggleText: { fontSize: fontSize.md, color: colors.textSecondary, fontWeight: fontWeight.medium },
+  optionalToggle:     {
+    marginHorizontal: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: '#F5F5F4',
+    marginTop: 2,
+    marginBottom: 18,
+  },
+  optionalToggleText: { fontSize: 13, lineHeight: 18, color: colors.textSecondary, fontWeight: fontWeight.medium },
   optionalSection:    { borderTopWidth: 1, borderTopColor: colors.divider, paddingTop: spacing.md },
 
   // Submit
-  submitButton: {
-    backgroundColor: colors.primary, borderRadius: borderRadius.lg,
-    paddingVertical: 16, alignItems: 'center', marginTop: spacing.xl,
+  submitTouch: {
+    marginHorizontal: 24,
+    marginTop: 24,
+    marginBottom: 16,
+    borderRadius: 24,
   },
-  submitButtonDisabled: { backgroundColor: colors.surfaceElevated },
-  submitText: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.textInverse },
+  submitButton: {
+    minHeight: 88,
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: '#E7E5E4',
+    shadowColor: '#000000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
+  },
+  submitButtonLoading: { justifyContent: 'center' },
+  submitButtonDisabled: { opacity: 0.58 },
+  submitText: { fontSize: 17, lineHeight: 24, fontWeight: fontWeight.semibold, color: colors.textPrimary },
+  submitTextDisabled: { color: colors.mutedButtonText },
+  submitArrowBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F5F5F4',
+  },
+  submitArrowBoxDisabled: { backgroundColor: '#EFEFEF' },
+  chevronMark: {
+    width: 9,
+    height: 9,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    transform: [{ rotate: '45deg' }],
+  },
 });

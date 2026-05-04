@@ -1,141 +1,83 @@
-// ============================================================
-// Home Screen — light minimal redesign (v2.0)
-// · Noto Serif 감성 헤드라인
-// · 날씨 카드 + 시간별 바 차트
-// · 추천 옷차림 카드
-// · 피드백 CTA 카드
-// · 3슬롯 하단 바
-// ============================================================
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
+  Pressable,
   RefreshControl,
+  ScrollView,
   StatusBar,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  colors, spacing, fontSize, fontWeight, borderRadius,
-  FEEL_HEADLINE, FEEL_LABELS,
-  CLOTHING_ITEM_DEFS,
+  borderRadius,
+  colors,
+  fontSize,
+  fontWeight,
+  layout,
+  spacing,
 } from '../theme';
-import type { Wardrobe } from '../types';
 import { useAuthStore } from '../stores/authStore';
-import { useWeatherStore } from '../stores/weatherStore';
 import { useFeedbackStore } from '../stores/feedbackStore';
-import { getDefaultSlot } from '../utils/formulas';
-import { COLD_START_THRESHOLD } from '../utils/constants';
-import type { FeedbackSlot } from '../types';
+import { useWeatherStore } from '../stores/weatherStore';
+import { formatTemp } from '../utils/formulas';
+import { refreshHomeScreenData } from '../utils/homeRefresh';
+import {
+  getWeatherGuideRows,
+  getWeatherReadyCards,
+  type WeatherGuideRow,
+  type WeatherReadyCard,
+} from '../utils/weatherCopy';
 
-// ---- 기온 구간별 권장 CLO 범위 ----
-// CLO 목표값: 더울수록 낮게, 추울수록 높게
-function targetCloRange(temp: number): { min: number; max: number } {
-  if (temp < 0)  return { min: 1.20, max: 99  };
-  if (temp < 5)  return { min: 0.80, max: 1.30 };
-  if (temp < 10) return { min: 0.55, max: 0.90 };
-  if (temp < 15) return { min: 0.35, max: 0.60 };
-  if (temp < 20) return { min: 0.20, max: 0.40 };
-  if (temp < 25) return { min: 0.09, max: 0.25 };
-  return                { min: 0.00, max: 0.15 };
-}
+const isDevLocalUser = (userId: string | undefined) => __DEV__ && !!userId && userId.startsWith('dev-');
 
-// ---- 옷장 기반 상의 추천 ----
-// 1. 사용자 옷장에서 목표 CLO 범위에 맞는 아이템을 착용 횟수 기준으로 정렬
-// 2. 없으면 전체 카탈로그에서 가장 가까운 아이템 폴백
-function getOutfitFromWardrobe(
-  temp: number,
-  wardrobe: Wardrobe,
-): { top: string; bottom: string; outer: string | null } {
-  const { min, max } = targetCloRange(temp);
-
-  // 옷장에 있는 아이템 (착용 기록 있는 것)
-  const ownedItems = CLOTHING_ITEM_DEFS.filter(
-    def => (wardrobe[def.id as keyof Wardrobe] ?? 0) > 0
-  );
-
-  // 목표 CLO 범위에 드는 아이템 중 착용 횟수가 많은 것 우선
-  const candidates = ownedItems
-    .filter(def => def.clo >= min && def.clo <= max)
-    .sort((a, b) =>
-      (wardrobe[b.id as keyof Wardrobe] ?? 0) - (wardrobe[a.id as keyof Wardrobe] ?? 0)
-    );
-
-  let topLabel: string;
-  if (candidates.length > 0) {
-    // 상위 2개 아이템을 조합해서 표시
-    const pick = candidates.slice(0, 2).map(c => c.label);
-    topLabel = pick.join(' + ');
-  } else if (ownedItems.length > 0) {
-    // 범위 내 없으면 CLO가 가장 가까운 옷장 아이템
-    const midClo = (min + max) / 2;
-    const closest = ownedItems.reduce((prev, curr) =>
-      Math.abs(curr.clo - midClo) < Math.abs(prev.clo - midClo) ? curr : prev
-    );
-    topLabel = closest.label;
-  } else {
-    // 옷장 데이터 없음 → 카탈로그 기반 폴백
-    topLabel = getDefaultTop(temp);
-  }
-
-  return {
-    top:    topLabel,
-    bottom: getDefaultBottom(temp),
-    outer:  getDefaultOuter(temp),
-  };
-}
-
-function getDefaultTop(temp: number): string {
-  if (temp < 5)  return '두꺼운 니트';
-  if (temp < 10) return '캐시미어 니트';
-  if (temp < 15) return '얇은 니트';
-  if (temp < 20) return '얇은 셔츠';
-  return '반팔 티셔츠';
-}
-
-function getDefaultBottom(temp: number): string {
-  if (temp < 5)  return '기모 바지';
-  if (temp < 10) return '울 슬랙스';
-  if (temp < 15) return '슬랙스';
-  return '면바지';
-}
-
-function getDefaultOuter(temp: number): string | null {
-  if (temp < 5)  return '롱패딩';
-  if (temp < 10) return '울 코트';
-  if (temp < 15) return '가벼운 코트';
-  if (temp < 20) return '가디건';
-  return null;
-}
-
-// ---- 신뢰도 → 퍼센트 ----
-function toConfidencePct(c: string): number | null {
-  if (c === 'high')   return 85;
-  if (c === 'medium') return 65;
-  if (c === 'low')    return 45;
-  return null;
-}
-
-const SLOT_LABELS: Record<FeedbackSlot, string> = {
-  morning:   '아침',
-  afternoon: '낮',
-  evening:   '저녁',
+const FIGMA_HOME_WEATHER = {
+  temp: 22,
+  feels_like: 20,
+  humidity: 45,
+  wind_speed: 2,
+  weather_desc: '맑음',
+  uv_index: 8,
+  precipitation_1h: 0,
 };
 
-// ---- 메트릭 셀 ----
-function MetricCell({ label, value }: { label: string; value: string }) {
+const FIGMA_HOME_GUIDE_ROWS: WeatherGuideRow[] = [
+  {
+    label: '아침 (06-10시)',
+    message: '조금 쌀쌀하게 느껴질 가능성이 높아요',
+    tone: 'morning',
+  },
+  {
+    label: '낮 (10-18시)',
+    message: '조금 덥게 느껴질 가능성이 높아요',
+    tone: 'day',
+  },
+  {
+    label: '저녁 (18-22시)',
+    message: '많이 쌀쌀하게 느껴질 가능성이 높아요',
+    tone: 'night',
+  },
+];
+
+function getTodayLabel(date: Date = new Date()) {
+  return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+}
+
+function SunMark() {
   return (
-    <View style={styles.metricCell}>
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={styles.metricValue}>{value}</Text>
+    <View style={styles.sunMark} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <View style={[styles.sunRay, styles.sunRayTop]} />
+      <View style={[styles.sunRay, styles.sunRayRight]} />
+      <View style={[styles.sunRay, styles.sunRayBottom]} />
+      <View style={[styles.sunRay, styles.sunRayLeft]} />
+      <View style={styles.sunCore} />
     </View>
   );
 }
 
 export default function HomeScreen({ navigation }: any) {
-  const { user } = useAuthStore();
+  const { user, session } = useAuthStore();
   const {
     data: weather,
     fetchWeather,
@@ -146,88 +88,69 @@ export default function HomeScreen({ navigation }: any) {
     todayFeedback,
     prediction,
     feedbackCount,
-    fetchTodayStatus,
     fetchTodayPrediction,
+    fetchTodayStatus,
     fetchFeedbackCount,
   } = useFeedbackStore();
 
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const LAT = useMemo(() => user?.default_lat  || 37.5665,  [user?.default_lat]);
-  const LNG = useMemo(() => user?.default_lng  || 126.9780, [user?.default_lng]);
+  const lat = useMemo(() => user?.default_lat || 37.5665, [user?.default_lat]);
+  const lng = useMemo(() => user?.default_lng || 126.978, [user?.default_lng]);
+  const figmaParityMode = isDevLocalUser(session?.user.id);
+
+  const refreshHomeData = useCallback(
+    async (force = false) => {
+      if (figmaParityMode) {
+        await fetchTodayPrediction();
+        return;
+      }
+
+      await refreshHomeScreenData(
+        {
+          fetchWeather,
+          fetchTodayStatus,
+          fetchFeedbackCount,
+          fetchTodayPrediction,
+        },
+        { lat, lng, force }
+      );
+    },
+    [
+      fetchWeather,
+      fetchTodayStatus,
+      fetchFeedbackCount,
+      fetchTodayPrediction,
+      lat,
+      lng,
+      figmaParityMode,
+    ]
+  );
 
   useEffect(() => {
-    Promise.all([
-      fetchWeather(LAT, LNG),
-      fetchTodayStatus(),
-      fetchTodayPrediction(),
-      fetchFeedbackCount(),
-    ]);
-  }, [LAT, LNG]);
+    void refreshHomeData();
+  }, [refreshHomeData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([
-      fetchWeather(LAT, LNG, true),
-      fetchTodayStatus(),
-      fetchTodayPrediction(),
-      fetchFeedbackCount(),
-    ]);
+    await refreshHomeData(true);
     setRefreshing(false);
   };
 
-  const current    = weather?.current;
+  const current = figmaParityMode ? FIGMA_HOME_WEATHER : weather?.current;
   const todayDaily = weather?.daily?.[0];
-  const hourly     = weather?.hourly || [];
 
-  const currentSlot: FeedbackSlot = getDefaultSlot(new Date().getHours());
-  const doneSlotsSet = new Set(todayFeedback.map(f => f.feedback_slot));
-  const allSlotsDone = doneSlotsSet.size >= 3;
-
-  // 헤드라인용 슬롯 예측: 현재 → 오후 → 오전 → 저녁
-  const primaryForecast = useMemo(() => {
-    if (!prediction) return null;
-    return prediction[currentSlot]
-      ?? prediction.afternoon
-      ?? prediction.morning
-      ?? prediction.evening;
-  }, [prediction, currentSlot]);
-
-  const headlineScore = primaryForecast
-    ? Math.round(Math.max(1, Math.min(7, primaryForecast.feel)))
-    : null;
-  const confidencePct = primaryForecast ? toConfidencePct(primaryForecast.confidence) : null;
-
-  // 시간별 바 차트 데이터 (6·9·12·15·18·21시)
-  const chartData = useMemo(() => {
-    if (!hourly.length) return [];
-    const currentHour = new Date().getHours();
-    const targets = [6, 9, 12, 15, 18, 21];
-    const points = targets.map(targetHour => {
-      const today = new Date(); today.setHours(targetHour, 0, 0, 0);
-      const ts = today.getTime() / 1000;
-      const h = hourly.reduce((a, b) =>
-        Math.abs(a.dt - ts) < Math.abs(b.dt - ts) ? a : b
-      );
-      return { hour: targetHour, temp: h.temp };
-    });
-    // 현재 시각에 가장 가까운 바
-    const closestHour = points.reduce((prev, curr) =>
-      Math.abs(curr.hour - currentHour) < Math.abs(prev.hour - currentHour) ? curr : prev
-    ).hour;
-    return points.map(p => ({ ...p, isCurrent: p.hour === closestHour }));
-  }, [hourly]);
-
-  const chartTemps = chartData.map(d => d.temp);
-  const chartMin = chartTemps.length ? Math.min(...chartTemps) : 0;
-  const chartMax = chartTemps.length ? Math.max(...chartTemps) : 1;
-  const BAR_MAX_H = 52;
-  const BAR_MIN_H = 12;
-
-  const outfit = current
-    ? getOutfitFromWardrobe(current.temp, user?.wardrobe ?? {})
-    : null;
-  const pop    = todayDaily ? Math.round(todayDaily.pop * 100) : null;
+  const precipitation = figmaParityMode ? null : todayDaily ? Math.round(todayDaily.pop * 100) : null;
+  const guideRows = figmaParityMode ? FIGMA_HOME_GUIDE_ROWS : getWeatherGuideRows(prediction);
+  const readyCards = getWeatherReadyCards({
+    uvIndex: current?.uv_index,
+    humidity: current?.humidity,
+    precipitationProbability: precipitation,
+    windSpeed: current?.wind_speed,
+  });
+  const summaryMetaText = figmaParityMode
+    ? '서울특별시 · 4월 11일'
+    : `${user?.climate_zone || '서울특별시'} · ${getTodayLabel()}`;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -235,276 +158,765 @@ export default function HomeScreen({ navigation }: any) {
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textTertiary} />
-        }
+        refreshControl={(
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.textTertiary}
+          />
+        )}
       >
-        {/* ── 헤드라인 ── */}
-        <View style={styles.heroSection}>
-          <Text style={styles.heroCaption}>오늘의 체감</Text>
-          <Text style={styles.heroHeadline}>
-            {headlineScore
-              ? FEEL_HEADLINE[headlineScore]
-              : weatherLoading
-                ? '날씨 불러오는 중...'
-                : weatherError
-                  ? '날씨 정보를\n불러오지 못했어요'
-                  : '체감 예측을\n준비 중이에요'}
-          </Text>
-          {confidencePct !== null && (
-            <View style={styles.confidenceRow}>
-              <View style={styles.confidenceLine} />
-              <Text style={styles.confidenceText}>예측 신뢰도 {confidencePct}%</Text>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryTopRow}>
+            <View style={styles.summaryHeaderCopy}>
+              <Text style={styles.summaryMeta}>{summaryMetaText}</Text>
+              <Text style={styles.summaryTitle}>날씨 어시스턴트</Text>
             </View>
-          )}
-          {!prediction && !weatherLoading && (
-            <View style={styles.confidenceRow}>
-              <View style={styles.confidenceLine} />
-              <Text style={styles.confidenceText}>
-                피드백 {feedbackCount}/{COLD_START_THRESHOLD} 누적 중
+            <SunMark />
+          </View>
+
+          {current ? (
+            <>
+              <View style={styles.summaryTempRow}>
+                <Text style={styles.summaryTemp}>{formatTemp(current.temp)}</Text>
+                <Text style={styles.summaryCondition}>{current.weather_desc}</Text>
+              </View>
+              <Text style={styles.summaryStats}>
+                체감 {formatTemp(current.feels_like)} · 습도 {current.humidity}% · 바람 {current.wind_speed.toFixed(1)}m/s
               </Text>
-            </View>
+            </>
+          ) : (
+            <Text style={styles.errorDescription}>
+              {weatherLoading ? '날씨를 불러오는 중이에요.' : weatherError || '날씨 정보를 준비 중이에요.'}
+            </Text>
           )}
         </View>
 
-        {/* ── 날씨 카드 ── */}
         {current ? (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('WeatherDetail')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.cardCaption}>현재 날씨</Text>
-
-            <View style={styles.weatherTop}>
-              <Text style={styles.weatherTemp}>{Math.round(current.temp)}°</Text>
-              <View style={styles.weatherRight}>
-                <Text style={styles.weatherDesc}>{current.weather_desc}</Text>
-                {todayDaily && (
-                  <Text style={styles.weatherMinMax}>
-                    최저 {Math.round(todayDaily.temp_min)}° · 최고 {Math.round(todayDaily.temp_max)}°
-                  </Text>
-                )}
+          <View style={styles.outfitGuideCard}>
+            <View style={styles.guideHeaderRow}>
+              <View style={styles.guideIconWrap}>
+                <ShirtMark />
               </View>
+              <Text style={styles.guideTitle}>오늘 옷차림 가이드</Text>
             </View>
 
-            <View style={styles.divider} />
-
-            <View style={styles.metricsGrid}>
-              <View style={styles.metricsRow}>
-                <MetricCell label="습도"   value={`${current.humidity}%`} />
-                <View style={styles.metricVDivider} />
-                <MetricCell label="강수"   value={pop !== null ? `${pop}%` : '-'} />
-              </View>
-              <View style={styles.divider} />
-              <View style={styles.metricsRow}>
-                <MetricCell label="바람"   value={`${current.wind_speed.toFixed(1)}m/s`} />
-                <View style={styles.metricVDivider} />
-                <MetricCell label="자외선" value="낮음" />
-              </View>
-            </View>
-
-            {chartData.length > 0 && (
-              <>
-                <View style={styles.divider} />
-                <Text style={styles.cardCaption}>시간별 기온</Text>
-                <View style={styles.barChart}>
-                  {chartData.map(({ hour, temp, isCurrent }) => {
-                    const ratio = chartMax > chartMin
-                      ? (temp - chartMin) / (chartMax - chartMin)
-                      : 0.5;
-                    const barH = Math.round(BAR_MIN_H + ratio * (BAR_MAX_H - BAR_MIN_H));
-                    return (
-                      <View key={hour} style={styles.barItem}>
-                        {isCurrent && (
-                          <Text style={styles.barTempLabel}>{Math.round(temp)}°</Text>
-                        )}
-                        <View style={[styles.bar, { height: barH }, isCurrent && styles.barCurrent]} />
-                        <Text style={styles.barHourLabel}>{hour}시</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              </>
-            )}
-          </TouchableOpacity>
-        ) : weatherError ? (
-          <View style={[styles.card, styles.errorCard]}>
-            <Text style={styles.errorText}>날씨 데이터를 불러오지 못했습니다</Text>
-            <Text style={styles.errorDetail}>{weatherError}</Text>
-          </View>
-        ) : null}
-
-        {/* ── 추천 옷차림 카드 ── */}
-        {outfit && (
-          <View style={styles.card}>
-            <View style={styles.outfitCardHeader}>
-              <Text style={styles.cardCaption}>추천 옷차림</Text>
-              {user?.wardrobe && Object.keys(user.wardrobe).length > 0 && (
-                <Text style={styles.wardrobeHint}>내 옷장 기반</Text>
-              )}
-            </View>
-            {[
-              { label: '상의',   value: outfit.top    },
-              { label: '하의',   value: outfit.bottom  },
-              ...(outfit.outer ? [{ label: '아우터', value: outfit.outer }] : []),
-            ].map(({ label, value }, i, arr) => (
+            {guideRows.map((row) => (
               <View
-                key={label}
-                style={[styles.outfitRow, i < arr.length - 1 && styles.outfitRowDivider]}
+                key={row.label}
+                style={[
+                  styles.guideBand,
+                  row.tone === 'morning' && styles.guideBandMorning,
+                  row.tone === 'day' && styles.guideBandDay,
+                  row.tone === 'night' && styles.guideBandNight,
+                ]}
               >
-                <Text style={styles.outfitLabel}>{label}</Text>
-                <Text style={styles.outfitValue}>{value}</Text>
+                <View style={styles.guideBandTimeWrap}>
+                  <Text
+                    style={[
+                      styles.guideBandLabel,
+                      row.tone === 'morning' && styles.guideBandLabelMorning,
+                      row.tone === 'day' && styles.guideBandLabelDay,
+                      row.tone === 'night' && styles.guideBandLabelNight,
+                    ]}
+                  >
+                    {row.label}
+                  </Text>
+                </View>
+                <Text style={styles.guideBandMessage}>{row.message}</Text>
               </View>
             ))}
           </View>
-        )}
+        ) : null}
 
-        {/* ── 피드백 CTA 카드 ── */}
-        {allSlotsDone ? (
-          <View style={styles.card}>
-            <Text style={styles.cardCaption}>오늘 체감 기록 완료</Text>
-            <Text style={styles.ctaDoneText}>모든 시간대 입력됐어요</Text>
+        <Pressable
+          onPress={() => navigation.navigate('Feedback')}
+          accessibilityRole="button"
+          accessibilityLabel="오늘 체감 기록하기"
+          accessibilityHint="날씨 체감 기록 화면으로 이동합니다"
+          style={styles.recordPromptCard}
+        >
+          <View>
+            <Text style={styles.recordPromptTitle}>오늘 체감 기록하기</Text>
+            <Text style={styles.recordPromptSubtitle}>날씨가 어떻게 느껴지셨나요?</Text>
           </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('Feedback')}
-            activeOpacity={0.7}
+          <View style={styles.recordArrowWrap}>
+            <ChevronMark color="#28231F" />
+          </View>
+        </Pressable>
+
+        <View style={styles.prepSection}>
+          <Text style={styles.prepSectionTitle}>오늘은 이런 준비가 좋아요</Text>
+          <View style={styles.prepCards}>
+            {readyCards.map((card) => (
+              <ReadyCard key={card.title} {...card} />
+            ))}
+          </View>
+        </View>
+
+        <Pressable
+          onPress={() => navigation.navigate('WeatherDetail')}
+          accessibilityRole="button"
+          accessibilityLabel="다른 지역 날씨"
+          accessibilityHint="다른 지역의 날씨와 옷차림을 확인합니다"
+        >
+          <LinearGradient
+            colors={['#00A6F4', '#155DFC']}
+            start={{ x: 0.08, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.regionButton}
           >
-            <Text style={styles.cardCaption}>오늘 어떻게 느끼셨나요?</Text>
-            <View style={styles.ctaRow}>
-              <Text style={styles.ctaTitle}>오늘 체감 기록하기</Text>
-              <View style={styles.ctaArrowCircle}>
-                <Text style={styles.ctaArrow}>›</Text>
+            <View style={styles.regionButtonCopy}>
+              <View style={styles.regionTitleRow}>
+                <RegionPinMark />
+                <Text style={styles.regionButtonTitle}>다른 지역 날씨</Text>
               </View>
+              <Text style={styles.regionButtonSubtitle}>다른 지역 날씨와 옷차림 확인하기</Text>
             </View>
-          </TouchableOpacity>
-        )}
+            <View style={styles.regionArrowWrap}>
+              <ChevronMark color={colors.textInverse} />
+            </View>
+          </LinearGradient>
+        </Pressable>
 
-        {/* ── 3슬롯 하단 ── */}
-        {prediction ? (
-          <View style={styles.slotRow}>
-            {(['morning', 'afternoon', 'evening'] as FeedbackSlot[]).map(slot => {
-              const f = prediction[slot];
-              const score = Math.round(Math.max(1, Math.min(7, f.feel)));
-              const isDone    = doneSlotsSet.has(slot);
-              const isCurrent = slot === currentSlot;
-              return (
-                <View key={slot} style={[styles.slotCard, isCurrent && styles.slotCardCurrent]}>
-                  <Text style={styles.slotLabel}>{SLOT_LABELS[slot]}</Text>
-                  <Text style={styles.slotFeelLabel}>{FEEL_LABELS[score]}</Text>
-                  {f.temp !== null && (
-                    <Text style={styles.slotTemp}>{Math.round(f.temp)}°</Text>
-                  )}
-                  {isDone && <Text style={styles.slotDone}>✓</Text>}
-                </View>
-              );
-            })}
-          </View>
-        ) : (
-          <View style={[styles.card, styles.coldStartCard]}>
-            <Text style={styles.coldStartTitle}>나만의 예측 준비 중</Text>
-            <Text style={styles.coldStartDesc}>
-              피드백 {COLD_START_THRESHOLD}회 누적 시 활성화 ({feedbackCount}/{COLD_START_THRESHOLD})
-            </Text>
-          </View>
-        )}
+        {weatherError ? (
+          <SectionCard>
+            <Text style={styles.errorTitle}>날씨 데이터를 가져오지 못했습니다</Text>
+            <Text style={styles.errorDescription}>{weatherError}</Text>
+          </SectionCard>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+function SectionCard({ children }: { children: React.ReactNode }) {
+  return <View style={styles.sectionCard}>{children}</View>;
+}
+
+function ReadyCard({
+  title,
+  detail,
+  tone,
+}: {
+  title: string;
+  detail: string;
+  tone: 'warm' | 'cool' | 'purple' | 'green';
+}) {
+  const toneMap = {
+    warm: {
+      card: '#FFFBEB',
+      border: 'rgba(254,230,133,0.5)',
+      iconBg: '#FEF3C6',
+      dot: '#E17100',
+    },
+    cool: {
+      card: '#F8FAFC',
+      border: 'rgba(226,232,240,0.5)',
+      iconBg: '#F1F5F9',
+      dot: '#45556C',
+    },
+    purple: {
+      card: '#F5F3FF',
+      border: 'rgba(221,214,255,0.5)',
+      iconBg: '#EDE9FE',
+      dot: '#7F22FE',
+    },
+    green: {
+      card: '#ECFDF5',
+      border: 'rgba(164,244,207,0.5)',
+      iconBg: '#D0FAE5',
+      dot: '#009966',
+    },
+  } as const;
+
+  const palette = toneMap[tone];
+
+  return (
+    <View style={[styles.readyCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
+      <View style={[styles.readyIconWrap, { backgroundColor: palette.iconBg }]}>
+        <ReadyIcon tone={tone} />
+      </View>
+      <View style={styles.readyCopy}>
+        <Text style={styles.readyTitle}>{title}</Text>
+        <View style={styles.readyDetailRow}>
+          <View style={[styles.readyDot, { backgroundColor: palette.dot }]} />
+          <Text style={styles.readyDetail}>{detail}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function ReadyIcon({ tone }: { tone: WeatherReadyCard['tone'] }) {
+  if (tone === 'warm') {
+    return (
+      <View style={styles.readySun}>
+        <View style={styles.readySunCore} />
+        <View style={[styles.readySunRay, styles.readySunRayTop]} />
+        <View style={[styles.readySunRay, styles.readySunRayBottom]} />
+        <View style={[styles.readySunRaySide, styles.readySunRayLeft]} />
+        <View style={[styles.readySunRaySide, styles.readySunRayRight]} />
+      </View>
+    );
+  }
+
+  if (tone === 'cool') {
+    return (
+      <View style={styles.readyWind}>
+        <View style={[styles.readyWindLine, styles.readyWindLineLong]} />
+        <View style={[styles.readyWindLine, styles.readyWindLineMid]} />
+        <View style={[styles.readyWindLine, styles.readyWindLineShort]} />
+      </View>
+    );
+  }
+
+  if (tone === 'purple') {
+    return (
+      <View style={styles.readyUmbrella}>
+        <View style={styles.readyUmbrellaCanopy} />
+        <View style={styles.readyUmbrellaStem} />
+        <View style={styles.readyUmbrellaHook} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.readyLeaf}>
+      <View style={styles.readyLeafDrop} />
+      <View style={styles.readyLeafStem} />
+    </View>
+  );
+}
+
+function ShirtMark() {
+  return (
+    <View style={styles.shirtMark}>
+      <View style={styles.shirtCollarLeft} />
+      <View style={styles.shirtCollarRight} />
+      <View style={styles.shirtBody} />
+      <View style={styles.shirtSleeveLeft} />
+      <View style={styles.shirtSleeveRight} />
+    </View>
+  );
+}
+
+function RegionPinMark() {
+  return (
+    <View style={styles.regionPinMark}>
+      <View style={styles.regionPinRing} />
+      <View style={styles.regionPinDot} />
+      <View style={styles.regionPinStem} />
+    </View>
+  );
+}
+
+function ChevronMark({ color }: { color: string }) {
+  return (
+    <View
+      style={[
+        styles.chevronMark,
+        {
+          borderTopColor: color,
+          borderRightColor: color,
+        },
+      ]}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  scroll:    { padding: spacing.lg, paddingBottom: spacing.xxl * 2 },
-
-  // Hero
-  heroSection:    { paddingVertical: spacing.lg, marginBottom: spacing.md },
-  heroCaption:    { fontSize: fontSize.sm, color: colors.textSecondary, marginBottom: spacing.sm, letterSpacing: 0.3 },
-  heroHeadline:   {
-    fontFamily: 'NotoSerifKR_400Regular',
-    fontSize:   fontSize.display,
-    color:      colors.textPrimary,
-    lineHeight: Math.round(fontSize.display * 1.25),
-    marginBottom: spacing.md,
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAF9',
   },
-  confidenceRow:  { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  confidenceLine: { width: 32, height: 1, backgroundColor: colors.textTertiary },
-  confidenceText: { fontSize: fontSize.sm, color: colors.textTertiary },
-
-  // Card
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius:    borderRadius.xl,
-    padding:         spacing.lg,
-    marginBottom:    spacing.md,
+  scroll: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 80,
+    gap: 0,
   },
-  cardCaption: { fontSize: fontSize.sm, color: colors.textSecondary, marginBottom: spacing.sm },
-  divider:     { height: 1, backgroundColor: colors.divider, marginVertical: spacing.md },
-
-  // Weather top
-  weatherTop:    { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: spacing.xs },
-  weatherTemp:   { fontSize: 64, fontWeight: fontWeight.bold, color: colors.textPrimary, lineHeight: 72 },
-  weatherRight:  { alignItems: 'flex-end' },
-  weatherDesc:   { fontSize: fontSize.lg, color: colors.textPrimary, fontWeight: fontWeight.medium },
-  weatherMinMax: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
-
-  // Metrics grid
-  metricsGrid:    {},
-  metricsRow:     { flexDirection: 'row', alignItems: 'stretch' },
-  metricCell:     { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.sm },
-  metricVDivider: { width: 1, backgroundColor: colors.divider, marginHorizontal: spacing.md },
-  metricLabel:    { fontSize: fontSize.sm, color: colors.textTertiary },
-  metricValue:    { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.textPrimary },
-
-  // Bar chart
-  barChart:      { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 88, marginTop: spacing.xs },
-  barItem:       { alignItems: 'center', flex: 1 },
-  barTempLabel:  { fontSize: fontSize.xs, color: colors.textSecondary, marginBottom: 4 },
-  bar:           { width: 20, borderRadius: 4, backgroundColor: colors.surfaceSecondary },
-  barCurrent:    { backgroundColor: colors.textSecondary },
-  barHourLabel:  { fontSize: 10, color: colors.textTertiary, marginTop: 4 },
-
-  // Error card
-  errorCard:   { backgroundColor: '#FFF5F5' },
-  errorText:   { fontSize: fontSize.md, color: colors.error, marginBottom: spacing.xs },
-  errorDetail: { fontSize: fontSize.xs, color: colors.textTertiary },
-
-  // Outfit card
-  outfitCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
-  wardrobeHint:     { fontSize: fontSize.xs, color: colors.textTertiary },
-  outfitRow:       { flexDirection: 'row', alignItems: 'baseline', paddingVertical: spacing.sm },
-  outfitRowDivider:{ borderBottomWidth: 1, borderBottomColor: colors.divider },
-  outfitLabel:     { fontSize: fontSize.sm, color: colors.textTertiary, width: 48 },
-  outfitValue:     { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: colors.textPrimary, flex: 1 },
-
-  // CTA card
-  ctaRow:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.xs },
-  ctaTitle:       { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: colors.textPrimary },
-  ctaDoneText:    { fontSize: fontSize.md, color: colors.textTertiary },
-  ctaArrowCircle: {
-    width: 32, height: 32, borderRadius: 16,
-    backgroundColor: colors.surfaceSecondary,
-    alignItems: 'center', justifyContent: 'center',
+  summaryCard: {
+    height: 174,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F4',
+    paddingHorizontal: 24,
+    paddingTop: 5,
   },
-  ctaArrow: { fontSize: 22, color: colors.textSecondary, lineHeight: 26 },
-
-  // 3-slot row
-  slotRow:        { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
-  slotCard:       {
-    flex: 1, backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl, padding: spacing.md,
+  summaryTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  summaryHeaderCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  summaryMeta: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#79716B',
+    fontWeight: fontWeight.regular,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    lineHeight: 28,
+    color: '#1C1917',
+    fontWeight: fontWeight.semibold,
+  },
+  sunMark: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: [{ rotate: '1.75deg' }],
+  },
+  sunCore: {
+    width: 14,
+    height: 14,
+    borderRadius: 999,
+    backgroundColor: '#FF9300',
+  },
+  sunRay: {
+    position: 'absolute',
+    width: 3,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#FF9300',
+  },
+  sunRayTop: {
+    top: 1,
+  },
+  sunRayRight: {
+    right: 1,
+    transform: [{ rotate: '90deg' }],
+  },
+  sunRayBottom: {
+    bottom: 1,
+  },
+  sunRayLeft: {
+    left: 1,
+    transform: [{ rotate: '90deg' }],
+  },
+  summaryTempRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 6,
+  },
+  summaryTemp: {
+    fontSize: 60,
+    lineHeight: 60,
+    color: '#1C1917',
+    fontWeight: fontWeight.bold,
+  },
+  summaryCondition: {
+    marginLeft: 12,
+    fontSize: 24,
+    lineHeight: 32,
+    color: '#A6A09B',
+    fontWeight: fontWeight.regular,
+  },
+  summaryStats: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#57534D',
+  },
+  outfitGuideCard: {
+    width: '88%',
+    maxWidth: 390,
+    alignSelf: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E7E5E4',
+    padding: 16,
+    marginTop: 24,
+    marginBottom: 21,
+    minHeight: 276,
+    overflow: 'hidden',
+    shadowColor: '#E7E5E4',
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3,
+  },
+  guideHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 18,
+  },
+  guideIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shirtMark: {
+    width: 22,
+    height: 22,
     alignItems: 'center',
   },
-  slotCardCurrent: { backgroundColor: colors.surfaceSecondary },
-  slotLabel:      { fontSize: fontSize.xs, color: colors.textTertiary, marginBottom: spacing.xs },
-  slotFeelLabel:  { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.textPrimary, marginBottom: 2 },
-  slotTemp:       { fontSize: fontSize.sm, color: colors.textSecondary },
-  slotDone:       { fontSize: fontSize.xs, color: colors.success, marginTop: 2 },
-
-  // Cold start
-  coldStartCard:  { alignItems: 'center' },
-  coldStartTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.textPrimary, marginBottom: 4 },
-  coldStartDesc:  { fontSize: fontSize.sm, color: colors.textTertiary },
+  shirtBody: {
+    position: 'absolute',
+    left: 6,
+    top: 7,
+    width: 10,
+    height: 12,
+    borderRadius: 3,
+    backgroundColor: '#766D63',
+  },
+  shirtSleeveLeft: {
+    position: 'absolute',
+    left: 1,
+    top: 6,
+    width: 8,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#766D63',
+    transform: [{ rotate: '-24deg' }],
+  },
+  shirtSleeveRight: {
+    position: 'absolute',
+    right: 1,
+    top: 6,
+    width: 8,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#766D63',
+    transform: [{ rotate: '24deg' }],
+  },
+  shirtCollarLeft: {
+    position: 'absolute',
+    left: 8,
+    top: 5,
+    width: 4,
+    height: 4,
+    borderRadius: 1,
+    backgroundColor: '#F5F5F4',
+    transform: [{ rotate: '35deg' }],
+    zIndex: 2,
+  },
+  shirtCollarRight: {
+    position: 'absolute',
+    right: 8,
+    top: 5,
+    width: 4,
+    height: 4,
+    borderRadius: 1,
+    backgroundColor: '#F5F5F4',
+    transform: [{ rotate: '-35deg' }],
+    zIndex: 2,
+  },
+  guideTitle: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#1C1917',
+    fontWeight: fontWeight.semibold,
+  },
+  guideSubtitle: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 15,
+    color: '#9A9288',
+  },
+  guideBand: {
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 10,
+    minHeight: 61,
+    justifyContent: 'center',
+  },
+  guideBandMorning: {
+    backgroundColor: '#F0F9FF',
+    borderColor: 'rgba(184,230,254,0.5)',
+  },
+  guideBandDay: {
+    backgroundColor: '#FFF2F0',
+    borderColor: 'rgba(255,242,240,0.5)',
+  },
+  guideBandNight: {
+    backgroundColor: '#F0F1FF',
+    borderColor: '#F0F1FF',
+  },
+  guideBandTimeWrap: {
+    marginBottom: 4,
+  },
+  guideBandLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: fontWeight.semibold,
+  },
+  guideBandLabelMorning: {
+    color: '#2176A8',
+  },
+  guideBandLabelDay: {
+    color: '#0069A8',
+  },
+  guideBandLabelNight: {
+    color: '#0069A8',
+  },
+  guideBandMessage: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#292524',
+    fontWeight: fontWeight.medium,
+  },
+  guideHeadlineCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(254,230,133,0.5)',
+    backgroundColor: '#FFFBEB',
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  guideHeadlineEyebrow: {
+    fontSize: fontSize.sm,
+    lineHeight: 18,
+    color: '#7B3306',
+    fontWeight: fontWeight.semibold,
+    marginBottom: 8,
+  },
+  guideHeadlineText: {
+    fontSize: fontSize.md,
+    lineHeight: 24,
+    color: colors.primaryLight,
+  },
+  recordPromptCard: {
+    width: '88%',
+    maxWidth: 390,
+    alignSelf: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#E7E5E4',
+    minHeight: 100,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+    marginBottom: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000000',
+    shadowOpacity: 0.1,
+    shadowRadius: 25,
+    shadowOffset: { width: 0, height: 20 },
+    elevation: 7,
+  },
+  recordPromptTitle: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#1C1917',
+    fontWeight: fontWeight.semibold,
+    marginBottom: 4,
+  },
+  recordPromptSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#57534D',
+  },
+  recordArrowWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 14,
+    backgroundColor: '#F5F5F4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prepSection: {
+    width: '88%',
+    maxWidth: 390,
+    alignSelf: 'center',
+    marginBottom: 31,
+  },
+  prepSectionTitle: {
+    fontSize: 20,
+    lineHeight: 28,
+    color: '#1C1917',
+    fontWeight: fontWeight.semibold,
+    marginBottom: 20,
+  },
+  prepCards: {
+    gap: 12,
+  },
+  readyCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    minHeight: 82,
+    paddingHorizontal: 17,
+    paddingVertical: 17,
+    flexDirection: 'row',
+    gap: 16,
+    alignItems: 'flex-start',
+    shadowColor: '#000000',
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  readyIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  readySun: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  readySunCore: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E17100' },
+  readySunRay: { position: 'absolute', width: 2, height: 5, borderRadius: 1, backgroundColor: '#E17100' },
+  readySunRaySide: { position: 'absolute', width: 5, height: 2, borderRadius: 1, backgroundColor: '#E17100' },
+  readySunRayTop: { top: 0, left: 9 },
+  readySunRayBottom: { bottom: 0, left: 9 },
+  readySunRayLeft: { left: 0, top: 9 },
+  readySunRayRight: { right: 0, top: 9 },
+  readyWind: { width: 21, height: 18, justifyContent: 'center' },
+  readyWindLine: { height: 2, borderRadius: 1, backgroundColor: '#45556C', marginVertical: 2 },
+  readyWindLineLong: { width: 18 },
+  readyWindLineMid: { width: 14, marginLeft: 4 },
+  readyWindLineShort: { width: 10, marginLeft: 1 },
+  readyUmbrella: { width: 21, height: 20, alignItems: 'center' },
+  readyUmbrellaCanopy: { width: 18, height: 9, borderTopLeftRadius: 10, borderTopRightRadius: 10, backgroundColor: '#7F22FE', marginTop: 3 },
+  readyUmbrellaStem: { width: 2, height: 8, backgroundColor: '#7F22FE' },
+  readyUmbrellaHook: { width: 7, height: 4, borderBottomWidth: 2, borderRightWidth: 2, borderColor: '#7F22FE', borderBottomRightRadius: 4, marginLeft: 5, marginTop: -1 },
+  readyLeaf: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  readyLeafDrop: { width: 12, height: 15, borderRadius: 8, borderTopRightRadius: 2, backgroundColor: '#009966', transform: [{ rotate: '35deg' }] },
+  readyLeafStem: { position: 'absolute', width: 2, height: 8, borderRadius: 1, backgroundColor: '#D0FAE5', transform: [{ rotate: '35deg' }] },
+  readyCopy: {
+    flex: 1,
+  },
+  readyTitle: {
+    fontSize: 16,
+    lineHeight: 22,
+    color: '#1C1917',
+    fontWeight: fontWeight.medium,
+    marginBottom: 6,
+  },
+  readyDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  readyDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+  },
+  readyDetail: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#57534D',
+  },
+  regionButton: {
+    width: '88%',
+    maxWidth: 390,
+    alignSelf: 'center',
+    minHeight: 100,
+    borderRadius: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+    marginBottom: 80,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    overflow: 'hidden',
+    shadowColor: '#00A6F4',
+    shadowOpacity: 0.3,
+    shadowRadius: 25,
+    shadowOffset: { width: 0, height: 20 },
+    elevation: 8,
+  },
+  regionButtonCopy: {
+    flex: 1,
+    paddingRight: 16,
+  },
+  regionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  regionPinMark: {
+    width: 17,
+    height: 18,
+    alignItems: 'center',
+  },
+  regionPinRing: {
+    position: 'absolute',
+    top: 1,
+    width: 12,
+    height: 12,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: colors.textInverse,
+  },
+  regionPinDot: {
+    position: 'absolute',
+    top: 5,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.textInverse,
+  },
+  regionPinStem: {
+    position: 'absolute',
+    bottom: 1,
+    width: 8,
+    height: 8,
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: colors.textInverse,
+    transform: [{ rotate: '45deg' }],
+  },
+  regionButtonTitle: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.textInverse,
+    fontWeight: fontWeight.semibold,
+  },
+  regionButtonSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 8,
+  },
+  regionArrowWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chevronMark: {
+    width: 9,
+    height: 9,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    transform: [{ rotate: '45deg' }],
+  },
+  sectionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  errorTitle: {
+    fontSize: fontSize.md,
+    lineHeight: 22,
+    color: '#DC2626',
+    fontWeight: fontWeight.semibold,
+    marginBottom: 4,
+  },
+  errorDescription: {
+    fontSize: fontSize.sm,
+    lineHeight: 20,
+    color: colors.textSecondary,
+  },
 });

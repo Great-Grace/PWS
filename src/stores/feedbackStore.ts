@@ -18,11 +18,12 @@ import {
   featuresToArray,
   updateWeights,
   computePerceptronFeel,
-  getConfidenceFromCount,
   initWeights,
 } from '../utils/formulas';
+import { resolvePredictionConfidence } from '../utils/prediction';
 import { useWeatherStore } from './weatherStore';
 import { useAuthStore } from './authStore';
+import { logSafeError } from '../utils/safeLog';
 
 // ---- 로컬 예측 타입 (온디바이스 계산 결과) ----
 export interface SlotForecast {
@@ -86,6 +87,10 @@ const SLOT_CONFIG = [
   { slot: 'evening'   as FeedbackSlot, targetHour: 18, weightKey: 'weight_evening'   as const },
 ];
 
+function isDevLocalUser(userId: string | undefined) {
+  return __DEV__ && !!userId && userId.startsWith('dev-');
+}
+
 export const useFeedbackStore = create<FeedbackState>((set, get) => ({
   todayFeedback:       [],
   prediction:          null,
@@ -101,6 +106,10 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
     try {
       const userId = useAuthStore.getState().session?.user.id;
       if (!userId) return;
+      if (isDevLocalUser(userId)) {
+        set({ todayFeedback: [] });
+        return;
+      }
       const today = getPwsDate();
       const { data, error } = await supabase
         .from('feedback_entries')
@@ -112,7 +121,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
       if (error) throw error;
       set({ todayFeedback: (data ?? []) as FeedbackEntry[] });
     } catch (error) {
-      console.error('Fetch today feedback error:', error);
+      logSafeError('Fetch today feedback error:', error);
     } finally {
       set({ isLoading: false });
     }
@@ -130,15 +139,16 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
       const result: Partial<LocalPrediction> = {};
 
       for (const { slot, targetHour, weightKey } of SLOT_CONFIG) {
-        const slotCount = get().feedbackCountBySlot[slot];
-        const confidence = getConfidenceFromCount(slotCount);
-
         // 가중치 벡터 (없으면 초기값)
         const rawW   = user[weightKey] as number[] | null;
         const weights = rawW ? new Float32Array(rawW) : initWeights();
 
         // hourly 예보에서 슬롯 시각 데이터 찾기
         const hourlyEntry = weather ? findHourlyForSlot(weather.hourly, targetHour) : null;
+        const confidence = resolvePredictionConfidence(
+          get().feedbackCountBySlot[slot],
+          hourlyEntry != null,
+        );
 
         if (!hourlyEntry) {
           result[slot] = { feel: 4.0, confidence, temp: null, humidity: null };
@@ -165,7 +175,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
 
       set({ prediction: result as LocalPrediction });
     } catch (error) {
-      console.error('Fetch prediction error:', error);
+      logSafeError('Fetch prediction error:', error);
     }
   },
 
@@ -175,6 +185,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
     try {
       const authUser = useAuthStore.getState().session?.user;
       if (!authUser) throw new Error('Not authenticated');
+      const isLocalDev = isDevLocalUser(authUser.id);
 
       const today        = getPwsDate();
       const now          = new Date();
@@ -204,7 +215,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
         record.actual_temp     = current.temp;
         record.actual_humidity = current.humidity;
         record.actual_wind     = current.wind_speed;
-        record.actual_precip   = 0; // TODO: OpenWeatherMap rain.1h 연결 시 교체
+        record.actual_precip   = current.precipitation_1h ?? 0;
         if (current.tmrt_api !== undefined) {
           record.actual_tmrt_api = current.tmrt_api;
           record.tmrt_corrected  = current.tmrt_api + (input.sun_exposure ?? 0) * 8.0;
@@ -236,9 +247,11 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
       }
 
       // ---- Supabase INSERT ----
-      const { error } = await supabase
-        .from('feedback_entries')
-        .insert(record);
+      const { error } = isLocalDev
+        ? { error: null }
+        : await supabase
+          .from('feedback_entries')
+          .insert(record);
 
       if (error) throw error;
 
@@ -263,10 +276,12 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
         const updatedW = Array.from(weights);
 
         // Supabase 백그라운드 sync (await 하지 않음)
-        supabase.from('users').update({
-          [weightKey]:       updatedW,
-          weight_updated_at: now.toISOString(),
-        }).eq('id', userProfile.id).then();
+        if (!isLocalDev) {
+          supabase.from('users').update({
+            [weightKey]:       updatedW,
+            weight_updated_at: now.toISOString(),
+          }).eq('id', userProfile.id).then();
+        }
 
         // authStore 로컬 즉시 반영
         useAuthStore.setState(state => ({
@@ -293,7 +308,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
         get().fetchFeedbackCount(),
       ]);
     } catch (error) {
-      console.error('Submit feedback error:', error);
+      logSafeError('Submit feedback error:', error);
       throw error;
     } finally {
       set({ isSaving: false });
@@ -304,6 +319,10 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
   fetchHistory: async (startDate: string, endDate: string) => {
     const userId = useAuthStore.getState().session?.user.id;
     if (!userId) return [];
+    if (isDevLocalUser(userId)) {
+      set({ recentEntries: [] });
+      return [];
+    }
     const { data, error } = await supabase
       .from('feedback_entries')
       .select('*')
@@ -324,6 +343,13 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
     try {
       const userId = useAuthStore.getState().session?.user.id;
       if (!userId) return;
+      if (isDevLocalUser(userId)) {
+        set({
+          feedbackCount: 0,
+          feedbackCountBySlot: { morning: 0, afternoon: 0, evening: 0 },
+        });
+        return;
+      }
       const { data, error } = await supabase
         .from('feedback_entries')
         .select('feedback_slot')
@@ -342,7 +368,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
         feedbackCountBySlot: bySlot,
       });
     } catch (error) {
-      console.error('Fetch count error:', error);
+      logSafeError('Fetch count error:', error);
     }
   },
 }));

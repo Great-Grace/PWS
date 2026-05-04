@@ -1,19 +1,56 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, processLock } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+import { resolveRequiredPublicEnv } from '../utils/env';
+import {
+  chunkKey,
+  parseChunkMetadata,
+  SECURE_STORE_MAX_CHUNKS,
+  splitSecureStoreValue,
+} from '../utils/secureStoreChunks';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = resolveRequiredPublicEnv(process.env, 'EXPO_PUBLIC_SUPABASE_URL');
+const supabaseAnonKey = resolveRequiredPublicEnv(process.env, 'EXPO_PUBLIC_SUPABASE_ANON_KEY');
+
+async function clearChunkedValue(key: string) {
+  await Promise.all(
+    Array.from({ length: SECURE_STORE_MAX_CHUNKS }, (_, index) =>
+      SecureStore.deleteItemAsync(chunkKey(key, index))
+    )
+  );
+}
 
 // Expo SecureStore adapter for Supabase Auth token persistence
 const ExpoSecureStoreAdapter = {
-  getItem: (key: string) => {
-    return SecureStore.getItemAsync(key);
+  getItem: async (key: string) => {
+    const value = await SecureStore.getItemAsync(key);
+    const metadata = parseChunkMetadata(value);
+    if (!metadata) return value;
+
+    const chunks = await Promise.all(
+      Array.from({ length: metadata.count }, (_, index) =>
+        SecureStore.getItemAsync(chunkKey(key, index))
+      )
+    );
+    if (chunks.some((chunk) => chunk == null)) return null;
+    return chunks.join('');
   },
-  setItem: (key: string, value: string) => {
-    return SecureStore.setItemAsync(key, value);
+  setItem: async (key: string, value: string) => {
+    await clearChunkedValue(key);
+
+    const chunks = splitSecureStoreValue(value);
+    if (chunks.length <= 1) {
+      await SecureStore.setItemAsync(key, value);
+      return;
+    }
+
+    await Promise.all(
+      chunks.map((chunk, index) => SecureStore.setItemAsync(chunkKey(key, index), chunk))
+    );
+    await SecureStore.setItemAsync(key, JSON.stringify({ chunked: true, count: chunks.length }));
   },
-  removeItem: (key: string) => {
-    return SecureStore.deleteItemAsync(key);
+  removeItem: async (key: string) => {
+    await clearChunkedValue(key);
+    await SecureStore.deleteItemAsync(key);
   },
 };
 
@@ -23,5 +60,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false, // React Native에서는 URL 기반 세션 감지 비활성화
+    lock: processLock,
   },
 });

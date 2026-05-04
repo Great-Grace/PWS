@@ -335,3 +335,11 @@ export const DISTRICT_COORDS: Record<string, { lat: number; lng: number }> = {
   '제주특별자치도 서귀포시': { lat: 33.2541, lng: 126.5600 },
   '제주특별자치도 제주시': { lat: 33.5097, lng: 126.5219 },
 };
+
+export function resolveDistrictCoords(address: string): { lat: number; lng: number } {
+  const coords = DISTRICT_COORDS[address];
+  if (!coords) {
+    throw new Error(`Unknown district coordinates: ${address}`);
+  }
+  return coords;
+}

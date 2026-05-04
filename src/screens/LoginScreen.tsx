@@ -1,22 +1,21 @@
-// ============================================================
-// Login Screen — 테스터 ID 입력 (Expo Go 테스트용)
-// ============================================================
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-  TextInput,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing, fontSize, fontWeight, borderRadius, serifFont } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { borderRadius, colors, fontSize, fontWeight, layout, spacing } from '../theme';
 import { useAuthStore } from '../stores/authStore';
+import AppDialog, { AppDialogState } from '../components/AppDialog';
 
 const TESTER_ID_REGEX = /^[a-z0-9_]{2,20}$/;
 
@@ -24,183 +23,338 @@ export default function LoginScreen() {
   const { signInWithTesterId } = useAuthStore();
   const [testerId, setTesterId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isTesterSheetVisible, setTesterSheetVisible] = useState(false);
+  const [dialog, setDialog] = useState<AppDialogState | null>(null);
+
+  const openTesterSheet = () => {
+    setTesterSheetVisible(true);
+  };
+
+  const closeTesterSheet = () => {
+    if (isLoading) return;
+    setTesterSheetVisible(false);
+  };
 
   const handleStart = async () => {
     const trimmed = testerId.trim().toLowerCase();
 
     if (!TESTER_ID_REGEX.test(trimmed)) {
-      Alert.alert(
-        '아이디 오류',
-        '영문 소문자, 숫자, 언더스코어(_)만 사용 가능하며\n2~20자로 입력해주세요.'
-      );
+      setDialog({
+        title: '아이디 오류',
+        message: '영문 소문자, 숫자, 언더스코어(_)만 사용 가능하며\n2~20자로 입력해주세요.',
+      });
       return;
     }
 
     setIsLoading(true);
     try {
       await signInWithTesterId(trimmed);
-    } catch (e: any) {
-      Alert.alert('로그인 실패', e.message || '다시 시도해주세요.');
+      setTesterSheetVisible(false);
+    } catch (error: any) {
+      setDialog({
+        title: '로그인 실패',
+        message: error.message || '잠시 후 다시 시도해주세요.',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <LinearGradient
+      colors={['#F0F9FF', '#EFF6FF', '#EEF2FF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.gradientRoot}
+    >
+      <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <KeyboardAvoidingView
-        style={styles.inner}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        {/* Hero */}
+      <View style={styles.content}>
         <View style={styles.hero}>
-          <Text style={styles.title}>나만의{'\n'}날씨</Text>
-          <Text style={styles.subtitle}>
-            같은 기온도 사람마다 다르게 느끼니까{'\n'}
-            당신만의 체감 날씨를 알려드릴게요
-          </Text>
-        </View>
-
-        {/* Features */}
-        <View style={styles.features}>
-          <FeatureItem text="체감 피드백을 학습해요" />
-          <FeatureItem text="맞춤 옷차림을 추천해요" />
-          <FeatureItem text="매일 아침 브리핑을 보내요" />
-        </View>
-
-        {/* Tester ID Input */}
-        <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>테스터 아이디</Text>
-          <TextInput
-            style={styles.input}
-            value={testerId}
-            onChangeText={setTesterId}
-            placeholder="영문 소문자·숫자·_ (2~20자)"
-            placeholderTextColor={colors.textTertiary}
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="go"
-            onSubmitEditing={handleStart}
-          />
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleStart}
-            activeOpacity={0.8}
-            disabled={isLoading}
+          <LinearGradient
+            colors={['#00A6F4', '#155DFC']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.logoMark}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.buttonText}>시작하기</Text>
-            )}
-          </TouchableOpacity>
+            <CloudMark />
+          </LinearGradient>
+          <Text style={styles.title}>날씨 체감 기록</Text>
+          <Text style={styles.subtitle}>오늘의 날씨, 나만의 체감으로 기록하세요</Text>
         </View>
 
-        <Text style={styles.notice}>
-          테스트 빌드 전용 · 입력한 아이디가 데이터 키로 사용됩니다
+        <Pressable
+          onPress={openTesterSheet}
+          accessibilityRole="button"
+          accessibilityLabel="테스터로 시작하기"
+          accessibilityHint="등록된 테스터 아이디로 앱을 시작합니다"
+          style={({ pressed }) => [styles.providerShadow, pressed && styles.providerPressed]}
+        >
+          <View style={styles.providerButton}>
+            <Text style={styles.providerMark}>T</Text>
+            <Text style={styles.providerLabel}>테스터로 시작하기</Text>
+          </View>
+        </Pressable>
+
+        <Text style={styles.legalText}>
+          사전 등록된 테스터 ID로 이용할 수 있어요{`\n`}소셜 로그인은 현재 빌드에서 제공하지 않습니다
         </Text>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </View>
+
+      <Modal
+        visible={isTesterSheetVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        navigationBarTranslucent
+        onRequestClose={closeTesterSheet}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeTesterSheet}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalKeyboard}>
+            <Pressable style={styles.modalCard} onPress={(event) => event.stopPropagation()}>
+              <Text style={styles.modalTitle}>테스터 로그인</Text>
+              <Text style={styles.modalDescription}>
+                현재 빌드는 사전 등록된 테스터 ID로만 시작할 수 있어요.
+              </Text>
+              <TextInput
+                value={testerId}
+                onChangeText={setTesterId}
+                placeholder="테스터 아이디 입력"
+                placeholderTextColor={colors.textTertiary}
+                accessibilityLabel="테스터 아이디"
+                accessibilityHint="등록된 테스터 아이디를 입력하세요"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="go"
+                onSubmitEditing={handleStart}
+                style={styles.input}
+              />
+              <Text style={styles.helperText}>등록된 ID 예: pws_dev · 영문 소문자/숫자/_ 조합 2~20자</Text>
+              <Pressable
+                onPress={handleStart}
+                disabled={isLoading}
+                accessibilityRole="button"
+                accessibilityLabel="앱 시작하기"
+                accessibilityState={{ disabled: isLoading }}
+                style={({ pressed }) => [styles.confirmShadow, pressed && styles.providerPressed]}
+              >
+                <View style={[styles.confirmButton, isLoading && styles.confirmButtonDisabled]}>
+                  {isLoading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={styles.confirmButtonText}>앱 시작하기</Text>}
+                </View>
+              </Pressable>
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
+      <AppDialog dialog={dialog} onClose={() => setDialog(null)} />
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
-function FeatureItem({ text }: { text: string }) {
+function CloudMark() {
   return (
-    <View style={styles.featureRow}>
-      <View style={styles.featureDot} />
-      <Text style={styles.featureText}>{text}</Text>
+    <View style={styles.cloudMark}>
+      <View style={styles.cloudBase} />
+      <View style={styles.cloudLobeLeft} />
+      <View style={styles.cloudLobeCenter} />
+      <View style={styles.cloudLobeRight} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  gradientRoot: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
-  inner: {
+  content: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPadding,
+    paddingTop: 87,
+    paddingBottom: 54,
   },
   hero: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 48,
+  },
+  logoMark: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    shadowColor: '#00A6F4',
+    shadowOpacity: 0.32,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 18 },
+    elevation: 6,
+  },
+  cloudMark: {
+    width: 42,
+    height: 30,
+    alignItems: 'center',
+  },
+  cloudBase: {
+    position: 'absolute',
+    left: 4,
+    right: 4,
+    bottom: 3,
+    height: 15,
+    borderRadius: 10,
+    backgroundColor: colors.textInverse,
+  },
+  cloudLobeLeft: {
+    position: 'absolute',
+    left: 7,
+    bottom: 9,
+    width: 15,
+    height: 15,
+    borderRadius: 8,
+    backgroundColor: colors.textInverse,
+  },
+  cloudLobeCenter: {
+    position: 'absolute',
+    left: 15,
+    bottom: 11,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.textInverse,
+  },
+  cloudLobeRight: {
+    position: 'absolute',
+    right: 6,
+    bottom: 8,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.textInverse,
   },
   title: {
-    fontFamily: serifFont,
-    fontSize: fontSize.display,
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: fontWeight.bold,
     color: colors.textPrimary,
-    lineHeight: Math.round(fontSize.display * 1.2),
-    marginBottom: spacing.md,
-    textAlign: 'center',
+    marginBottom: 12,
   },
   subtitle: {
-    fontSize: fontSize.md,
-    color: colors.textSecondary,
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#57534D',
     textAlign: 'center',
-    lineHeight: 22,
   },
-  features: {
-    paddingVertical: spacing.xl,
-    gap: spacing.md,
+  actionStack: {
+    gap: 12,
   },
-  featureRow: {
+  providerShadow: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  providerPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.995 }],
+  },
+  providerButton: {
+    minHeight: 64,
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#E7E5E4',
+    backgroundColor: colors.surface,
+  },
+  providerMark: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: fontWeight.bold,
+    color: colors.accent,
+  },
+  providerLabel: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: fontWeight.bold,
+    color: colors.textPrimary,
+  },
+  legalText: {
+    marginTop: 32,
+    textAlign: 'center',
+    color: '#79716B',
+    fontSize: 12,
+    lineHeight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: 'flex-end',
+  },
+  modalKeyboard: {
+    width: '100%',
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    paddingHorizontal: layout.screenPadding,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
     gap: spacing.md,
   },
-  featureDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.textTertiary,
-    marginTop: 8,
-  },
-  featureText: {
-    fontSize: fontSize.md,
+  modalTitle: {
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: fontWeight.bold,
     color: colors.textPrimary,
-    fontWeight: fontWeight.medium,
   },
-  inputSection: {
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  inputLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
+  modalDescription: {
+    fontSize: 14,
+    lineHeight: 22,
     color: colors.textSecondary,
   },
   input: {
-    backgroundColor: colors.surface,
+    height: 58,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: 14,
+    backgroundColor: colors.background,
     fontSize: fontSize.md,
     color: colors.textPrimary,
   },
-  button: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: borderRadius.lg,
+  helperText: {
+    marginTop: -6,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.textTertiary,
+  },
+  confirmShadow: {
+    marginTop: spacing.sm,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  confirmButton: {
+    height: 58,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.accent,
   },
-  buttonDisabled: {
-    opacity: 0.6,
+  confirmButtonDisabled: {
+    opacity: 0.7,
   },
-  buttonText: {
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.semibold,
-    color: '#FFFFFF',
-  },
-  notice: {
-    fontSize: fontSize.xs,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    paddingBottom: spacing.xl,
+  confirmButtonText: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: fontWeight.bold,
+    color: colors.textInverse,
   },
 });

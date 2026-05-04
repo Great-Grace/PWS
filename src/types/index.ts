@@ -23,7 +23,11 @@ export type ClothingItemId =
   | 'blazer'        // 블레이저
   | 'light_padding' // 경량 패딩
   | 'padding'       // 패딩
-  | 'heavy_coat';   // 두꺼운 코트
+  | 'heavy_coat'    // 두꺼운 코트
+  | 'shorts'        // 반바지
+  | 'pants'         // 긴바지
+  | 'slacks'        // 슬랙스
+  | 'jeans';        // 청바지
 
 // 사용자 옷장: 아이템별 착용 횟수
 export type Wardrobe = Partial<Record<ClothingItemId, number>>;
@@ -70,7 +74,7 @@ export interface FeedbackEntry {
   // Group A — Core feel (required) — 1-7 scale (v1.2)
   feel_score: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   humid_feel: 1 | 2 | 3 | 4 | 5;
-  wind_feel: 0 | 1 | 2;
+  wind_feel: 0 | 1 | 2 | 3;
 
   // Group B — Behavioural correction (required)
   clothing: 1 | 2 | 3;           // CLO 합산 기반 자동 계산
@@ -108,7 +112,7 @@ export interface FeedbackEntry {
 export interface FeedbackInput {
   feel_score: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   humid_feel: 1 | 2 | 3 | 4 | 5;
-  wind_feel: 0 | 1 | 2;
+  wind_feel: 0 | 1 | 2 | 3;
   clothing: 1 | 2 | 3;               // CLO 합산 기반 자동 계산
   clothing_items: ClothingItemId[];   // 사용자가 선택한 상의 목록
   activity: 1 | 2 | 3;
@@ -127,6 +131,7 @@ export interface CurrentWeather {
   weather_code: number;
   weather_desc: string;
   uv_index: number;
+  precipitation_1h?: number;
   tmrt_api?: number;
 }
 
@@ -139,6 +144,7 @@ export interface HourlyForecast {
   weather_code: number;
   weather_desc: string;
   pop: number; // Probability of precipitation (0–1)
+  precipitation_1h?: number;
 }
 
 export interface DailyForecast {

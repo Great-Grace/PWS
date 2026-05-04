@@ -4,12 +4,13 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import {
   View,
+  Pressable,
   Text,
   StyleSheet,
-  TouchableOpacity,
   SafeAreaView,
 } from 'react-native';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../theme';
+import { logSafeError } from '../utils/safeLog';
 
 interface Props {
   children: ReactNode;
@@ -32,7 +33,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // 프로덕션에서는 Sentry 등 에러 리포팅 서비스로 전송
-    console.error('[ErrorBoundary]', error, errorInfo);
+    logSafeError('[ErrorBoundary]', __DEV__ ? { error, errorInfo } : error);
   }
 
   handleRetry = () => {
@@ -44,19 +45,23 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <SafeAreaView style={styles.container}>
           <View style={styles.content}>
-            <Text style={styles.emoji}>😵</Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>오류</Text>
+            </View>
             <Text style={styles.title}>앗, 문제가 발생했어요</Text>
             <Text style={styles.message}>
               예상치 못한 오류가 발생했습니다.{'\n'}
               아래 버튼을 눌러 다시 시도해주세요.
             </Text>
-            <TouchableOpacity
-              style={styles.retryButton}
+            <Pressable
               onPress={this.handleRetry}
-              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="다시 시도하기"
             >
-              <Text style={styles.retryText}>다시 시도하기</Text>
-            </TouchableOpacity>
+              <View style={styles.retryButton}>
+                <Text style={styles.retryText}>다시 시도하기</Text>
+              </View>
+            </Pressable>
           </View>
         </SafeAreaView>
       );
@@ -77,9 +82,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.xl,
   },
-  emoji: {
-    fontSize: 64,
+  badge: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.accentSurface,
     marginBottom: spacing.lg,
+  },
+  badgeText: {
+    fontSize: fontSize.sm,
+    color: colors.accent,
+    fontWeight: fontWeight.bold,
   },
   title: {
     fontSize: fontSize.xxl,
@@ -96,10 +109,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   retryButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     paddingVertical: 14,
     paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.full,
   },
   retryText: {
     fontSize: fontSize.lg,

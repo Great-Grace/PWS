@@ -34,3 +34,8 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+.omx/
+.omc/
+
+# Supabase CLI local state
+supabase/.temp/

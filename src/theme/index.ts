@@ -1,31 +1,42 @@
-// PWS Design System — Light Mode
-// 미니멀하고 조용한 UI. 숫자보다 '체감'을 언어로 먼저 보여줌.
+// PWS Design System — Figma structure refined with Apple-inspired restraint.
+// The UI should feel quiet, spacious, and native before it feels decorative.
 
 export const colors = {
   // Base
-  background:      '#FFFFFF',
-  surface:         '#F5F5F5',
-  surfaceSecondary:'#EBEBEB',
-  surfaceElevated: '#EBEBEB',
-  card:            '#F5F5F5',
+  background:       '#FAFAF9',
+  surface:          '#FFFFFF',
+  surfaceSecondary: '#F4F1EC',
+  surfaceElevated:  '#FFFFFF',
+  card:             '#FFFFFF',
+  parchment:        '#FAFAF9',
+  pearl:            '#FAFAFC',
+  ink:              '#1D1D1F',
+  hairline:         '#E5E5EA',
 
-  // Primary — Monochrome
-  primary:         '#1A1A1A',
-  primaryLight:    '#3D3D3D',
+  // Primary
+  primary:         '#211E1B',
+  primaryLight:    '#3D3832',
   primaryDark:     '#000000',
+  accent:          '#0A84FF',
+  accentLight:     '#389BFF',
+  accentSecondary: '#0A84FF',
+  accentSurface:   '#EFF8FF',
+  accentBorder:    '#D9ECFA',
 
   // Text
-  textPrimary:     '#1A1A1A',
-  textSecondary:   '#8C8C8C',
-  textTertiary:    '#BBBBBB',
+  textPrimary:     '#211E1B',
+  textSecondary:   '#7D766E',
+  textTertiary:    '#9A9288',
   textInverse:     '#FFFFFF',
 
   // Utility
-  border:          '#E0E0E0',
-  divider:         '#E8E8E8',
+  border:          '#E7E2DA',
+  divider:         '#EEE8DF',
   error:           '#C0392B',
   success:         '#27AE60',
   warning:         '#E67E22',
+  mutedButton:     '#E5E5EA',
+  mutedButtonText: '#86868B',
 
   // Feel Scale (1=매우 추움 → 7=매우 더움) — 차분한 톤
   feelVeryCold:    '#5B9BD5',
@@ -49,7 +60,7 @@ export const colors = {
 export const spacing = {
   xs:  4,
   sm:  8,
-  md:  16,
+  md:  17,
   lg:  24,
   xl:  32,
   xxl: 48,
@@ -58,7 +69,7 @@ export const spacing = {
 export const borderRadius = {
   sm:   8,
   md:   12,
-  lg:   16,
+  lg:   18,
   xl:   24,
   full: 9999,
 } as const;
@@ -66,11 +77,11 @@ export const borderRadius = {
 export const fontSize = {
   xs:      11,
   sm:      13,
-  md:      15,
-  lg:      17,
+  md:      17,
+  lg:      18,
   xl:      20,
-  xxl:     28,
-  display: 48,
+  xxl:     30,
+  display: 40,
 } as const;
 
 export const fontWeight = {
@@ -79,6 +90,31 @@ export const fontWeight = {
   semibold: '600' as const,
   bold:     '700' as const,
 };
+
+export const layout = {
+  screenPadding: 24,
+  sectionGap: 32,
+  compactGap: 12,
+  touchTarget: 44,
+  bottomBarHeight: 72,
+} as const;
+
+export const shadows = {
+  card: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
+  },
+  product: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 4,
+  },
+} as const;
 
 // 체감 헤드라인용 Serif 폰트 패밀리
 export const serifFont = 'NotoSerifKR_400Regular';
@@ -143,6 +179,10 @@ export const CLOTHING_ITEM_DEFS: ClothingItemDef[] = [
   { id: 'light_padding', label: '경량 패딩',      clo: 0.55 },
   { id: 'padding',       label: '패딩',           clo: 0.90 },
   { id: 'heavy_coat',    label: '두꺼운 코트',    clo: 1.00 },
+  { id: 'shorts',        label: '반바지',         clo: 0.06 },
+  { id: 'pants',         label: '긴바지',         clo: 0.15 },
+  { id: 'slacks',        label: '슬랙스',         clo: 0.16 },
+  { id: 'jeans',         label: '청바지',         clo: 0.20 },
 ] as const;
 
 // CLO 합산 → clothing 척도 1-3 변환 임계값

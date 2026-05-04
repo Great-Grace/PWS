@@ -7,11 +7,61 @@ import { supabase } from '../config/supabase';
 import type { User } from '../types';
 import { Session } from '@supabase/supabase-js';
 import { computeBMI, computeBMIBucket, computeBMIOffset } from '../utils/formulas';
-
-const TEST_PASSWORD = process.env.EXPO_PUBLIC_TEST_PASSWORD ?? 'pws_tester_2024';
+import { normalizeTesterId, resolveDevTesterMode, resolveTesterAuthConfig } from '../utils/testerAuth';
+import { logSafeError } from '../utils/safeLog';
 
 function testerEmail(testerId: string) {
   return `${testerId.trim().toLowerCase()}@test.pws`;
+}
+
+function createDevSession(testerId: string): Session {
+  return {
+    access_token: `dev-${testerId}`,
+    refresh_token: `dev-${testerId}`,
+    expires_in: 60 * 60 * 24 * 365,
+    expires_at: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365,
+    token_type: 'bearer',
+    user: {
+      id: `dev-${testerId}`,
+      aud: 'authenticated',
+      role: 'authenticated',
+      email: testerEmail(testerId),
+      app_metadata: {},
+      user_metadata: {},
+      created_at: new Date(0).toISOString(),
+    },
+  } as Session;
+}
+
+function createDevUser(testerId: string): User {
+  return {
+    id: `dev-${testerId}`,
+    email: testerEmail(testerId),
+    nickname: testerId,
+    default_lat: 37.5665,
+    default_lng: 126.978,
+    climate_zone: '서울특별시',
+    onboarding_done: true,
+    birth_year: null,
+    gender: null,
+    age_bucket: null,
+    bmi_bucket: null,
+    bmi_offset: 0,
+    korea_baseline: 0.3,
+    notify_time: '08:00',
+    notify_enabled: false,
+    notify_outfit: false,
+    notify_rain: false,
+    expo_push_token: null,
+    is_active: true,
+    weight_morning: null,
+    weight_afternoon: null,
+    weight_evening: null,
+    weight_updated_at: null,
+    wardrobe: {},
+    created_at: new Date(0).toISOString(),
+    updated_at: new Date(0).toISOString(),
+  };
 }
 
 // ---- Store ----
@@ -55,7 +105,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await get().fetchUserProfile();
       }
     } catch (error) {
-      console.error('Auth init error:', error);
+      logSafeError('Auth init error:', error);
     } finally {
       set({ isLoading: false });
     }
@@ -75,28 +125,48 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signInWithTesterId: async (testerId: string) => {
-    const email = testerEmail(testerId);
+    const normalized = normalizeTesterId(testerId);
+    const devTesterMode = __DEV__ ? resolveDevTesterMode(normalized) : null;
+
+    if (devTesterMode) {
+      set({
+        session: createDevSession(normalized),
+        user: devTesterMode === 'strict-parity' ? createDevUser(normalized) : null,
+        isOnboarded: devTesterMode === 'strict-parity',
+        testerId: normalized,
+      });
+      return;
+    }
+
+    const { password, allowAutoSignup } = resolveTesterAuthConfig(
+      process.env.EXPO_PUBLIC_TEST_PASSWORD
+    );
+    const email = testerEmail(normalized);
 
     // 기존 테스터면 바로 로그인
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
-      password: TEST_PASSWORD,
+      password,
     });
 
     if (!signInError) {
-      set({ testerId });
+      set({ testerId: normalized });
       return;
     }
 
     // 신규 테스터면 회원가입
-    if (signInError.message.includes('Invalid login credentials')) {
+    if (allowAutoSignup && signInError.message.includes('Invalid login credentials')) {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
-        password: TEST_PASSWORD,
+        password,
       });
       if (signUpError) throw new Error(signUpError.message);
-      set({ testerId });
+      set({ testerId: normalized });
       return;
+    }
+
+    if (signInError.message.includes('Invalid login credentials')) {
+      throw new Error('등록된 테스터 계정이 아니거나 로그인 설정이 올바르지 않습니다.');
     }
 
     throw new Error(signInError.message);
@@ -126,7 +196,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
         return;
       }
-      console.error('Fetch profile error:', error);
+      logSafeError('Fetch profile error:', error);
       return;
     }
 
@@ -157,6 +227,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       id: session.user.id,
       email: session.user.email!,
       nickname: (() => {
+        if (data.nickname.trim()) return data.nickname.trim();
         if (get().testerId) return get().testerId!;
         // 앱 재시작 시 testerId가 날아간 경우, 이메일에서 역추출
         const email = session.user.email ?? '';
@@ -179,6 +250,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // DB 저장 전에 state 반영 → 스피너 없이 즉시 메인으로 이동
     set({ user: userRecord as User, isOnboarded: true });
+
+    if (__DEV__ && session.user.id.startsWith('dev-')) {
+      return;
+    }
 
     const { error } = await supabase
       .from('users')
