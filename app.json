@@ -45,8 +45,6 @@
     "updates": {
       "url": "https://u.expo.dev/5e146f93-f4ce-4364-9bb3-5deadabd01a0"
     },
-    "runtimeVersion": {
-      "policy": "sdkVersion"
-    }
+    "runtimeVersion": "exposdk:54.0.0"
   }
 }
