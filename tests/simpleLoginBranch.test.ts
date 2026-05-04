@@ -7,14 +7,20 @@ const packageSource = readFileSync('package.json', 'utf8');
 
 assert.match(
   authStoreSource,
-  /if \(__DEV__ && devTesterMode\)/,
-  'Tester branch dev login should resolve local sessions before reading Supabase password env'
+  /resolveOptionalTesterAuthConfig\(process\.env\.EXPO_PUBLIC_TEST_PASSWORD\)/,
+  'Tester branch should read the shared tester password as an optional DB-first login setting'
 );
 
 assert.ok(
-  authStoreSource.indexOf('if (__DEV__ && devTesterMode)') <
-    authStoreSource.indexOf('const { password, allowAutoSignup } = resolveTesterAuthConfig'),
-  'Simple-login dev branch must not require EXPO_PUBLIC_TEST_PASSWORD before local session creation'
+  authStoreSource.indexOf('const config = resolveOptionalTesterAuthConfig') <
+    authStoreSource.indexOf("if (__DEV__ && devTesterMode === 'simple-login')"),
+  'Existing registered testers should get a Supabase login attempt before local simple-login fallback'
+);
+
+assert.match(
+  authStoreSource,
+  /if \(__DEV__ && devTesterMode && devTesterMode !== 'simple-login'\)/,
+  'Dedicated QA IDs should still bypass DB auth before the generic tester flow'
 );
 
 assert.match(
@@ -25,8 +31,14 @@ assert.match(
 
 assert.match(
   authStoreSource,
-  /const \{ password, allowAutoSignup \} = resolveTesterAuthConfig/,
-  'Non-dev deployment path should still keep the managed Supabase tester auth branch reachable'
+  /if \(!signInError\) \{[\s\S]*set\(\{ testerId: normalized \}\);[\s\S]*return;[\s\S]*\}/,
+  'Successful Supabase login should keep the real DB-backed tester session and accumulated data'
+);
+
+assert.match(
+  authStoreSource,
+  /if \(!__DEV__ \|\| !signInError\.message\.includes\('Invalid login credentials'\)\)/,
+  'Published tester builds should not silently fall back to local data when DB credentials are invalid'
 );
 
 assert.match(

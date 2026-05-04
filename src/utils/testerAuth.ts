@@ -27,6 +27,16 @@ export function resolveTesterAuthConfig(rawPassword: string | undefined): Tester
   };
 }
 
+export function resolveOptionalTesterAuthConfig(rawPassword: string | undefined): TesterAuthConfig | null {
+  const password = rawPassword?.trim();
+  if (!password) return null;
+
+  return {
+    password,
+    allowAutoSignup: false,
+  };
+}
+
 export function normalizeTesterId(testerId: string): string {
   return testerId.trim().toLowerCase();
 }

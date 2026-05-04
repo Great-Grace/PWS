@@ -5,6 +5,7 @@ import {
   isLocalTesterSessionId,
   normalizeTesterId,
   resolveDevTesterMode,
+  resolveOptionalTesterAuthConfig,
   resolveTesterAuthConfig,
   testerSessionId,
 } from '../src/utils/testerAuth';
@@ -16,6 +17,21 @@ assert.deepEqual(
     allowAutoSignup: false,
   },
   '테스터 인증 설정은 공백 제거 후 자동 회원가입을 비활성화해야 한다'
+);
+
+assert.deepEqual(
+  resolveOptionalTesterAuthConfig('  managed-secret  '),
+  {
+    password: 'managed-secret',
+    allowAutoSignup: false,
+  },
+  '선택적 테스터 인증 설정도 공백 제거 후 DB 우선 로그인에 사용할 수 있어야 한다'
+);
+
+assert.equal(
+  resolveOptionalTesterAuthConfig(undefined),
+  null,
+  '선택적 테스터 인증 설정은 비어 있어도 로컬 fallback 판단을 위해 null을 반환해야 한다'
 );
 
 assert.throws(

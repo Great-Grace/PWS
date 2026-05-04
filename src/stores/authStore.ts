@@ -8,10 +8,11 @@ import type { User } from '../types';
 import { Session } from '@supabase/supabase-js';
 import { computeBMI, computeBMIBucket, computeBMIOffset } from '../utils/formulas';
 import {
+  TESTER_AUTH_CONFIG_ERROR,
   isLocalTesterSessionId,
   normalizeTesterId,
   resolveDevTesterMode,
-  resolveTesterAuthConfig,
+  resolveOptionalTesterAuthConfig,
   testerSessionId,
 } from '../utils/testerAuth';
 import { logSafeError } from '../utils/safeLog';
@@ -135,7 +136,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const normalized = normalizeTesterId(testerId);
     const devTesterMode = __DEV__ ? resolveDevTesterMode(normalized) : null;
 
-    if (__DEV__ && devTesterMode) {
+    if (__DEV__ && devTesterMode && devTesterMode !== 'simple-login') {
       set({
         session: createDevSession(normalized),
         user: devTesterMode === 'onboarding-qa' ? null : createDevUser(normalized),
@@ -145,38 +146,54 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    const { password, allowAutoSignup } = resolveTesterAuthConfig(
-      process.env.EXPO_PUBLIC_TEST_PASSWORD
-    );
+    const config = resolveOptionalTesterAuthConfig(process.env.EXPO_PUBLIC_TEST_PASSWORD);
     const email = testerEmail(normalized);
 
-    // 기존 테스터면 바로 로그인
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    if (config) {
+      const { password, allowAutoSignup } = config;
 
-    if (!signInError) {
-      set({ testerId: normalized });
-      return;
-    }
-
-    // 신규 테스터면 회원가입
-    if (allowAutoSignup && signInError.message.includes('Invalid login credentials')) {
-      const { error: signUpError } = await supabase.auth.signUp({
+      // 기존 테스터면 DB 계정으로 로그인해서 누적 데이터를 그대로 사용한다.
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (signUpError) throw new Error(signUpError.message);
-      set({ testerId: normalized });
+
+      if (!signInError) {
+        set({ testerId: normalized });
+        return;
+      }
+
+      // 신규 테스터면 회원가입
+      if (allowAutoSignup && signInError.message.includes('Invalid login credentials')) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (signUpError) throw new Error(signUpError.message);
+        set({ testerId: normalized });
+        return;
+      }
+
+      if (!__DEV__ || !signInError.message.includes('Invalid login credentials')) {
+        if (signInError.message.includes('Invalid login credentials')) {
+          throw new Error('등록된 테스터 계정이 아니거나 로그인 설정이 올바르지 않습니다.');
+        }
+
+        throw new Error(signInError.message);
+      }
+    }
+
+    if (__DEV__ && devTesterMode === 'simple-login') {
+      set({
+        session: createDevSession(normalized),
+        user: createDevUser(normalized),
+        isOnboarded: true,
+        testerId: normalized,
+      });
       return;
     }
 
-    if (signInError.message.includes('Invalid login credentials')) {
-      throw new Error('등록된 테스터 계정이 아니거나 로그인 설정이 올바르지 않습니다.');
-    }
-
-    throw new Error(signInError.message);
+    throw new Error(TESTER_AUTH_CONFIG_ERROR);
   },
 
   signOut: async () => {
