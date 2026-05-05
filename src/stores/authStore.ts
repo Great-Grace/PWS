@@ -153,24 +153,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { password, allowAutoSignup } = config;
 
       // 기존 테스터면 DB 계정으로 로그인해서 누적 데이터를 그대로 사용한다.
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (!signInError) {
-        set({ testerId: normalized });
+        set({ session: signInData.session, testerId: normalized });
+        await get().fetchUserProfile();
         return;
       }
 
       // 신규 테스터면 회원가입
       if (allowAutoSignup && signInError.message.includes('Invalid login credentials')) {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
         });
         if (signUpError) throw new Error(signUpError.message);
-        set({ testerId: normalized });
+        set({ session: signUpData.session, testerId: normalized });
+        await get().fetchUserProfile();
         return;
       }
 

@@ -31,8 +31,8 @@ assert.match(
 
 assert.match(
   authStoreSource,
-  /if \(!signInError\) \{[\s\S]*set\(\{ testerId: normalized \}\);[\s\S]*return;[\s\S]*\}/,
-  'Successful Supabase login should keep the real DB-backed tester session and accumulated data'
+  /if \(!signInError\) \{[\s\S]*set\(\{ session: signInData\.session, testerId: normalized \}\);[\s\S]*await get\(\)\.fetchUserProfile\(\);[\s\S]*return;[\s\S]*\}/,
+  'Successful Supabase login should synchronously enter the DB-backed tester session and accumulated data'
 );
 
 assert.match(
