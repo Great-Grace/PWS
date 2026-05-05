@@ -134,9 +134,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signInWithTesterId: async (testerId: string) => {
     const normalized = normalizeTesterId(testerId);
-    const devTesterMode = __DEV__ ? resolveDevTesterMode(normalized) : null;
+    const devTesterMode = resolveDevTesterMode(normalized);
 
-    if (__DEV__ && devTesterMode && devTesterMode !== 'simple-login') {
+    if (devTesterMode && devTesterMode !== 'simple-login') {
       set({
         session: createDevSession(normalized),
         user: devTesterMode === 'onboarding-qa' ? null : createDevUser(normalized),
@@ -174,16 +174,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      if (!__DEV__ || !signInError.message.includes('Invalid login credentials')) {
-        if (signInError.message.includes('Invalid login credentials')) {
-          throw new Error('등록된 테스터 계정이 아니거나 로그인 설정이 올바르지 않습니다.');
-        }
-
+      if (!signInError.message.includes('Invalid login credentials')) {
         throw new Error(signInError.message);
       }
     }
 
-    if (__DEV__ && devTesterMode === 'simple-login') {
+    if (devTesterMode === 'simple-login') {
       set({
         session: createDevSession(normalized),
         user: createDevUser(normalized),

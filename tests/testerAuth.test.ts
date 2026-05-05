@@ -75,25 +75,25 @@ assert.equal(
 );
 
 assert.equal(
-  isLocalTesterSessionId('dev-weatherfan', true),
+  isLocalTesterSessionId('dev-weatherfan'),
   true,
-  'dev 런타임의 로컬 테스터 세션은 Supabase 없이 앱을 사용할 수 있어야 한다'
+  '테스터 브랜치의 로컬 테스터 세션은 Expo Go 배포 번들에서도 Supabase 없이 앱을 사용할 수 있어야 한다'
 );
 
 assert.equal(
-  isLocalTesterSessionId('dev-weatherfan', false),
+  isLocalTesterSessionId('120f5699-b96c-476f-85b9-26f7f6a35c90'),
   false,
-  '배포 런타임에서는 로컬 테스터 세션 판정을 하지 않아야 한다'
+  '실제 Supabase UUID 세션은 로컬 테스터 세션으로 오인하면 안 된다'
 );
 
 assert.equal(
-  isFigmaParitySessionId('dev-pws_dev', true),
+  isFigmaParitySessionId('dev-pws_dev'),
   true,
   'pws_dev만 Figma parity 고정 데이터를 사용해야 한다'
 );
 
 assert.equal(
-  isFigmaParitySessionId('dev-weatherfan', true),
+  isFigmaParitySessionId('dev-weatherfan'),
   false,
   '일반 simple-login 닉네임은 Figma parity 고정 데이터를 사용하면 안 된다'
 );

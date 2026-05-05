@@ -1,8 +1,6 @@
 export const TESTER_AUTH_CONFIG_ERROR =
   '테스터 로그인 설정이 비어 있습니다. 관리자에게 문의해주세요.';
 
-declare const __DEV__: boolean;
-
 export interface TesterAuthConfig {
   password: string;
   allowAutoSignup: boolean;
@@ -45,16 +43,12 @@ export function testerSessionId(testerId: string): string {
   return `${LOCAL_TESTER_SESSION_PREFIX}${normalizeTesterId(testerId)}`;
 }
 
-function isDevRuntime(): boolean {
-  return typeof __DEV__ !== 'undefined' && __DEV__;
+export function isLocalTesterSessionId(userId: string | undefined): boolean {
+  return !!userId && userId.startsWith(LOCAL_TESTER_SESSION_PREFIX);
 }
 
-export function isLocalTesterSessionId(userId: string | undefined, devRuntime = isDevRuntime()): boolean {
-  return devRuntime && !!userId && userId.startsWith(LOCAL_TESTER_SESSION_PREFIX);
-}
-
-export function isFigmaParitySessionId(userId: string | undefined, devRuntime = isDevRuntime()): boolean {
-  return devRuntime && userId === testerSessionId(FIGMA_PARITY_TESTER_ID);
+export function isFigmaParitySessionId(userId: string | undefined): boolean {
+  return userId === testerSessionId(FIGMA_PARITY_TESTER_ID);
 }
 
 export function resolveDevTesterMode(testerId: string): DevTesterMode {

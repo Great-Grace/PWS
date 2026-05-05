@@ -12,14 +12,14 @@ assert.match(
 );
 
 assert.ok(
-  authStoreSource.indexOf('const config = resolveOptionalTesterAuthConfig') <
-    authStoreSource.indexOf("if (__DEV__ && devTesterMode === 'simple-login')"),
+  authStoreSource.indexOf('resolveOptionalTesterAuthConfig(process.env.EXPO_PUBLIC_TEST_PASSWORD)') <
+    authStoreSource.indexOf("if (devTesterMode === 'simple-login')"),
   'Existing registered testers should get a Supabase login attempt before local simple-login fallback'
 );
 
 assert.match(
   authStoreSource,
-  /if \(__DEV__ && devTesterMode && devTesterMode !== 'simple-login'\)/,
+  /if \(devTesterMode && devTesterMode !== 'simple-login'\)/,
   'Dedicated QA IDs should still bypass DB auth before the generic tester flow'
 );
 
@@ -37,8 +37,14 @@ assert.match(
 
 assert.match(
   authStoreSource,
-  /if \(!__DEV__ \|\| !signInError\.message\.includes\('Invalid login credentials'\)\)/,
-  'Published tester builds should not silently fall back to local data when DB credentials are invalid'
+  /if \(!signInError\.message\.includes\('Invalid login credentials'\)\)/,
+  'Network and non-credential auth errors should still surface instead of local fallback'
+);
+
+assert.match(
+  authStoreSource,
+  /if \(devTesterMode === 'simple-login'\) \{[\s\S]*session: createDevSession\(normalized\)/,
+  'Expo Go published tester bundles should fallback locally when no registered DB credentials match'
 );
 
 assert.match(
