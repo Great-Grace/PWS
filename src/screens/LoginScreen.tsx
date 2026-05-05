@@ -109,9 +109,19 @@ export default function LoginScreen() {
         navigationBarTranslucent
         onRequestClose={closeTesterSheet}
       >
-        <Pressable style={styles.modalOverlay} onPress={closeTesterSheet}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalKeyboard}>
-            <Pressable style={styles.modalCard} onPress={(event) => event.stopPropagation()}>
+        <View style={styles.modalOverlay}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="테스터 로그인 닫기"
+            style={StyleSheet.absoluteFill}
+            onPress={closeTesterSheet}
+          />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            pointerEvents="box-none"
+            style={styles.modalKeyboard}
+          >
+            <View style={styles.modalCard}>
               <Text style={styles.modalTitle}>테스터 로그인</Text>
               <Text style={styles.modalDescription}>
                 현재 빌드는 사전 등록된 테스터 ID로만 시작할 수 있어요.
@@ -142,9 +152,9 @@ export default function LoginScreen() {
                   {isLoading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={styles.confirmButtonText}>앱 시작하기</Text>}
                 </View>
               </Pressable>
-            </Pressable>
+            </View>
           </KeyboardAvoidingView>
-        </Pressable>
+        </View>
       </Modal>
       <AppDialog dialog={dialog} onClose={() => setDialog(null)} />
       </SafeAreaView>

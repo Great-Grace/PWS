@@ -30,4 +30,15 @@ assert.equal(
   'Login should disclose unsupported social login without promising a future release'
 );
 
+assert.equal(
+  loginSource.includes('onPress={(event) => event.stopPropagation()}'),
+  false,
+  'Tester login sheet should not rely on nested Pressable propagation because iOS can swallow the start button tap'
+);
+
+assert.ok(
+  /<KeyboardAvoidingView[\s\S]*pointerEvents="box-none"[\s\S]*<View style=\{styles\.modalCard\}/.test(loginSource),
+  'Tester login sheet card should sit above the backdrop without wrapping the start button in another Pressable'
+);
+
 console.log('loginCopy test passed');
