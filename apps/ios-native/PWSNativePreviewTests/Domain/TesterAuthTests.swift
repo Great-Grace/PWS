@@ -7,7 +7,7 @@ final class TesterAuthTests: XCTestCase {
 
         XCTAssertEqual(auth.normalizedTesterId(" TaeWoo "), "taewoo")
         XCTAssertEqual(auth.testerEmail(for: " TaeWoo "), "taewoo@test.pws")
-        XCTAssertEqual(auth.localSessionId(for: " TaeWoo "), "local-tester-taewoo")
+        XCTAssertEqual(auth.localSessionId(for: " TaeWoo "), "dev-taewoo")
     }
 }
 
