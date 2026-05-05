@@ -72,6 +72,14 @@ function createDevUser(testerId: string): User {
   };
 }
 
+function createTesterFallbackUser(testerId: string, userId: string, email: string): User {
+  return {
+    ...createDevUser(testerId),
+    id: userId,
+    email,
+  };
+}
+
 // ---- Store ----
 interface AuthState {
   session: Session | null;
@@ -159,8 +167,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
 
       if (!signInError) {
-        set({ session: signInData.session, testerId: normalized });
-        await get().fetchUserProfile();
+        const session = signInData.session;
+        set({
+          session,
+          user: session ? createTesterFallbackUser(normalized, session.user.id, email) : null,
+          isOnboarded: true,
+          testerId: normalized,
+        });
+        void get().fetchUserProfile();
         return;
       }
 
@@ -171,8 +185,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           password,
         });
         if (signUpError) throw new Error(signUpError.message);
-        set({ session: signUpData.session, testerId: normalized });
-        await get().fetchUserProfile();
+        const session = signUpData.session;
+        set({
+          session,
+          user: session ? createTesterFallbackUser(normalized, session.user.id, email) : null,
+          isOnboarded: true,
+          testerId: normalized,
+        });
+        void get().fetchUserProfile();
         return;
       }
 
