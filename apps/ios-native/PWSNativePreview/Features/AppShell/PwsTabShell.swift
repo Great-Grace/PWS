@@ -87,25 +87,26 @@ struct PwsTabShell: View {
                     environment: environment,
                     isLoading: isAuthenticating,
                     errorMessage: authErrorMessage
-                ) { testerId in
+                ) { email, password in
                     isAuthenticating = true
                     authErrorMessage = nil
                     Task {
                         do {
-                            let remoteSession = try await environment.authClient.signInTester(testerId: testerId)
+                            let remoteSession = try await environment.authClient.signInWithPassword(email: email, password: password)
+                            let fallbackTesterId = testerIdForSession(email: email)
                             await MainActor.run {
                                 isAuthenticating = false
                                 withAnimation(.snappy) {
                                     session = PWSSession(
                                         remoteSession: remoteSession,
-                                        fallbackTesterId: testerId,
+                                        fallbackTesterId: fallbackTesterId,
                                         testerAuth: environment.testerAuth
                                     )
                                 }
                             }
                             await refreshRemoteRuntime(for: PWSSession(
                                 remoteSession: remoteSession,
-                                fallbackTesterId: testerId,
+                                fallbackTesterId: fallbackTesterId,
                                 testerAuth: environment.testerAuth
                             ))
                         } catch {
@@ -238,6 +239,11 @@ struct PwsTabShell: View {
             runtimeErrorMessage = accountDeletionErrorMessage
         }
     }
+
+    private func testerIdForSession(email: String) -> String {
+        environment.testerAuth.testerId(fromEmail: email)
+            ?? email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
 }
 
 private let runtimeLoadErrorMessage = "실시간 데이터를 불러오지 못했습니다. 네트워크와 로그인 상태를 확인해주세요."
@@ -353,10 +359,12 @@ struct PWSSession: Equatable {
     }
 
     init(remoteSession: NativeSupabaseSession, fallbackTesterId: String, testerAuth: TesterAuth) {
-        self.testerId = testerAuth.normalizedTesterId(fallbackTesterId)
-        self.testerEmail = testerAuth.testerEmail(for: fallbackTesterId)
+        let remoteEmail = remoteSession.userEmail?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let sessionTesterId = testerAuth.testerId(fromEmail: remoteEmail) ?? testerAuth.normalizedTesterId(fallbackTesterId)
+        self.testerId = sessionTesterId
+        self.testerEmail = remoteEmail?.isEmpty == false ? remoteEmail! : testerAuth.testerEmail(for: sessionTesterId)
         let remoteUserId = remoteSession.userId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        self.localSessionId = remoteUserId.isEmpty ? testerAuth.localSessionId(for: fallbackTesterId) : remoteUserId
+        self.localSessionId = remoteUserId.isEmpty ? testerAuth.localSessionId(for: sessionTesterId) : remoteUserId
     }
 
     init(restoredRemoteSession: NativeSupabaseSession, fallbackTesterId: String, testerAuth: TesterAuth) {

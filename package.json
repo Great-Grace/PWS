@@ -21,6 +21,7 @@
     "native:ios:verify": "npm run native:ios:build && npm run native:ios:build-for-testing",
     "native:readiness": "node scripts/native-readiness-report.js",
     "supabase:smoke": "node scripts/live-supabase-smoke.js",
+    "testflight:accounts": "node scripts/setup-testflight-testers.js",
     "release:sbom": "node scripts/generate-npm-sbom.js",
     "release:readiness": "node scripts/release-readiness.js"
   },
