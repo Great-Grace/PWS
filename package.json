@@ -8,10 +8,21 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "rm -rf .tmp-tests && tsc --module commonjs --target es2022 --outDir .tmp-tests tests/bootState.test.ts tests/onboarding.test.ts tests/homeRefresh.test.ts tests/testerAuth.test.ts tests/simpleLoginBranch.test.ts tests/designSystem.test.ts tests/env.test.ts tests/secureStoreChunks.test.ts tests/weatherData.test.ts tests/weatherCopy.test.ts tests/prediction.test.ts tests/regions.test.ts tests/formulas.test.ts tests/homeCopy.test.ts tests/settingsActions.test.ts tests/loginCopy.test.ts tests/releaseCopy.test.ts tests/releaseConfig.test.ts && node .tmp-tests/tests/bootState.test.js && node .tmp-tests/tests/onboarding.test.js && node .tmp-tests/tests/homeRefresh.test.js && node .tmp-tests/tests/testerAuth.test.js && node .tmp-tests/tests/simpleLoginBranch.test.js && node .tmp-tests/tests/designSystem.test.js && node .tmp-tests/tests/env.test.js && node .tmp-tests/tests/secureStoreChunks.test.js && node .tmp-tests/tests/weatherData.test.js && node .tmp-tests/tests/weatherCopy.test.js && node .tmp-tests/tests/prediction.test.js && node .tmp-tests/tests/regions.test.js && node .tmp-tests/tests/formulas.test.js && node .tmp-tests/tests/homeCopy.test.js && node .tmp-tests/tests/settingsActions.test.js && node .tmp-tests/tests/loginCopy.test.js && node .tmp-tests/tests/releaseCopy.test.js && node .tmp-tests/tests/releaseConfig.test.js",
+    "test": "rm -rf .tmp-tests && tsc --module commonjs --target es2022 --outDir .tmp-tests tests/bootState.test.ts tests/onboarding.test.ts tests/homeRefresh.test.ts tests/testerAuth.test.ts tests/simpleLoginBranch.test.ts tests/designSystem.test.ts tests/env.test.ts tests/secureStoreChunks.test.ts tests/weatherData.test.ts tests/weatherCopy.test.ts tests/prediction.test.ts tests/regions.test.ts tests/formulas.test.ts tests/homeCopy.test.ts tests/settingsActions.test.ts tests/loginCopy.test.ts tests/releaseCopy.test.ts tests/releaseConfig.test.ts tests/nativeParityReadiness.test.ts tests/firstReleaseReadiness.test.ts && node .tmp-tests/tests/bootState.test.js && node .tmp-tests/tests/onboarding.test.js && node .tmp-tests/tests/homeRefresh.test.js && node .tmp-tests/tests/testerAuth.test.js && node .tmp-tests/tests/simpleLoginBranch.test.js && node .tmp-tests/tests/designSystem.test.js && node .tmp-tests/tests/env.test.js && node .tmp-tests/tests/secureStoreChunks.test.js && node .tmp-tests/tests/weatherData.test.js && node .tmp-tests/tests/weatherCopy.test.js && node .tmp-tests/tests/prediction.test.js && node .tmp-tests/tests/regions.test.js && node .tmp-tests/tests/formulas.test.js && node .tmp-tests/tests/homeCopy.test.js && node .tmp-tests/tests/settingsActions.test.js && node .tmp-tests/tests/loginCopy.test.js && node .tmp-tests/tests/releaseCopy.test.js && node .tmp-tests/tests/releaseConfig.test.js && node .tmp-tests/tests/nativeParityReadiness.test.js && node .tmp-tests/tests/firstReleaseReadiness.test.js",
     "clean": "watchman watch-del-all && rm -rf node_modules package-lock.json && npm install --legacy-peer-deps && npx expo install --fix",
     "clear-cache": "npx expo start -c",
-    "android:release": "cd android && JAVA_HOME=$(node ../scripts/java21-home.js) ./gradlew :app:assembleRelease"
+    "android:release": "cd android && JAVA_HOME=$(node ../scripts/java21-home.js) ./gradlew :app:assembleRelease",
+    "native:android:test": "JAVA_HOME=\"$(node scripts/java21-home.js)\" ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" android/gradlew -p apps/android-native :app:testDebugUnitTest",
+    "native:android:debug": "JAVA_HOME=\"$(node scripts/java21-home.js)\" ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" android/gradlew -p apps/android-native :app:assembleDebug",
+    "native:android:release": "JAVA_HOME=\"$(node scripts/java21-home.js)\" ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" android/gradlew -p apps/android-native :app:assembleRelease",
+    "native:android:verify": "JAVA_HOME=\"$(node scripts/java21-home.js)\" ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" android/gradlew -p apps/android-native :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease",
+    "native:ios:build": "xcodebuild build -project apps/ios-native/PWSNativePreview.xcodeproj -scheme PWSNativePreview -destination 'generic/platform=iOS Simulator' -derivedDataPath apps/ios-native/.build/DerivedData CODE_SIGNING_ALLOWED=NO",
+    "native:ios:build-for-testing": "xcodebuild build-for-testing -project apps/ios-native/PWSNativePreview.xcodeproj -scheme PWSNativePreview -destination 'generic/platform=iOS Simulator' -derivedDataPath apps/ios-native/.build/DerivedData CODE_SIGNING_ALLOWED=NO",
+    "native:ios:verify": "npm run native:ios:build && npm run native:ios:build-for-testing",
+    "native:readiness": "node scripts/native-readiness-report.js",
+    "supabase:smoke": "node scripts/live-supabase-smoke.js",
+    "release:sbom": "node scripts/generate-npm-sbom.js",
+    "release:readiness": "node scripts/release-readiness.js"
   },
   "dependencies": {
     "@expo-google-fonts/noto-serif-kr": "^0.4.3",
@@ -46,6 +57,19 @@
   "devDependencies": {
     "@types/react": "~19.1.0",
     "typescript": "~5.9.2"
+  },
+  "overrides": {
+    "postcss": "8.5.10",
+    "xcode": {
+      "uuid": "11.1.1"
+    }
+  },
+  "expo": {
+    "doctor": {
+      "appConfigFieldsNotSyncedCheck": {
+        "enabled": false
+      }
+    }
   },
   "private": true
 }

@@ -5,13 +5,14 @@ import java.time.LocalDate
 data class NativeUserProfile(
     val id: String,
     val nickname: String,
+    val email: String? = null,
     val gender: Gender? = null,
     val birthYear: Int? = null,
     val province: String? = null,
     val district: String? = null,
     val notifyEnabled: Boolean = true,
     val notifyOutfit: Boolean = true,
-    val notifyRain: Boolean = true,
+    val notifyRain: Boolean = false,
 ) {
     val regionLabel: String
         get() = listOfNotNull(province, district).joinToString(" ").ifBlank { "위치 미설정" }
@@ -57,6 +58,7 @@ object NativeSessionReducer {
                 user = NativeUserProfile(
                     id = TesterAuth.testerSessionId(normalizedId),
                     nickname = defaultName,
+                    email = TesterAuth.testerEmail(normalizedId),
                     gender = if (mode == DevTesterMode.FigmaParity) Gender.Male else null,
                     birthYear = if (mode == DevTesterMode.FigmaParity) 1994 else null,
                     province = if (mode == DevTesterMode.FigmaParity) "서울특별시" else null,

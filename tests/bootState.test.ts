@@ -1,4 +1,6 @@
 import * as assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { shouldHoldBootScreen } from '../src/utils/bootState';
 
 assert.equal(
@@ -35,6 +37,14 @@ assert.equal(
   shouldHoldBootScreen({ isLoading: true, fontsLoaded: false, fontError: null, bootTimedOut: true }),
   false,
   '인증 초기화가 멈춰도 테스터 앱은 무한 부팅 화면 대신 로그인 화면으로 진행해야 한다'
+);
+
+const appSource = readFileSync(join(process.cwd(), 'App.tsx'), 'utf8');
+
+assert.equal(
+  appSource.includes("logSafeError('[App] boot initialization timed out'"),
+  false,
+  '부트 타임아웃 fallback은 Expo Go LogBox를 띄우지 않아야 한다'
 );
 
 console.log('bootState test passed');

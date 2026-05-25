@@ -38,13 +38,14 @@ data class NativeUserRecord(
     val gender: Gender? = null,
     val notifyEnabled: Boolean = true,
     val notifyOutfit: Boolean = true,
-    val notifyRain: Boolean = true,
+    val notifyRain: Boolean = false,
 ) {
     fun toNativeUserProfile(): NativeUserProfile {
         val (province, district) = splitClimateZone(climateZone)
         return NativeUserProfile(
             id = id,
             nickname = nickname,
+            email = email,
             gender = gender,
             birthYear = birthYear,
             province = province,
@@ -259,7 +260,7 @@ private fun parseUserRecord(json: String): NativeUserRecord {
         gender = stringField(json, "gender")?.toNativeGender(),
         notifyEnabled = boolField(json, "notify_enabled") ?: true,
         notifyOutfit = boolField(json, "notify_outfit") ?: true,
-        notifyRain = boolField(json, "notify_rain") ?: true,
+        notifyRain = boolField(json, "notify_rain") ?: false,
     )
 }
 

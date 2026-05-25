@@ -8,6 +8,11 @@ data class NativeTesterSignInResult(
     val testerId: String,
 )
 
+data class NativePasswordSignInResult(
+    val session: NativeSupabaseSession,
+    val userEmail: String,
+)
+
 class NativeTesterAuthBridge(
     private val authClient: NativeSupabaseAuthClient,
     private val sessionStore: NativeSupabaseSessionStore,
@@ -34,9 +39,28 @@ class NativeTesterAuthBridge(
             sessionStore: NativeSupabaseSessionStore,
             transport: NativeSupabaseAuthTransport = HttpUrlConnectionNativeSupabaseAuthTransport(),
         ): NativeTesterAuthBridge? {
-            val url = BuildConfig.EXPO_PUBLIC_SUPABASE_URL.trim()
-            val anonKey = BuildConfig.EXPO_PUBLIC_SUPABASE_ANON_KEY.trim()
-            val password = BuildConfig.EXPO_PUBLIC_TEST_PASSWORD.trim()
+            return fromEnvironmentOrNull(
+                supabaseUrl = BuildConfig.EXPO_PUBLIC_SUPABASE_URL,
+                supabaseAnonKey = BuildConfig.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+                testerPassword = BuildConfig.EXPO_PUBLIC_TEST_PASSWORD,
+                isDebugBuild = BuildConfig.DEBUG,
+                sessionStore = sessionStore,
+                transport = transport,
+            )
+        }
+
+        fun fromEnvironmentOrNull(
+            supabaseUrl: String,
+            supabaseAnonKey: String,
+            testerPassword: String,
+            isDebugBuild: Boolean,
+            sessionStore: NativeSupabaseSessionStore,
+            transport: NativeSupabaseAuthTransport = HttpUrlConnectionNativeSupabaseAuthTransport(),
+        ): NativeTesterAuthBridge? {
+            if (!isDebugBuild) return null
+            val url = supabaseUrl.trim()
+            val anonKey = supabaseAnonKey.trim()
+            val password = testerPassword.trim()
             if (url.isBlank() || anonKey.isBlank() || password.isBlank()) return null
             return NativeTesterAuthBridge(
                 authClient = NativeSupabaseAuthClient(
@@ -46,6 +70,43 @@ class NativeTesterAuthBridge(
                 ),
                 sessionStore = sessionStore,
                 testerPassword = password,
+            )
+        }
+    }
+}
+
+class NativePasswordAuthBridge(
+    private val authClient: NativeSupabaseAuthClient,
+    private val sessionStore: NativeSupabaseSessionStore,
+) {
+    fun signIn(email: String, password: String): NativePasswordSignInResult {
+        val normalizedEmail = email.trim()
+        val result = authClient.signInWithPasswordResult(
+            email = normalizedEmail,
+            password = password,
+        )
+        sessionStore.save(result.session)
+        return NativePasswordSignInResult(
+            session = result.session,
+            userEmail = result.userEmail ?: normalizedEmail,
+        )
+    }
+
+    companion object {
+        fun fromBuildConfigOrNull(
+            sessionStore: NativeSupabaseSessionStore,
+            transport: NativeSupabaseAuthTransport = HttpUrlConnectionNativeSupabaseAuthTransport(),
+        ): NativePasswordAuthBridge? {
+            val url = BuildConfig.EXPO_PUBLIC_SUPABASE_URL.trim()
+            val anonKey = BuildConfig.EXPO_PUBLIC_SUPABASE_ANON_KEY.trim()
+            if (url.isBlank() || anonKey.isBlank()) return null
+            return NativePasswordAuthBridge(
+                authClient = NativeSupabaseAuthClient(
+                    supabaseUrl = url,
+                    supabaseAnonKey = anonKey,
+                    transport = transport,
+                ),
+                sessionStore = sessionStore,
             )
         }
     }

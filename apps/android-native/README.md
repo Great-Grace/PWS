@@ -24,5 +24,6 @@ The native preview now includes a Kotlin adapter for the existing Supabase Edge 
 - Request shape: `POST <supabase-url>/functions/v1/weather-onecall` with `{ "lat": number, "lng": number }`
 - Auth: requires a Supabase access token in `Authorization: Bearer ...`
 - Runtime behavior: reads a persisted token from `NativeSupabaseSessionStore`, then falls back through `FallbackWeatherRemoteSource` until the native auth/session lane can create and refresh a real token, so emulator QA remains deterministic.
+- Security gating: persisted Supabase sessions and tester password auth are debug-only until encrypted session storage is added. Release builds leave `EXPO_PUBLIC_TEST_PASSWORD` empty, disable SharedPreferences-backed session persistence, and fail closed instead of using preview weather fallback.
 
 See `.omx/wiki/weather-onecall-contract.md` for the full RN ↔ native contract.

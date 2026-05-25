@@ -43,6 +43,37 @@ class WeatherRepositoryTest {
         assertTrue(repository.state.error == null)
     }
 
+    @Test
+    fun fallbackWeatherSourceRecordsWarningWhenPreviewDataReplacesRemoteFailure() {
+        val fallbackSource = FallbackWeatherRemoteSource(
+            primary = FailingWeatherRemoteSource("날씨 인증이 필요합니다"),
+            fallback = RecordingWeatherRemoteSource(),
+            allowFallback = true,
+        )
+        val repository = CachingWeatherRepository(fallbackSource)
+
+        repository.fetchWeather(lat = 37.0, lng = 126.0, nowMs = 1_000L)
+
+        assertEquals("원격 날씨 실패로 미리보기 데이터를 표시합니다", repository.state.warning)
+    }
+
+    @Test
+    fun fallbackWeatherSourceFailsClosedWhenPreviewFallbackIsDisabled() {
+        val fallbackSource = FallbackWeatherRemoteSource(
+            primary = FailingWeatherRemoteSource("날씨 인증이 필요합니다"),
+            fallback = RecordingWeatherRemoteSource(),
+            allowFallback = false,
+        )
+        val repository = CachingWeatherRepository(fallbackSource)
+
+        val error = runCatching {
+            repository.fetchWeather(lat = 37.0, lng = 126.0, nowMs = 1_000L)
+        }.exceptionOrNull()
+
+        assertEquals("날씨 인증이 필요합니다", error?.message)
+        assertEquals("날씨 인증이 필요합니다", repository.state.error)
+    }
+
     private class RecordingWeatherRemoteSource(
         private val icon: String? = "01d",
     ) : WeatherRemoteSource {
@@ -88,6 +119,14 @@ class WeatherRepositoryTest {
                 ),
                 fetchedAt = nowMs,
             )
+        }
+    }
+
+    private class FailingWeatherRemoteSource(
+        private val message: String,
+    ) : WeatherRemoteSource {
+        override fun fetchWeather(lat: Double, lng: Double, nowMs: Long): WeatherDataNative {
+            throw IllegalStateException(message)
         }
     }
 }

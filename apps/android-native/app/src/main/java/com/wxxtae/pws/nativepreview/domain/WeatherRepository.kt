@@ -50,6 +50,7 @@ data class WeatherRepositoryState(
     val data: WeatherDataNative? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
+    val warning: String? = null,
     val lastLat: Double? = null,
     val lastLng: Double? = null,
 )
@@ -77,13 +78,14 @@ class CachingWeatherRepository(
             return cached
         }
 
-        state = state.copy(isLoading = true, error = null)
+        state = state.copy(isLoading = true, error = null, warning = null)
         return try {
             val remoteData = remoteSource.fetchWeather(lat, lng, nowMs).normalizeDailyIcons()
             state = WeatherRepositoryState(
                 data = remoteData,
                 isLoading = false,
                 error = null,
+                warning = (remoteSource as? WeatherFallbackStatus)?.lastFallbackWarning,
                 lastLat = lat,
                 lastLng = lng,
             )
@@ -95,6 +97,10 @@ class CachingWeatherRepository(
             )
             throw error
         }
+    }
+
+    fun clear() {
+        state = WeatherRepositoryState()
     }
 
     fun getCurrent(): CurrentWeatherNative? = state.data?.current

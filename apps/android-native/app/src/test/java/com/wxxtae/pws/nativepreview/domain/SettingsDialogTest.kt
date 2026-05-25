@@ -32,8 +32,9 @@ class SettingsDialogTest {
         assertTrue(logout?.destructive == true)
 
         assertEquals("계정 삭제", delete?.title)
+        assertEquals("삭제", delete?.primaryLabel)
         assertEquals(SettingsDialogAction.ConfirmDeleteAccount, delete?.action)
-        assertTrue(delete?.message?.contains("실제 삭제 RPC를 실행하지 않습니다") == true)
+        assertTrue(delete?.message?.contains("영구적으로 삭제") == true)
         assertTrue(delete?.destructive == true)
     }
 

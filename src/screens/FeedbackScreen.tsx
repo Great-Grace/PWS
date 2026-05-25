@@ -43,6 +43,10 @@ const SLOT_META: { slot: FeedbackSlot; label: string; timeHint: string }[] = [
 const FEEDBACK_FEEL_LABELS = ['매우 추움', '추움', '선선함', '적당함', '따뜻함', '더움', '매우 더움'];
 const FEEDBACK_HUMID_LABELS = ['건조함', '쾌적함', '습함', '매우 습함'];
 const FEEDBACK_WIND_LABELS = ['바람 없음', '약한 바람', '보통 바람', '강한 바람'];
+
+type ClothingSectionKey = 'top' | 'outer' | 'bottom';
+type FeedbackClothingItem = (typeof CLOTHING_ITEM_DEFS)[number] & { id: ClothingItemId };
+
 // ---- 슬롯 입력 상태 타입 ----
 interface SlotDraft {
   feelScore:     number | null;
@@ -54,7 +58,7 @@ interface SlotDraft {
   sleep:         number | null;
   outdoorHours:  number | null;
   showOptional:  boolean;
-  openClothingSection: 'top' | 'outer' | 'bottom' | null;
+  openClothingSection: ClothingSectionKey | null;
 }
 
 function emptyDraft(): SlotDraft {
@@ -76,11 +80,28 @@ function initDrafts(): DraftMap {
   return { morning: emptyDraft(), afternoon: emptyDraft(), evening: emptyDraft() };
 }
 
-const CLOTHING_SECTIONS = {
+const CLOTHING_SECTIONS: Record<ClothingSectionKey, readonly ClothingItemId[]> = {
   top: ['sleeveless', 'tshirt', 'longsleeve', 'shirt', 'knit_thin', 'sweatshirt', 'hoodie', 'hoodie_zip', 'knit_thick', 'fleece'],
   outer: ['light_jacket', 'cardigan', 'blazer', 'light_padding', 'padding', 'heavy_coat'],
   bottom: ['shorts', 'pants', 'slacks', 'jeans'],
 } as const;
+
+const CLOTHING_SECTION_META: { key: ClothingSectionKey; label: string }[] = [
+  { key: 'top', label: '상의' },
+  { key: 'outer', label: '아우터' },
+  { key: 'bottom', label: '하의' },
+];
+
+function clothingItemsForSection(section: ClothingSectionKey): FeedbackClothingItem[] {
+  const sectionIds = new Set<string>(CLOTHING_SECTIONS[section]);
+  return CLOTHING_ITEM_DEFS.filter((item): item is FeedbackClothingItem => sectionIds.has(item.id));
+}
+
+const CLOTHING_SECTION_ITEMS: Record<ClothingSectionKey, FeedbackClothingItem[]> = {
+  top: clothingItemsForSection('top'),
+  outer: clothingItemsForSection('outer'),
+  bottom: clothingItemsForSection('bottom'),
+};
 
 // ---- 화면 ----
 export default function FeedbackScreen({ navigation }: any) {
@@ -277,86 +298,19 @@ export default function FeedbackScreen({ navigation }: any) {
               </View>
             )}
           </View>
-          <AccordionSection
-            label="상의"
-            open={draft.openClothingSection === 'top'}
-            onPress={() => updateDraft({ openClothingSection: draft.openClothingSection === 'top' ? null : 'top' })}
-          >
-            <View style={styles.clothingGrid}>
-              {CLOTHING_ITEM_DEFS.filter(item => CLOTHING_SECTIONS.top.includes(item.id as any)).map(item => {
-                const selected = draft.clothingItems.includes(item.id as ClothingItemId);
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[styles.clothingChip, selected && styles.clothingChipOn]}
-                    onPress={() => toggleClothing(item.id as ClothingItemId)}
-                    accessibilityRole="button"
-                    accessibilityLabel={item.label}
-                    accessibilityState={{ selected }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.clothingChipText, selected && styles.clothingChipTextOn]}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
+          {CLOTHING_SECTION_META.map(({ key, label }) => (
+            <ClothingSectionPicker
+              key={key}
+              section={key}
+              label={label}
+              open={draft.openClothingSection === key}
+              selectedIds={draft.clothingItems}
+              onToggle={toggleClothing}
+              onToggleOpen={() => updateDraft({
+                openClothingSection: draft.openClothingSection === key ? null : key,
               })}
-            </View>
-          </AccordionSection>
-
-          <AccordionSection
-            label="아우터"
-            open={draft.openClothingSection === 'outer'}
-            onPress={() => updateDraft({ openClothingSection: draft.openClothingSection === 'outer' ? null : 'outer' })}
-          >
-            <View style={styles.clothingGrid}>
-              {CLOTHING_ITEM_DEFS.filter(item => CLOTHING_SECTIONS.outer.includes(item.id as any)).map(item => {
-                const selected = draft.clothingItems.includes(item.id as ClothingItemId);
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[styles.clothingChip, selected && styles.clothingChipOn]}
-                    onPress={() => toggleClothing(item.id as ClothingItemId)}
-                    accessibilityRole="button"
-                    accessibilityLabel={item.label}
-                    accessibilityState={{ selected }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.clothingChipText, selected && styles.clothingChipTextOn]}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </AccordionSection>
-
-          <AccordionSection
-            label="하의"
-            open={draft.openClothingSection === 'bottom'}
-            onPress={() => updateDraft({ openClothingSection: draft.openClothingSection === 'bottom' ? null : 'bottom' })}
-          >
-            <View style={styles.clothingGrid}>
-              {CLOTHING_ITEM_DEFS.filter(item => CLOTHING_SECTIONS.bottom.includes(item.id as any)).map((item) => {
-                const selected = draft.clothingItems.includes(item.id as ClothingItemId);
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[styles.clothingChip, selected && styles.clothingChipOn]}
-                    onPress={() => toggleClothing(item.id as ClothingItemId)}
-                    accessibilityRole="button"
-                    accessibilityLabel={item.label}
-                    accessibilityState={{ selected }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.clothingChipText, selected && styles.clothingChipTextOn]}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </AccordionSection>
+            />
+          ))}
         </View>
 
         {/* ── 체감 온도 ── */}
@@ -503,6 +457,49 @@ function AccordionSection({
       </TouchableOpacity>
       {open ? <View style={styles.accordionBody}>{children}</View> : null}
     </View>
+  );
+}
+
+function ClothingSectionPicker({
+  section,
+  label,
+  open,
+  selectedIds,
+  onToggle,
+  onToggleOpen,
+}: {
+  section: ClothingSectionKey;
+  label: string;
+  open: boolean;
+  selectedIds: readonly ClothingItemId[];
+  onToggle: (id: ClothingItemId) => void;
+  onToggleOpen: () => void;
+}) {
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
+  return (
+    <AccordionSection label={label} open={open} onPress={onToggleOpen}>
+      <View style={styles.clothingGrid}>
+        {CLOTHING_SECTION_ITEMS[section].map(item => {
+          const selected = selectedSet.has(item.id);
+          return (
+            <TouchableOpacity
+              key={item.id}
+              style={[styles.clothingChip, selected && styles.clothingChipOn]}
+              onPress={() => onToggle(item.id)}
+              accessibilityRole="button"
+              accessibilityLabel={item.label}
+              accessibilityState={{ selected }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.clothingChipText, selected && styles.clothingChipTextOn]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </AccordionSection>
   );
 }
 

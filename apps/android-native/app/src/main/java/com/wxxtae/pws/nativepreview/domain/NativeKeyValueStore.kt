@@ -1,6 +1,9 @@
 package com.wxxtae.pws.nativepreview.domain
 
 interface NativeKeyValueStore {
+    val isSecureAtRest: Boolean
+        get() = false
+
     fun getString(key: String): String?
     fun putString(key: String, value: String)
     fun remove(key: String)

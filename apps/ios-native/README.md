@@ -2,7 +2,7 @@
 
 SwiftUI-first native iOS migration target for PWS. This preview app runs beside the Expo/RN app until parity is approved.
 
-Preview bundle id: `com.wxxtae.pws.nativepreview.ios`
+Bundle id: `woos.owndo`
 Final bundle id placeholder: `com.wxxtae.pws`
 
 ## Build
@@ -12,8 +12,8 @@ From `app/`:
 ```bash
 xcodegen generate --spec apps/ios-native/project.yml
 xcodebuild -list -project apps/ios-native/PWSNativePreview.xcodeproj
-xcodebuild build -project apps/ios-native/PWSNativePreview.xcodeproj -scheme PWSNativePreview -destination 'generic/platform=iOS Simulator' -derivedDataPath apps/ios-native/.build/DerivedData CODE_SIGNING_ALLOWED=NO
-xcodebuild build-for-testing -project apps/ios-native/PWSNativePreview.xcodeproj -scheme PWSNativePreview -destination 'generic/platform=iOS Simulator' -derivedDataPath apps/ios-native/.build/DerivedData CODE_SIGNING_ALLOWED=NO
+xcodebuild build -project apps/ios-native/PWSNativePreview.xcodeproj -scheme PWSNativePreview -sdk iphonesimulator -derivedDataPath apps/ios-native/.build/DerivedData CODE_SIGNING_ALLOWED=NO
+xcodebuild build-for-testing -project apps/ios-native/PWSNativePreview.xcodeproj -scheme PWSNativePreview -sdk iphonesimulator -derivedDataPath apps/ios-native/.build/DerivedData CODE_SIGNING_ALLOWED=NO
 ```
 
 Simulator unit tests require at least one installed iOS simulator runtime and device:
@@ -30,7 +30,7 @@ As of the initial scaffold, Xcode and the iOS Simulator SDK are installed, but n
 
 Xcode currently sees the paired iPhone `태우’s iPhone` with Developer Mode enabled. A paid Apple Developer Program account is not required for local development installs, but Xcode still needs a signed-in Apple ID/Personal Team so it can create a development provisioning profile.
 
-From Xcode, open `PWSNativePreview.xcodeproj`, then use `Xcode > Settings > Accounts` to add the Apple ID and select the Personal Team under `Signing & Capabilities` for the `PWSNativePreview` target. If automatic signing rejects the current bundle id, change `com.wxxtae.pws.nativepreview.ios` to a unique id tied to the account.
+From Xcode, open `PWSNativePreview.xcodeproj`, then use `Xcode > Settings > Accounts` to add the Apple ID and select the Personal Team under `Signing & Capabilities` for the `PWSNativePreview` target. If automatic signing rejects the current bundle id, register `woos.owndo` or change it to a unique id tied to the account.
 
 ```bash
 xcrun devicectl list devices

@@ -119,15 +119,28 @@ class SupabaseEdgeFunctionWeatherRemoteSource(
     }
 }
 
+private const val PreviewWeatherFallbackWarning = "원격 날씨 실패로 미리보기 데이터를 표시합니다"
+
+interface WeatherFallbackStatus {
+    val lastFallbackWarning: String?
+}
+
 class FallbackWeatherRemoteSource(
     private val primary: WeatherRemoteSource?,
     private val fallback: WeatherRemoteSource,
-) : WeatherRemoteSource {
+    private val allowFallback: Boolean = true,
+) : WeatherRemoteSource, WeatherFallbackStatus {
+    override var lastFallbackWarning: String? = null
+        private set
+
     override fun fetchWeather(lat: Double, lng: Double, nowMs: Long): WeatherDataNative {
+        lastFallbackWarning = null
         if (primary != null) {
             try {
                 return primary.fetchWeather(lat, lng, nowMs)
-            } catch (_: Throwable) {
+            } catch (error: Throwable) {
+                if (!allowFallback) throw error
+                lastFallbackWarning = PreviewWeatherFallbackWarning
                 // During migration QA, keep the native UI usable until native auth/session sync can
                 // provide a real Supabase access token for the weather-onecall Edge Function.
             }

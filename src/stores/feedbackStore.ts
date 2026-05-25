@@ -3,7 +3,7 @@
 // · 3-slot 구조 (morning / afternoon / evening)
 // · 하루 리셋 05:00 기준 (getPwsDate)
 // · 슬롯 항상 input.slot 기준 (UI에서 명시적 선택)
-// · 온디바이스 퍼셉트론 SGD 업데이트
+// · UTCI 기반 ordered prior + residual 학습용 피드백 저장
 // ============================================================
 import { create } from 'zustand';
 import { supabase } from '../config/supabase';
@@ -13,12 +13,6 @@ import {
   getPwsDate,
   computeFeedbackOffsets,
   computeEnvBase,
-  getSeason,
-  computeWeatherFeatures,
-  featuresToArray,
-  updateWeights,
-  computePerceptronFeel,
-  initWeights,
 } from '../utils/formulas';
 import { resolvePredictionConfidence } from '../utils/prediction';
 import { useWeatherStore } from './weatherStore';
@@ -58,13 +52,6 @@ interface FeedbackState {
   fetchFeedbackCount:  () => Promise<void>;
 }
 
-// ---- 헬퍼: 연중 일수 계산 ----
-function getDayOfYear(date: Date): number {
-  return Math.floor(
-    (date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000
-  );
-}
-
 // ---- 헬퍼: 목표 시각에 가장 가까운 hourly 데이터 찾기 ----
 function findHourlyForSlot(
   hourly: HourlyForecast[],
@@ -83,9 +70,9 @@ function findHourlyForSlot(
 
 // ---- 슬롯 설정 ----
 const SLOT_CONFIG = [
-  { slot: 'morning'   as FeedbackSlot, targetHour: 8,  weightKey: 'weight_morning'   as const },
-  { slot: 'afternoon' as FeedbackSlot, targetHour: 13, weightKey: 'weight_afternoon' as const },
-  { slot: 'evening'   as FeedbackSlot, targetHour: 18, weightKey: 'weight_evening'   as const },
+  { slot: 'morning'   as FeedbackSlot, targetHour: 8  },
+  { slot: 'afternoon' as FeedbackSlot, targetHour: 13 },
+  { slot: 'evening'   as FeedbackSlot, targetHour: 18 },
 ];
 
 export const useFeedbackStore = create<FeedbackState>((set, get) => ({
@@ -124,7 +111,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
     }
   },
 
-  // ---- 온디바이스 퍼셉트론으로 3슬롯 예측 계산 ----
+  // ---- UTCI 기반 3슬롯 baseline 예측 계산 ----
   fetchTodayPrediction: async () => {
     try {
       const user    = useAuthStore.getState().user;
@@ -132,14 +119,9 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
       if (!user) return;
 
       const now        = new Date();
-      const dayOfYear  = getDayOfYear(now);
       const result: Partial<LocalPrediction> = {};
 
-      for (const { slot, targetHour, weightKey } of SLOT_CONFIG) {
-        // 가중치 벡터 (없으면 초기값)
-        const rawW   = user[weightKey] as number[] | null;
-        const weights = rawW ? new Float32Array(rawW) : initWeights();
-
+      for (const { slot, targetHour } of SLOT_CONFIG) {
         // hourly 예보에서 슬롯 시각 데이터 찾기
         const hourlyEntry = weather ? findHourlyForSlot(weather.hourly, targetHour) : null;
         const confidence = resolvePredictionConfidence(
@@ -152,18 +134,16 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
           continue;
         }
 
-        const features = featuresToArray(computeWeatherFeatures({
-          tempC:     hourlyEntry.temp,
-          humidity:  hourlyEntry.humidity,
-          windMps:   hourlyEntry.wind_speed,
-          tmrt:      0,   // 예보에는 tmrt 없음 → 0으로 처리
-          precipMmh: hourlyEntry.pop > 0.3 ? hourlyEntry.pop * 5 : 0, // pop → mm/h 근사
-          hour:      targetHour,
-          dayOfYear,
-        }));
-
         result[slot] = {
-          feel:      computePerceptronFeel(weights, features),
+          feel:      computeEnvBase({
+            temp:           hourlyEntry.temp,
+            humidity:       hourlyEntry.humidity,
+            windMps:        hourlyEntry.wind_speed,
+            tmrt_corrected: null,
+            precipMmh:      hourlyEntry.precipitation_1h ?? (hourlyEntry.pop > 0.3 ? hourlyEntry.pop * 5 : 0),
+            hour:           targetHour,
+            date:           now,
+          }),
           confidence,
           temp:      hourlyEntry.temp,
           humidity:  hourlyEntry.humidity,
@@ -176,7 +156,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
     }
   },
 
-  // ---- 피드백 제출 + SGD 업데이트 ----
+  // ---- 피드백 제출 ----
   submitFeedback: async (input: FeedbackInput) => {
     set({ isSaving: true });
     try {
@@ -191,7 +171,7 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
       const current = useWeatherStore.getState().getCurrent();
 
       // ---- DB 레코드 조립 ----
-      const record: Record<string, any> = {
+      const record: Record<string, unknown> & { tmrt_corrected?: number } = {
         user_id:        authUser.id,
         feedback_date:  today,
         feel_score:     input.feel_score,
@@ -236,10 +216,12 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
       if (current) {
         record.env_base = computeEnvBase({
           temp:           current.temp,
-          humid_feel:     input.humid_feel,
-          wind_feel:      input.wind_feel,
+          humidity:       current.humidity,
+          windMps:        current.wind_speed,
           tmrt_corrected: record.tmrt_corrected ?? null,
-          season:         getSeason(now),
+          precipMmh:      current.precipitation_1h ?? 0,
+          hour:           now.getHours(),
+          date:           now,
         });
       }
 
@@ -251,40 +233,6 @@ export const useFeedbackStore = create<FeedbackState>((set, get) => ({
           .insert(record);
 
       if (error) throw error;
-
-      // ---- 온디바이스 SGD 업데이트 ----
-      if (current && userProfile) {
-        const dayOfYear  = getDayOfYear(now);
-        const weightKey  = `weight_${feedbackSlot}` as typeof SLOT_CONFIG[number]['weightKey'];
-        const rawW       = userProfile[weightKey] as number[] | null;
-        const weights    = rawW ? new Float32Array(rawW) : initWeights();
-
-        const features = featuresToArray(computeWeatherFeatures({
-          tempC:     current.temp,
-          humidity:  current.humidity,
-          windMps:   current.wind_speed,
-          tmrt:      record.tmrt_corrected ?? 0,
-          precipMmh: record.actual_precip  ?? 0,
-          hour:      now.getHours(),
-          dayOfYear,
-        }));
-
-        updateWeights(weights, features, input.feel_score);
-        const updatedW = Array.from(weights);
-
-        // Supabase 백그라운드 sync (await 하지 않음)
-        if (!isLocalDev) {
-          supabase.from('users').update({
-            [weightKey]:       updatedW,
-            weight_updated_at: now.toISOString(),
-          }).eq('id', userProfile.id).then();
-        }
-
-        // authStore 로컬 즉시 반영
-        useAuthStore.setState(state => ({
-          user: state.user ? { ...state.user, [weightKey]: updatedW } : null,
-        }));
-      }
 
       // ---- 옷장 로컬 즉시 반영 ----
       if (input.clothing_items?.length && userProfile) {

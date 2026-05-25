@@ -8,15 +8,27 @@
 
 /* Begin PBXBuildFile section */
 		02FE8E4DEF3B477715E0AD17 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0C75EF93EB09EB6C7AA1F5 /* AppEnvironment.swift */; };
+		0F482B9610C3F691EC50108A /* FeedbackContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6265382DD406D5247B7F2725 /* FeedbackContractTests.swift */; };
 		151CA127E08E1C78A9E5E749 /* WeatherOneCallContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D94B628FB727E06CF23B3C4A /* WeatherOneCallContractTests.swift */; };
 		2FBA930842B96E781A3B36D8 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F78DF0B1CA289E277605370 /* HomeScreen.swift */; };
 		469FA617343AEF0043F0B903 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0C57E42131F8096A4FF58C98 /* Assets.xcassets */; };
 		50B0E91E8D40BCE1C80AED87 /* TesterAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF65A142DFB08732580333D9 /* TesterAuth.swift */; };
+		5697F9A6CD2A9587134258B9 /* FeedbackScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE8762F009AEBC2C2B33885 /* FeedbackScreen.swift */; };
+		6824F20DE269BFCB08E2B58A /* WeatherDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 216F7F256618587705E3CA67 /* WeatherDetailScreen.swift */; };
 		71526A3D13F1389E246EE7F3 /* TesterAuthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D123FDBD112ACCAE1AA3DC2 /* TesterAuthTests.swift */; };
+		7C7E19F477979966E1F2064B /* ProfileContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3D9FEEDEAAC25B0BFB4C1B /* ProfileContractTests.swift */; };
 		80641A0BDC8B1DA0E4D20805 /* PwsTabShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A8A43697D6C50E211C6051D /* PwsTabShell.swift */; };
+		83A063D335AF61ED77867186 /* PWSComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60B67618AC3EC0DB825B612C /* PWSComponents.swift */; };
+		A7D0679138D9035309C2198F /* NativeKeyValueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B266056F408798D1BC46F89F /* NativeKeyValueStore.swift */; };
 		AC705C3F981EBED00790F402 /* WeatherOneCallContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C2FB3DC4E77564937A19796 /* WeatherOneCallContract.swift */; };
+		BEBB0AEDE311DC658E6805C5 /* LoginScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA98B9B9809AA0FC914B72EE /* LoginScreen.swift */; };
+		D47770CD09126F4AADA1D584 /* NativeSupabaseSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB6466DDCE0882074032432 /* NativeSupabaseSession.swift */; };
+		DD229BD334830ECCAF33A3EC /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23968C02BA64F80DB1E11D8A /* SettingsScreen.swift */; };
+		E1344E2E0302B8E0DE6EA60E /* FeedbackContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0E0C83CAEB20A7ACDCA5FF /* FeedbackContracts.swift */; };
+		E63E4F4C4E459FBA24671358 /* HistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B734D869983DD552AF7D211 /* HistoryScreen.swift */; };
 		EB3A2807C7F49C1C99E9D27D /* PWSTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B046D6EC680DD10BB935388 /* PWSTokens.swift */; };
 		FB06DA6F041261F5374428DE /* PWSConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66BA057EE7C856D2BA4426B /* PWSConfig.swift */; };
+		FBC2207BEB06546B1F95AA2E /* ProfileContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = E422984B2ECCC7849A28AFC9 /* ProfileContract.swift */; };
 		FED48D1932832278B4ED6DC0 /* PWSNativePreviewApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF951DA1A7E8F834B09B981D /* PWSNativePreviewApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -31,21 +43,34 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0AB6466DDCE0882074032432 /* NativeSupabaseSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSupabaseSession.swift; sourceTree = "<group>"; };
 		0C57E42131F8096A4FF58C98 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0D123FDBD112ACCAE1AA3DC2 /* TesterAuthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TesterAuthTests.swift; sourceTree = "<group>"; };
 		1A30DA42FEB44A3783E66539 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		1D3D9FEEDEAAC25B0BFB4C1B /* ProfileContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileContractTests.swift; sourceTree = "<group>"; };
+		216F7F256618587705E3CA67 /* WeatherDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDetailScreen.swift; sourceTree = "<group>"; };
+		23968C02BA64F80DB1E11D8A /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		3B734D869983DD552AF7D211 /* HistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryScreen.swift; sourceTree = "<group>"; };
 		3F78DF0B1CA289E277605370 /* HomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreen.swift; sourceTree = "<group>"; };
 		4A8A43697D6C50E211C6051D /* PwsTabShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PwsTabShell.swift; sourceTree = "<group>"; };
 		4C2FB3DC4E77564937A19796 /* WeatherOneCallContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherOneCallContract.swift; sourceTree = "<group>"; };
 		6001F1C837F546A18C2A901D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		60B67618AC3EC0DB825B612C /* PWSComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PWSComponents.swift; sourceTree = "<group>"; };
+		6265382DD406D5247B7F2725 /* FeedbackContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackContractTests.swift; sourceTree = "<group>"; };
 		6B046D6EC680DD10BB935388 /* PWSTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PWSTokens.swift; sourceTree = "<group>"; };
 		6B0C75EF93EB09EB6C7AA1F5 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		7B86EB23C9714C2286A3D4B1 /* PWSNativePreview.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PWSNativePreview.entitlements; sourceTree = "<group>"; };
 		908CC0A191B47B8A7A0DF828 /* PWSNativePreview.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PWSNativePreview.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ABE8762F009AEBC2C2B33885 /* FeedbackScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackScreen.swift; sourceTree = "<group>"; };
 		AF65A142DFB08732580333D9 /* TesterAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TesterAuth.swift; sourceTree = "<group>"; };
+		B266056F408798D1BC46F89F /* NativeKeyValueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeKeyValueStore.swift; sourceTree = "<group>"; };
+		BA98B9B9809AA0FC914B72EE /* LoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginScreen.swift; sourceTree = "<group>"; };
 		BF951DA1A7E8F834B09B981D /* PWSNativePreviewApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PWSNativePreviewApp.swift; sourceTree = "<group>"; };
 		C66BA057EE7C856D2BA4426B /* PWSConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PWSConfig.swift; sourceTree = "<group>"; };
 		D94B628FB727E06CF23B3C4A /* WeatherOneCallContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherOneCallContractTests.swift; sourceTree = "<group>"; };
-		F1CAE313035CB86BB98BBD11 /* PWSNativePreviewTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PWSNativePreviewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA0E0C83CAEB20A7ACDCA5FF /* FeedbackContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackContracts.swift; sourceTree = "<group>"; };
+		E422984B2ECCC7849A28AFC9 /* ProfileContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileContract.swift; sourceTree = "<group>"; };
+		F1CAE313035CB86BB98BBD11 /* PWSNativePreviewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PWSNativePreviewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -60,14 +85,33 @@
 		0837815639A8C0909DD253C8 /* Domain */ = {
 			isa = PBXGroup;
 			children = (
+				6265382DD406D5247B7F2725 /* FeedbackContractTests.swift */,
 				0D123FDBD112ACCAE1AA3DC2 /* TesterAuthTests.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
 		};
+		1AC3F9443C4AB76F705B169F /* WeatherDetail */ = {
+			isa = PBXGroup;
+			children = (
+				216F7F256618587705E3CA67 /* WeatherDetailScreen.swift */,
+			);
+			path = WeatherDetail;
+			sourceTree = "<group>";
+		};
+		1F5BC97C3E70416DF4158E19 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				E422984B2ECCC7849A28AFC9 /* ProfileContract.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
 		271A150999FB26A2C94AB09B /* Session */ = {
 			isa = PBXGroup;
 			children = (
+				B266056F408798D1BC46F89F /* NativeKeyValueStore.swift */,
+				0AB6466DDCE0882074032432 /* NativeSupabaseSession.swift */,
 				AF65A142DFB08732580333D9 /* TesterAuth.swift */,
 			);
 			path = Session;
@@ -76,14 +120,24 @@
 		396E02503E9C4263FFA3B417 /* Contract */ = {
 			isa = PBXGroup;
 			children = (
+				1D3D9FEEDEAAC25B0BFB4C1B /* ProfileContractTests.swift */,
 				D94B628FB727E06CF23B3C4A /* WeatherOneCallContractTests.swift */,
 			);
 			path = Contract;
 			sourceTree = "<group>";
 		};
+		3A5F9F353032ADA183B84E4E /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				23968C02BA64F80DB1E11D8A /* SettingsScreen.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		47DF0613DE4CD10D10C617DF /* Design */ = {
 			isa = PBXGroup;
 			children = (
+				60B67618AC3EC0DB825B612C /* PWSComponents.swift */,
 				6B046D6EC680DD10BB935388 /* PWSTokens.swift */,
 			);
 			path = Design;
@@ -112,14 +166,29 @@
 			isa = PBXGroup;
 			children = (
 				D355C93BCD661987A1144C12 /* AppShell */,
+				6B94CBED4BE098728B9BBF5B /* Feedback */,
+				B226D802BE22B8776013D6A4 /* History */,
 				033C1306AB22ED00A1A8B63D /* Home */,
+				BDF22140FF0C374B3A74F920 /* Login */,
+				3A5F9F353032ADA183B84E4E /* Settings */,
+				1AC3F9443C4AB76F705B169F /* WeatherDetail */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		6B94CBED4BE098728B9BBF5B /* Feedback */ = {
+			isa = PBXGroup;
+			children = (
+				ABE8762F009AEBC2C2B33885 /* FeedbackScreen.swift */,
+			);
+			path = Feedback;
 			sourceTree = "<group>";
 		};
 		6BDF41E4E462E98FD7954274 /* Domain */ = {
 			isa = PBXGroup;
 			children = (
+				A585ABFE63401306B9BF4951 /* Feedback */,
+				1F5BC97C3E70416DF4158E19 /* Profile */,
 				271A150999FB26A2C94AB09B /* Session */,
 				7F2B6A52925AAAE4706FD7BD /* Weather */,
 			);
@@ -151,6 +220,22 @@
 			path = Weather;
 			sourceTree = "<group>";
 		};
+		A585ABFE63401306B9BF4951 /* Feedback */ = {
+			isa = PBXGroup;
+			children = (
+				DA0E0C83CAEB20A7ACDCA5FF /* FeedbackContracts.swift */,
+			);
+			path = Feedback;
+			sourceTree = "<group>";
+		};
+		B226D802BE22B8776013D6A4 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				3B734D869983DD552AF7D211 /* HistoryScreen.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
 		B8BB21D1712B61E3421726E9 = {
 			isa = PBXGroup;
 			children = (
@@ -158,6 +243,14 @@
 				4E00DD1B5ACD9B5E354EDDE8 /* PWSNativePreviewTests */,
 				53D26AD6946AF1DC76E7FC6C /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		BDF22140FF0C374B3A74F920 /* Login */ = {
+			isa = PBXGroup;
+			children = (
+				BA98B9B9809AA0FC914B72EE /* LoginScreen.swift */,
+			);
+			path = Login;
 			sourceTree = "<group>";
 		};
 		D355C93BCD661987A1144C12 /* AppShell */ = {
@@ -172,6 +265,7 @@
 			isa = PBXGroup;
 			children = (
 				6B0C75EF93EB09EB6C7AA1F5 /* AppEnvironment.swift */,
+				7B86EB23C9714C2286A3D4B1 /* PWSNativePreview.entitlements */,
 				BF951DA1A7E8F834B09B981D /* PWSNativePreviewApp.swift */,
 				786736F92C7F56ED9E48489A /* Config */,
 				47DF0613DE4CD10D10C617DF /* Design */,
@@ -231,10 +325,6 @@
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					3ED5959FB323D44D7CBD7A23 = {
-						DevelopmentTeam = 23776Z264P;
-						ProvisioningStyle = Automatic;
-					};
-					438324F443931055EEDB1AEE = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -276,12 +366,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				02FE8E4DEF3B477715E0AD17 /* AppEnvironment.swift in Sources */,
+				E1344E2E0302B8E0DE6EA60E /* FeedbackContracts.swift in Sources */,
+				5697F9A6CD2A9587134258B9 /* FeedbackScreen.swift in Sources */,
+				E63E4F4C4E459FBA24671358 /* HistoryScreen.swift in Sources */,
 				2FBA930842B96E781A3B36D8 /* HomeScreen.swift in Sources */,
+				BEBB0AEDE311DC658E6805C5 /* LoginScreen.swift in Sources */,
+				A7D0679138D9035309C2198F /* NativeKeyValueStore.swift in Sources */,
+				D47770CD09126F4AADA1D584 /* NativeSupabaseSession.swift in Sources */,
+				83A063D335AF61ED77867186 /* PWSComponents.swift in Sources */,
 				FB06DA6F041261F5374428DE /* PWSConfig.swift in Sources */,
 				FED48D1932832278B4ED6DC0 /* PWSNativePreviewApp.swift in Sources */,
 				EB3A2807C7F49C1C99E9D27D /* PWSTokens.swift in Sources */,
+				FBC2207BEB06546B1F95AA2E /* ProfileContract.swift in Sources */,
 				80641A0BDC8B1DA0E4D20805 /* PwsTabShell.swift in Sources */,
+				DD229BD334830ECCAF33A3EC /* SettingsScreen.swift in Sources */,
 				50B0E91E8D40BCE1C80AED87 /* TesterAuth.swift in Sources */,
+				6824F20DE269BFCB08E2B58A /* WeatherDetailScreen.swift in Sources */,
 				AC705C3F981EBED00790F402 /* WeatherOneCallContract.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -290,6 +390,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F482B9610C3F691EC50108A /* FeedbackContractTests.swift in Sources */,
+				7C7E19F477979966E1F2064B /* ProfileContractTests.swift in Sources */,
 				71526A3D13F1389E246EE7F3 /* TesterAuthTests.swift in Sources */,
 				151CA127E08E1C78A9E5E749 /* WeatherOneCallContractTests.swift in Sources */,
 			);
@@ -373,16 +475,18 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_ENTITLEMENTS = PWSNativePreview/PWSNativePreview.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 696TYA6RR2;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = PWSNativePreview/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.wxxtae.pws.nativepreview.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = woos.owndo;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -448,16 +552,18 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_ENTITLEMENTS = PWSNativePreview/PWSNativePreview.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 696TYA6RR2;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = PWSNativePreview/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.wxxtae.pws.nativepreview.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = woos.owndo;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -468,7 +574,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 23776Z264P;
+				DEVELOPMENT_TEAM = 696TYA6RR2;
 				INFOPLIST_FILE = PWSNativePreviewTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -476,7 +582,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.wxxtae.pws.nativepreview.ios.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = woos.owndo.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PWSNativePreview.app/PWSNativePreview";
@@ -488,7 +594,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 23776Z264P;
+				DEVELOPMENT_TEAM = 696TYA6RR2;
 				INFOPLIST_FILE = PWSNativePreviewTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -496,7 +602,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.wxxtae.pws.nativepreview.ios.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = woos.owndo.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PWSNativePreview.app/PWSNativePreview";

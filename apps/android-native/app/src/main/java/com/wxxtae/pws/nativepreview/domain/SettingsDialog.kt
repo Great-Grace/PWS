@@ -56,9 +56,9 @@ object SettingsDialogReducer {
 
         SettingsAction.RequestDeleteAccount -> SettingsDialogState(
             title = "계정 삭제",
-            message = "모든 데이터가 영구적으로 삭제됩니다.\n정말 삭제하시겠어요?\n\n네이티브 마이그레이션 검증 단계에서는 실제 삭제 RPC를 실행하지 않습니다.",
+            message = "모든 데이터가 영구적으로 삭제됩니다.\n정말 삭제하시겠어요?",
             secondaryLabel = "취소",
-            primaryLabel = "확인",
+            primaryLabel = "삭제",
             destructive = true,
             action = SettingsDialogAction.ConfirmDeleteAccount,
         )

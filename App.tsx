@@ -114,7 +114,6 @@ export default function App() {
   useEffect(() => {
     if ((!isLoading && fontsLoaded) || fontError) return;
     const timeout = setTimeout(() => {
-      logSafeError('[App] boot initialization timed out', 'continuing to login shell');
       setBootTimedOut(true);
     }, 8000);
     return () => clearTimeout(timeout);

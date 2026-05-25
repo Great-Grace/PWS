@@ -122,6 +122,7 @@ private fun parseNativeSupabaseAuthResult(body: String, nowEpochSeconds: Long): 
             refreshToken = root.optionalString("refresh_token")?.trim()?.takeIf { it.isNotBlank() },
             expiresAtEpochSeconds = expiresAt,
             userId = userId,
+            userEmail = userEmail,
         ),
         userEmail = userEmail,
     )

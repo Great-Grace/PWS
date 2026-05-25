@@ -20,6 +20,12 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>PWSSupabaseAnonKey</key>
+	<string>$(EXPO_PUBLIC_SUPABASE_ANON_KEY)</string>
+	<key>PWSSupabaseURL</key>
+	<string>$(EXPO_PUBLIC_SUPABASE_URL)</string>
+	<key>PWSTesterPassword</key>
+	<string>$(EXPO_PUBLIC_TEST_PASSWORD)</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 </dict>
