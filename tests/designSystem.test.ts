@@ -1,4 +1,4 @@
-import { borderRadius, colors, layout, shadows, spacing } from '../src/theme';
+import { borderRadius, colors, layout, shadows, spacing } from '../legacy/expo-rn/src/theme';
 
 function assert(condition: unknown, message: string) {
   if (!condition) {

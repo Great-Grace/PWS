@@ -1,8 +1,8 @@
 import * as assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const authStoreSource = readFileSync('src/stores/authStore.ts', 'utf8');
-const settingsSource = readFileSync('src/screens/SettingsScreen.tsx', 'utf8');
+const authStoreSource = readFileSync('legacy/expo-rn/src/stores/authStore.ts', 'utf8');
+const settingsSource = readFileSync('legacy/expo-rn/src/screens/SettingsScreen.tsx', 'utf8');
 const packageSource = readFileSync('package.json', 'utf8');
 
 assert.match(

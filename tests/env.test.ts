@@ -2,7 +2,7 @@ import * as assert from 'node:assert/strict';
 import {
   PUBLIC_ENV_ERROR_PREFIX,
   resolveRequiredPublicEnv,
-} from '../src/utils/env';
+} from '../legacy/expo-rn/src/utils/env';
 
 assert.equal(
   resolveRequiredPublicEnv({ EXPO_PUBLIC_SUPABASE_URL: ' https://example.supabase.co ' }, 'EXPO_PUBLIC_SUPABASE_URL'),

@@ -1,42 +1,43 @@
 # Native Platform Repo Map
 
-## Target Logical Layout
-
-```text
-apps/
-  android-native/   # Kotlin + Jetpack Compose native app
-  ios-native/       # SwiftUI native app
-  expo-tester/      # logical owner for current Expo/RN app; physical move is gated
-backend/
-  supabase/
-shared/
-  contracts/
-  design/
-docs/
-  migration/
-```
-
 ## Current Physical Layout
 
 ```text
 app/
-  android/          # tracked Expo/RN Android surface
-  apps/android-native/   # untracked Kotlin + Compose preview
-  supabase/         # Supabase config, functions, migrations, security SQL
-  src/              # Expo/RN source
-  DESIGN.md         # strict-copy design authority
+  apps/
+    ios-native/       # SwiftUI iOS app; TestFlight source of truth
+    android-native/   # Kotlin + Jetpack Compose Android app
+  supabase/           # shared backend: config, migrations, Edge Functions, manual SQL
+  shared/             # shared contracts and design notes
+  legacy/
+    expo-rn/          # archived Expo/RN reference app; not a release build path
+  docs/
+  scripts/
+  tests/
 ```
 
-## Completed First Move
+## Build Boundary
 
-`native-android/` has moved to `apps/android-native/`. The post-move Gradle command is:
+- iOS release/TestFlight builds must use `apps/ios-native/PWSNativePreview.xcodeproj`.
+- Android native builds must use `apps/android-native`.
+- Root Expo/EAS commands are disabled by `scripts/native-only-command.js`.
+- `legacy/expo-rn` remains only so old behavior and migration tests can be inspected.
+
+## Backend Boundary
+
+Both native apps use the same Supabase backend:
+
+- Auth: Supabase Auth
+- Profile/feedback/history/account deletion: Supabase REST/RPC
+- Weather: `supabase/functions/weather-onecall`
+- Schema/security changes: `supabase/migrations` and `supabase/manual`
+
+## Canonical Commands
 
 ```bash
-android/gradlew -p apps/android-native :app:testDebugUnitTest :app:assembleDebug
+npm run native:ios:build
+npm run native:ios:verify
+npm run native:android:test
+npm run native:android:verify
+npm run testflight:accounts
 ```
-
-## Deferred Moves
-
-- Expo/RN root stays physically in place until command compatibility passes.
-- `supabase/` stays in place until CLI path assumptions are checked.
-- `DESIGN.md` remains at root and is referenced from `shared/design` rather than moved destructively.

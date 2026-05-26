@@ -1,5 +1,5 @@
 import * as assert from 'node:assert/strict';
-import { DISTRICT_COORDS, KOREA_REGIONS, resolveDistrictCoords } from '../src/utils/regions';
+import { DISTRICT_COORDS, KOREA_REGIONS, resolveDistrictCoords } from '../legacy/expo-rn/src/utils/regions';
 
 for (const region of KOREA_REGIONS) {
   for (const district of region.districts) {

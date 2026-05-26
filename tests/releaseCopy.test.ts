@@ -1,8 +1,8 @@
 import * as assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const weatherDetailSource = readFileSync('src/screens/WeatherDetailScreen.tsx', 'utf8');
-const settingsSource = readFileSync('src/screens/SettingsScreen.tsx', 'utf8');
+const weatherDetailSource = readFileSync('legacy/expo-rn/src/screens/WeatherDetailScreen.tsx', 'utf8');
+const settingsSource = readFileSync('legacy/expo-rn/src/screens/SettingsScreen.tsx', 'utf8');
 
 for (const unsupportedCopy of [
   '체감도 보통',

@@ -60,6 +60,16 @@ The script is idempotent:
 4. If login appears stuck, use the app's session reset/sign-out flow, then retry.
 5. Record build number, platform, account email, action, result, and screenshot for every bug.
 
+## Build Source
+
+TestFlight builds must come from the native iOS project:
+
+```bash
+open apps/ios-native/PWSNativePreview.xcodeproj
+```
+
+Archive the `PWSNativePreview` target. Do not use Expo/EAS for TestFlight. If the login button says `앱 시작하기`, the uploaded build is stale or came from the archived Expo/RN surface under `legacy/expo-rn`.
+
 ## QA Matrix
 
 | Flow | Account |

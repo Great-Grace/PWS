@@ -65,8 +65,6 @@ assert.match(supabaseSmokeHarness, /delete_own_account/, 'account deletion smoke
 assert.match(supabaseSmokeHarness, /Refusing to run account deletion smoke against the primary smoke tester/, 'account deletion smoke must not delete the primary smoke tester');
 for (const requiredCommand of [
   'npm audit --omit=dev',
-  'npx expo-doctor',
-  'npx expo install --check',
   'npm run typecheck',
   'npm test',
   'npm run native:android:verify',

@@ -5,8 +5,6 @@ const { execFileSync } = require('node:child_process');
 
 const requiredCommands = [
   'npm audit --omit=dev',
-  'npx expo-doctor',
-  'npx expo install --check',
   'npm run typecheck',
   'npm test',
   'npm run native:android:verify',

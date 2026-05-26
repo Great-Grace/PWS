@@ -6,7 +6,7 @@ import {
   normalizeBirthYear,
   setAllAgreements,
   toggleAgreement,
-} from '../src/utils/onboarding';
+} from '../legacy/expo-rn/src/utils/onboarding';
 
 const emptyState = { terms: false, privacy: false, marketing: false };
 

@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const settingsSource = readFileSync('src/screens/SettingsScreen.tsx', 'utf8');
+const settingsSource = readFileSync('legacy/expo-rn/src/screens/SettingsScreen.tsx', 'utf8');
 
 assert.match(
   settingsSource,

@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { shouldHoldBootScreen } from '../src/utils/bootState';
+import { shouldHoldBootScreen } from '../legacy/expo-rn/src/utils/bootState';
 
 assert.equal(
   shouldHoldBootScreen({ isLoading: true, fontsLoaded: false, fontError: null }),
@@ -39,7 +39,7 @@ assert.equal(
   '인증 초기화가 멈춰도 테스터 앱은 무한 부팅 화면 대신 로그인 화면으로 진행해야 한다'
 );
 
-const appSource = readFileSync(join(process.cwd(), 'App.tsx'), 'utf8');
+const appSource = readFileSync(join(process.cwd(), 'legacy/expo-rn/App.tsx'), 'utf8');
 
 assert.equal(
   appSource.includes("logSafeError('[App] boot initialization timed out'"),

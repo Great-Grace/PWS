@@ -1,12 +1,12 @@
 import * as assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const buildGradle = readFileSync('android/app/build.gradle', 'utf8');
-const gradleProperties = readFileSync('android/gradle.properties', 'utf8');
-const androidManifest = readFileSync('android/app/src/main/AndroidManifest.xml', 'utf8');
-const appJson = readFileSync('app.json', 'utf8');
-const appInfo = readFileSync('src/config/appInfo.ts', 'utf8');
-const supabaseConfig = readFileSync('src/config/supabase.ts', 'utf8');
+const buildGradle = readFileSync('legacy/expo-rn/android/app/build.gradle', 'utf8');
+const gradleProperties = readFileSync('legacy/expo-rn/android/gradle.properties', 'utf8');
+const androidManifest = readFileSync('legacy/expo-rn/android/app/src/main/AndroidManifest.xml', 'utf8');
+const appJson = readFileSync('legacy/expo-rn/app.json', 'utf8');
+const appInfo = readFileSync('legacy/expo-rn/src/config/appInfo.ts', 'utf8');
+const supabaseConfig = readFileSync('legacy/expo-rn/src/config/supabase.ts', 'utf8');
 
 const releaseBlockMatch = buildGradle.match(/release \{[\s\S]*?\n        \}/);
 assert.ok(releaseBlockMatch, 'Android release build block should exist');

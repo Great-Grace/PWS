@@ -160,23 +160,19 @@ Do not approve the first Android+iOS release while any P0 item below is open.
    - Follow-up: remove the override only after Expo/Metro depends on a patched PostCSS line directly.
 
 2. Pin release validation runtime
-   - Local Node 25 is not release evidence for Expo SDK 54.
-   - Validate with Node 20 LTS or exact EAS image.
+   - Validate Node-based tooling with the project npm lockfile and native build lanes.
    - Keep Android Gradle gates pinned to JDK 21 through `scripts/java21-home.js`.
 
-3. Resolve Expo native config drift
-   - Status: local command gate closed on 2026-05-17 KST.
+3. Keep native projects as release source of truth
+   - Status: Expo/RN has been archived under `legacy/expo-rn`.
    - Decision: checked-in native projects are the source of truth for this release lane.
-   - Implementation: `expo.doctor.appConfigFieldsNotSyncedCheck.enabled=false` is set in `package.json`.
-   - Follow-up: explicitly verify app scheme, icons, splash, package IDs, permissions, runtimeVersion, update config, and native plugin effects in native files before signed artifacts.
+   - Follow-up: explicitly verify app scheme, icons, splash, package IDs, permissions, and runtime config in native files before signed artifacts.
 
 4. Required command gate after fixes
    - `npm audit --omit=dev`
-   - `npx expo-doctor`
-   - `npx expo install --check`
    - `npm run typecheck`
    - `npm test`
-   - `npm run android:release`
+   - `npm run native:android:release`
    - `npm run native:android:verify`
    - `npm run native:ios:verify`
    - `npm run supabase:smoke`

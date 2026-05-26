@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const loginSource = readFileSync('src/screens/LoginScreen.tsx', 'utf8');
+const loginSource = readFileSync('legacy/expo-rn/src/screens/LoginScreen.tsx', 'utf8');
 
 for (const unsupportedProvider of [
   '카카오로 시작하기',

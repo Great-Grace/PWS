@@ -8,7 +8,7 @@ import {
   resolveOptionalTesterAuthConfig,
   resolveTesterAuthConfig,
   testerSessionId,
-} from '../src/utils/testerAuth';
+} from '../legacy/expo-rn/src/utils/testerAuth';
 
 assert.deepEqual(
   resolveTesterAuthConfig('  managed-secret  '),

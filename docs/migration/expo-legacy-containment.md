@@ -1,41 +1,34 @@
-# Expo/RN Legacy Tester Containment
+# Expo/RN Legacy Containment
 
-## Role
+## Status
 
-The Expo/RN app is now the tester/reference surface, not the target production architecture. It remains useful for:
+The Expo/RN app has been physically moved out of the root and archived at:
 
-- Expo Go or EAS tester delivery.
-- Comparing native Android/iOS behavior against the current product flow.
-- Preserving known-good Supabase, weather, feedback, onboarding, and Figma strict-copy UI behavior while native apps catch up.
+```text
+legacy/expo-rn/
+```
 
-## Current Owned Files
+It is no longer a release or TestFlight build path.
 
-Keep these root-owned until the command matrix proves a physical move:
+## Archived Files
 
-- `App.tsx`
-- `src/`
-- `tests/`
-- `package.json`
-- `package-lock.json`
-- `app.json`
-- `eas.json`
-- tracked `android/`
-- Expo assets under `assets/`
-- Expo/RN helper scripts under `scripts/`
+- `legacy/expo-rn/App.tsx`
+- `legacy/expo-rn/index.ts`
+- `legacy/expo-rn/src/`
+- `legacy/expo-rn/app.json`
+- `legacy/expo-rn/eas.json`
+- `legacy/expo-rn/android/`
+- `legacy/expo-rn/assets/`
+- `legacy/expo-rn/babel.config.js`
+- `legacy/expo-rn/metro.config.js`
 
 ## Boundary Rules
 
-- Tester-only auth behavior must not become the native production auth policy.
-- Expo update/build workflows remain for tester delivery only.
-- Native Android/iOS should consume shared contracts and `DESIGN.md`; they should not copy Expo implementation details blindly.
-- Expo physical move to `apps/expo-tester/` is optional and blocked until `docs/migration/command-matrix.md` passes.
+- PM/build handoff must not use `eas build`, `expo run:ios`, or root `npm run ios`.
+- TestFlight must use `apps/ios-native/PWSNativePreview.xcodeproj`.
+- Android native must use `apps/android-native`.
+- Legacy tests can still read `legacy/expo-rn` as migration evidence, but new product work should land in native apps or shared contracts.
 
-## Cleanup Path
+## Guardrail
 
-1. Keep Expo/RN root-owned during Android/iOS native bootstrap.
-2. Treat it as logical `apps/expo-tester` in docs.
-3. Once native Android and iOS reach parity, choose one:
-   - archive Expo/RN as `apps/expo-tester/`
-   - remove it after a final tag
-   - keep it as a permanent QA harness
-4. Only then remove Expo-specific production assumptions from native release planning.
+Root Expo commands intentionally fail through `scripts/native-only-command.js`. This makes accidental legacy builds loud instead of quietly producing the wrong app.

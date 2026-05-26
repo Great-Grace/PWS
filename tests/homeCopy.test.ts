@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const homeSource = readFileSync('src/screens/HomeScreen.tsx', 'utf8');
+const homeSource = readFileSync('legacy/expo-rn/src/screens/HomeScreen.tsx', 'utf8');
 
 assert.equal(
   homeSource.includes('PM2.5'),

@@ -6,7 +6,7 @@ import {
   chunkKey,
   parseChunkMetadata,
   splitSecureStoreValue,
-} from '../src/utils/secureStoreChunks';
+} from '../legacy/expo-rn/src/utils/secureStoreChunks';
 
 assert.equal(
   chunkKey('sb-session', 2),

@@ -25,8 +25,6 @@ Do not approve a first Android+iOS release if any of the following are true:
 Run these after P0/P1 fixes and before final release signoff:
 
 - `npm audit --omit=dev`
-- `npx expo-doctor`
-- `npx expo install --check`
 - `npm run typecheck`
 - `npm test`
 - `npm run native:android:verify`
@@ -36,7 +34,7 @@ Run these after P0/P1 fixes and before final release signoff:
 
 Additional platform gates:
 
-- Android release artifact: `npm run android:release` or the approved release build command with upload-key evidence.
+- Android release artifact: `npm run native:android:release` or the approved release build command with upload-key evidence.
 - iOS runtime test: `xcodebuild test` or XcodeBuildMCP simulator/device lane when CoreSimulator/device access is healthy.
 - Android/iOS runtime smoke with sanitized logs.
 - Live Supabase read/RLS smoke: `npm run supabase:smoke`; account deletion proof remains a separate controlled disposable-account step unless the smoke harness is explicitly extended for that case.
