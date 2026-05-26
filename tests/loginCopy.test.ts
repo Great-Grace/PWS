@@ -19,9 +19,21 @@ for (const unsupportedProvider of [
 }
 
 assert.equal(
-  loginSource.includes('테스터로 시작하기'),
+  loginSource.includes('이메일로 로그인'),
   true,
-  'Login should present the current tester access flow explicitly'
+  'Login should present the current email/password tester access flow explicitly'
+);
+
+assert.equal(
+  loginSource.includes('앱 시작하기'),
+  false,
+  'Login should not show the legacy tester-id start button copy'
+);
+
+assert.equal(
+  loginSource.includes('테스터 아이디'),
+  false,
+  'Login should not ask TestFlight users for the legacy tester id'
 );
 
 assert.equal(

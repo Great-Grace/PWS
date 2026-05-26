@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wxxtae.pws",
+      "bundleIdentifier": "woos.owndo",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

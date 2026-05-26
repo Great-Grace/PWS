@@ -17,11 +17,12 @@ import { borderRadius, colors, fontSize, fontWeight, layout, spacing } from '../
 import { useAuthStore } from '../stores/authStore';
 import AppDialog, { AppDialogState } from '../components/AppDialog';
 
-const TESTER_ID_REGEX = /^[a-z0-9_]{2,20}$/;
+const TESTER_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen() {
-  const { signInWithTesterId } = useAuthStore();
-  const [testerId, setTesterId] = useState('');
+  const { signInWithEmailPassword } = useAuthStore();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTesterSheetVisible, setTesterSheetVisible] = useState(false);
   const [dialog, setDialog] = useState<AppDialogState | null>(null);
@@ -36,19 +37,28 @@ export default function LoginScreen() {
   };
 
   const handleStart = async () => {
-    const trimmed = testerId.trim().toLowerCase();
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
 
-    if (!TESTER_ID_REGEX.test(trimmed)) {
+    if (!TESTER_EMAIL_REGEX.test(trimmedEmail)) {
       setDialog({
-        title: '아이디 오류',
-        message: '영문 소문자, 숫자, 언더스코어(_)만 사용 가능하며\n2~20자로 입력해주세요.',
+        title: '이메일 오류',
+        message: '배정받은 TestFlight 이메일을 입력해주세요.\n예: pws_tf_01@test.pws',
+      });
+      return;
+    }
+
+    if (!trimmedPassword) {
+      setDialog({
+        title: '비밀번호 오류',
+        message: '테스터 공통 비밀번호를 입력해주세요.',
       });
       return;
     }
 
     setIsLoading(true);
     try {
-      await signInWithTesterId(trimmed);
+      await signInWithEmailPassword(trimmedEmail, trimmedPassword);
       setTesterSheetVisible(false);
     } catch (error: any) {
       setDialog({
@@ -86,18 +96,18 @@ export default function LoginScreen() {
         <Pressable
           onPress={openTesterSheet}
           accessibilityRole="button"
-          accessibilityLabel="테스터로 시작하기"
-          accessibilityHint="등록된 테스터 아이디로 앱을 시작합니다"
+          accessibilityLabel="이메일로 로그인"
+          accessibilityHint="배정된 TestFlight 이메일과 비밀번호로 로그인합니다"
           style={({ pressed }) => [styles.providerShadow, pressed && styles.providerPressed]}
         >
           <View style={styles.providerButton}>
             <Text style={styles.providerMark}>T</Text>
-            <Text style={styles.providerLabel}>테스터로 시작하기</Text>
+            <Text style={styles.providerLabel}>이메일로 로그인</Text>
           </View>
         </Pressable>
 
         <Text style={styles.legalText}>
-          사전 등록된 테스터 ID로 이용할 수 있어요{`\n`}소셜 로그인은 현재 빌드에서 제공하지 않습니다
+          사전 등록된 TestFlight 계정으로 이용할 수 있어요{`\n`}소셜 로그인은 현재 빌드에서 제공하지 않습니다
         </Text>
       </View>
 
@@ -124,32 +134,47 @@ export default function LoginScreen() {
             <View style={styles.modalCard}>
               <Text style={styles.modalTitle}>테스터 로그인</Text>
               <Text style={styles.modalDescription}>
-                현재 빌드는 사전 등록된 테스터 ID로만 시작할 수 있어요.
+                배정받은 이메일과 공통 비밀번호를 입력하세요.
               </Text>
               <TextInput
-                value={testerId}
-                onChangeText={setTesterId}
-                placeholder="테스터 아이디 입력"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="pws_tf_01@test.pws"
                 placeholderTextColor={colors.textTertiary}
-                accessibilityLabel="테스터 아이디"
-                accessibilityHint="등록된 테스터 아이디를 입력하세요"
+                accessibilityLabel="테스터 이메일"
+                accessibilityHint="배정받은 TestFlight 이메일을 입력하세요"
                 autoCapitalize="none"
                 autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="username"
+                returnKeyType="next"
+                style={styles.input}
+              />
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="비밀번호"
+                placeholderTextColor={colors.textTertiary}
+                accessibilityLabel="비밀번호"
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry
+                textContentType="password"
                 returnKeyType="go"
                 onSubmitEditing={handleStart}
                 style={styles.input}
               />
-              <Text style={styles.helperText}>등록된 ID 예: pws_dev · 영문 소문자/숫자/_ 조합 2~20자</Text>
+              <Text style={styles.helperText}>일반 QA는 pws_tf_* 계정, 탈퇴 테스트는 pws_delete_* 계정만 사용하세요.</Text>
               <Pressable
                 onPress={handleStart}
                 disabled={isLoading}
                 accessibilityRole="button"
-                accessibilityLabel="앱 시작하기"
+                accessibilityLabel="이메일로 로그인"
                 accessibilityState={{ disabled: isLoading }}
                 style={({ pressed }) => [styles.confirmShadow, pressed && styles.providerPressed]}
               >
                 <View style={[styles.confirmButton, isLoading && styles.confirmButtonDisabled]}>
-                  {isLoading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={styles.confirmButtonText}>앱 시작하기</Text>}
+                  {isLoading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={styles.confirmButtonText}>이메일로 로그인</Text>}
                 </View>
               </Pressable>
             </View>

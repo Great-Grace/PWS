@@ -89,6 +89,7 @@ interface AuthState {
   testerId: string | null; // 로그인 시 입력한 ID → 닉네임으로 재사용
 
   initialize: () => Promise<void>;
+  signInWithEmailPassword: (email: string, password: string) => Promise<void>;
   signInWithTesterId: (testerId: string) => Promise<void>;
   signOut: () => Promise<void>;
   fetchUserProfile: () => Promise<void>;
@@ -138,6 +139,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  signInWithEmailPassword: async (rawEmail: string, rawPassword: string) => {
+    const email = rawEmail.trim().toLowerCase();
+    const password = rawPassword.trim();
+    const testerId = email.endsWith('@test.pws')
+      ? email.replace('@test.pws', '')
+      : email.split('@')[0] || null;
+
+    if (!email || !password) {
+      throw new Error('이메일과 비밀번호를 모두 입력해주세요.');
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const session = data.session;
+    set({
+      session,
+      user: session && testerId ? createTesterFallbackUser(testerId, session.user.id, email) : null,
+      isOnboarded: true,
+      testerId,
+    });
+    void get().fetchUserProfile();
   },
 
   signInWithTesterId: async (testerId: string) => {
