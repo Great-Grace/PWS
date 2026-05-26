@@ -9,8 +9,6 @@ app/
     android-native/   # Kotlin + Jetpack Compose Android app
   supabase/           # shared backend: config, migrations, Edge Functions, manual SQL
   shared/             # shared contracts and design notes
-  legacy/
-    expo-rn/          # archived Expo/RN reference app; not a release build path
   docs/
   scripts/
   tests/
@@ -20,8 +18,8 @@ app/
 
 - iOS release/TestFlight builds must use `apps/ios-native/PWSNativePreview.xcodeproj`.
 - Android native builds must use `apps/android-native`.
-- Root Expo/EAS commands are disabled by `scripts/native-only-command.js`.
-- `legacy/expo-rn` remains only so old behavior and migration tests can be inspected.
+- Root legacy mobile commands are disabled by `scripts/native-only-command.js`.
+- Historical cross-platform app code must be inspected through Git history, not the release workspace.
 
 ## Backend Boundary
 

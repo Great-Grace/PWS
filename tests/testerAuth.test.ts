@@ -8,7 +8,7 @@ import {
   resolveOptionalTesterAuthConfig,
   resolveTesterAuthConfig,
   testerSessionId,
-} from '../legacy/expo-rn/src/utils/testerAuth';
+} from '../shared/domain/testerAuth';
 
 assert.deepEqual(
   resolveTesterAuthConfig('  managed-secret  '),
@@ -31,7 +31,7 @@ assert.deepEqual(
 assert.equal(
   resolveOptionalTesterAuthConfig(undefined),
   null,
-  '선택적 테스터 인증 설정은 비어 있어도 로컬 fallback 판단을 위해 null을 반환해야 한다'
+  '선택적 테스터 인증 설정은 비어 있어도 로컬 테스터 판단을 위해 null을 반환해야 한다'
 );
 
 assert.throws(
@@ -77,7 +77,7 @@ assert.equal(
 assert.equal(
   isLocalTesterSessionId('dev-weatherfan'),
   true,
-  '테스터 브랜치의 로컬 테스터 세션은 Expo Go 배포 번들에서도 Supabase 없이 앱을 사용할 수 있어야 한다'
+  '테스터 브랜치의 로컬 테스터 세션은 네이티브 QA에서도 Supabase 없이 앱을 사용할 수 있어야 한다'
 );
 
 assert.equal(

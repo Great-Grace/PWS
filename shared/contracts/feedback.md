@@ -2,7 +2,7 @@
 
 ## Owner
 - Table: `public.feedback_entries`.
-- RN reference: `src/stores/feedbackStore.ts`, `src/screens/FeedbackScreen.tsx`.
+- Shared TypeScript reference: `shared/domain/formulas.ts`.
 - Native reference: `apps/android-native/app/src/main/java/com/wxxtae/pws/nativepreview/domain/FeedbackRepository.kt`.
 - Security reference: `supabase/pws_security_baseline.sql`, `supabase/migrations/20260504055409_operational_security_hardening.sql`.
 
@@ -34,14 +34,13 @@
 ## Weather Snapshot Fields
 - `actual_temp`, `actual_humidity`, `actual_wind`, `actual_precip`.
 - Optional radiant temperature fields: `actual_tmrt_api`, `tmrt_corrected`.
-- RN populates snapshots from the current weather store when available.
+- Native clients populate snapshots from the current weather state when available.
 
 ## Computed Fields
 - `clothing_offset`, `activity_offset`, `sleep_offset`.
 - `adjusted_feel`, `personal_feel`, `exposure_weight`, `weighted_feel`.
 - `env_base`.
-- RN computes and inserts these values during submission when inputs and weather are available.
-- Supabase also normalizes these fields in a `BEFORE INSERT OR UPDATE` trigger so Android/iOS/native clients still create trainable rows when they submit only normalized input plus weather snapshots.
+- Supabase normalizes these fields in a `BEFORE INSERT OR UPDATE` trigger so Android/iOS/native clients create trainable rows when they submit normalized input plus weather snapshots.
 - `env_base` is a literature-anchored baseline: UTCI polynomial approximation for outdoor thermal stress, then ordered-logit calibration from UTCI stress thresholds to the PWS 1-7 label scale.
 - `weighted_feel` is kept on the 1-7 prediction scale; exposure weighting should pull personal feedback toward neutral, not multiply the whole score below the rating scale.
 - Learned model target is the residual `weighted_feel - env_base`; personal/group offsets use shrinkage toward 0 until enough labels accumulate.
@@ -54,7 +53,7 @@
 
 ## Support Feedback
 - Table: `public.tester_feedback`.
-- RN reference: `src/screens/SettingsScreen.tsx`.
+- Native reference: Settings support feedback surfaces in `apps/android-native` and `apps/ios-native`.
 - Purpose: app support feedback, distinct from weather-feel records.
 - Insert body: `user_id` plus trimmed `message`, capped at 500 characters in UI.
 - Authenticated users may insert and read only their own rows.

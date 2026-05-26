@@ -1,6 +1,6 @@
 # PWS Native Android Preview
 
-This is the Kotlin-first native Android migration target. It is intentionally parallel to the current Expo/React Native app until native feature parity is proven.
+This is the Kotlin-first native Android app surface.
 
 ## Build
 From `app/`. The Android SDK must be discoverable through `ANDROID_HOME` or an ignored local `local.properties`.
@@ -26,4 +26,4 @@ The native preview now includes a Kotlin adapter for the existing Supabase Edge 
 - Runtime behavior: reads a persisted token from `NativeSupabaseSessionStore`, then falls back through `FallbackWeatherRemoteSource` until the native auth/session lane can create and refresh a real token, so emulator QA remains deterministic.
 - Security gating: persisted Supabase sessions and tester password auth are debug-only until encrypted session storage is added. Release builds leave `EXPO_PUBLIC_TEST_PASSWORD` empty, disable SharedPreferences-backed session persistence, and fail closed instead of using preview weather fallback.
 
-See `.omx/wiki/weather-onecall-contract.md` for the full RN ↔ native contract.
+See `shared/contracts/weather-onecall.md` for the shared weather contract.

@@ -118,9 +118,10 @@ const sbom = JSON.parse(readFileSync(releaseSbom, 'utf8')) as {
 assert.equal(sbom.schema, 'pws-npm-sbom-v1', 'SBOM must use the local npm SBOM schema');
 assert.equal(sbom.status, 'pass', 'current npm SBOM must have no unknown license entries');
 assert.ok(sbom.packageCount > 0, 'SBOM must include dependency entries');
-assert.ok(
-  sbom.packages.some((entry) => entry.name === 'expo' && entry.version),
-  'SBOM must include direct Expo dependency evidence'
+assert.equal(
+  sbom.packages.some((entry) => /^(expo|react-native)$/.test(entry.name)),
+  false,
+  'SBOM must not include removed Expo/RN runtime packages'
 );
 
 const nativeReadiness = JSON.parse(readFileSync(nativeReadinessArtifact, 'utf8')) as {

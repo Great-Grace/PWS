@@ -10,7 +10,7 @@ Scope: Android native, iOS native, shared backend/runtime readiness, dependency/
 - `code-simplifier`: release blockers are tied to local/demo runtime paths, static UI, and duplicated fragile contracts.
 - `critic`: `native:readiness` is a build/test gate, not a commercial release gate.
 - `debugger`: runtime smoke, logs, live backend behavior, and release env handling are the largest blockers.
-- `dependency-expert`: PostCSS/Expo audit, native config drift, Node/JDK pinning, signing, and SBOM remain release tasks.
+- `dependency-expert`: root npm trimming, native config drift, Node/JDK pinning, signing, and SBOM remain release tasks.
 
 ## No-Ship Criteria
 
@@ -109,7 +109,7 @@ Do not approve the first Android+iOS release while any P0 item below is open.
    - Add tests proving fallback is disabled for release-like runtime.
 
 4. Env and cold-launch validation
-   - Test real env, missing env, and bad anon key across Expo/RN and native release paths.
+   - Test real env, missing env, and bad anon key across native release paths.
    - Ensure startup failures become controlled UI states, not crashes.
    - Status update: Android background runtime failures now show a visible runtime error instead of crashing the worker thread, and iOS renders runtime errors in the shell.
 
@@ -149,22 +149,22 @@ Do not approve the first Android+iOS release while any P0 item below is open.
 4. SBOM and notices
    - Generate OSS notices/SBOM.
    - Document permissive license paths for transitive dual-license packages.
-   - Status update: `npm run release:sbom` now generates `docs/migration/native-parity-readiness/sbom-npm.json` from `package-lock.json`; the generated npm inventory currently has 703 package entries, `status: pass`, and `unknownLicenseCount: 0`.
+   - Status update: `npm run release:sbom` now generates `docs/migration/native-parity-readiness/sbom-npm.json` from `package-lock.json`; after removing the old cross-platform runtime, the generated npm inventory has 14 package entries, `status: pass`, and `unknownLicenseCount: 0`.
    - Native dependency/license review lane is generated in `docs/migration/native-parity-readiness/native-dependency-license-review.md`; no native dependency license blocker is currently known.
 
 ## Dependency And Toolchain Tasks
 
 1. Resolve `npm audit --omit=dev`
    - Status: local command gate closed on 2026-05-17 KST.
-   - Resolution: keep npm override for `postcss@8.5.10`; do not apply npm's suggested Expo 49 downgrade.
-   - Follow-up: remove the override only after Expo/Metro depends on a patched PostCSS line directly.
+   - Resolution: remove the old cross-platform runtime dependency graph from the root npm workspace.
+   - Follow-up: keep npm audit in the release gate.
 
 2. Pin release validation runtime
    - Validate Node-based tooling with the project npm lockfile and native build lanes.
    - Keep Android Gradle gates pinned to JDK 21 through `scripts/java21-home.js`.
 
 3. Keep native projects as release source of truth
-   - Status: Expo/RN has been archived under `legacy/expo-rn`.
+   - Status: the old cross-platform app has been removed from the release workspace.
    - Decision: checked-in native projects are the source of truth for this release lane.
    - Follow-up: explicitly verify app scheme, icons, splash, package IDs, permissions, and runtime config in native files before signed artifacts.
 

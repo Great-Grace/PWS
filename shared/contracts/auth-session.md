@@ -1,7 +1,7 @@
 # Auth Session Contract
 
 ## Owner
-- RN auth reference: `src/stores/authStore.ts`.
+- Shared tester auth reference: `shared/domain/testerAuth.ts`.
 - Native auth reference: `apps/android-native/app/src/main/java/com/wxxtae/pws/nativepreview/domain/NativeSupabaseAuthClient.kt`.
 - Native session storage reference: `apps/android-native/app/src/main/java/com/wxxtae/pws/nativepreview/domain/NativeSupabaseSession.kt`.
 - Existing notes: `.omx/wiki/weather-onecall-auth-native.md`.

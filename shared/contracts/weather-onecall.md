@@ -3,7 +3,7 @@
 ## Owner
 - Runtime surface: Supabase Edge Function `weather-onecall`.
 - Server reference: `supabase/functions/weather-onecall/index.ts`.
-- RN client reference: `src/stores/weatherStore.ts`.
+- Shared parser reference: `shared/domain/weatherData.ts`.
 - Native client reference: `apps/android-native/app/src/main/java/com/wxxtae/pws/nativepreview/domain/SupabaseWeatherRemoteSource.kt`.
 - Existing notes: `.omx/wiki/weather-onecall-contract.md`, `.omx/wiki/weather-onecall-auth-native.md`.
 
@@ -36,8 +36,7 @@
 - `fetchedAt`: epoch milliseconds.
 
 ## Client Rules
-- RN invokes `supabase.functions.invoke<WeatherData>('weather-onecall', { body: { lat, lng } })`.
-- Native builds the same HTTP request explicitly and normalizes missing or null `daily.weather_icon` to `""`.
+- Native builds the HTTP request explicitly and normalizes missing or null `daily.weather_icon` to `""`.
 - Native may keep `FallbackWeatherRemoteSource` during migration QA when token/env setup is absent.
 
 ## Migration Gate Coverage

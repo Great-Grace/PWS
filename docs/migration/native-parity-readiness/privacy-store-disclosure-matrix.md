@@ -28,7 +28,7 @@ This matrix summarizes the current Android/iOS native app data surfaces for firs
 | Android native | Internet | Required for Supabase auth/weather/profile/feedback/history/account deletion | Disclose network-backed account, weather, feedback, and support data flows |
 | Android native | Vibration | Requested via AndroidX/runtime UI stack | Review whether user-visible haptics are intentional before store submission |
 | iOS native | `NSLocation*UsageDescription` | No native Info.plist location usage key and no CoreLocation source usage found | Do not disclose iOS precise device location for native release unless CoreLocation is added |
-| iOS native | Encryption export | Expo reference declares `ITSAppUsesNonExemptEncryption=false`; native iOS store/archive evidence is not finalized | Reconfirm for final iOS bundle/signing lane |
+| iOS native | Encryption export | Native iOS store/archive evidence is not finalized | Reconfirm for final iOS bundle/signing lane |
 
 ## Store Answer Draft
 

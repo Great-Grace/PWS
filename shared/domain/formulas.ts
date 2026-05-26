@@ -5,8 +5,8 @@
 // · 7-level feel label (humidity-aware)
 // ============================================================
 
-import type { BMIBucket, ClothingItemId, FeedbackSlot } from '../types';
-import { CLOTHING_ITEM_DEFS, CLO_THIN_MAX, CLO_NORMAL_MAX } from '../theme';
+import type { BMIBucket, ClothingItemId, FeedbackSlot } from './types';
+import { CLOTHING_ITEM_DEFS, CLO_THIN_MAX, CLO_NORMAL_MAX } from './clothing';
 
 // ============================================================
 // 기존 유틸리티 함수 (유지)

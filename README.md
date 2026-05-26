@@ -9,11 +9,11 @@ This repository is native-first.
 - Backend: `supabase`
 - Shared contracts/design notes: `shared`
 
-## Legacy Surface
+## Removed Legacy Surface
 
-The old Expo/RN app is archived under `legacy/expo-rn`. It is reference material only and is not the TestFlight or store build path.
+The old cross-platform app has been removed from this release workspace. Historical code is available only through Git history before commit `26bfba1`.
 
-Root Expo commands are intentionally disabled. If a build shows the old `앱 시작하기` login flow, it was built from the legacy surface or an old commit.
+Root legacy mobile commands are intentionally disabled. If a build shows the old `앱 시작하기` login flow, it was built from an old commit, not this workspace.
 
 ## iOS TestFlight Build
 

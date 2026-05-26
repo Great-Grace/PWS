@@ -4,7 +4,7 @@ import {
   DEFAULT_WEATHER_DESC,
   DEFAULT_WEATHER_ICON,
   buildWeatherDataFromOneCall,
-} from '../legacy/expo-rn/src/utils/weatherData';
+} from '../shared/domain/weatherData';
 
 const raw = {
   current: {

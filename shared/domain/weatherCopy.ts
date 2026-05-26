@@ -1,4 +1,4 @@
-import type { DailyForecast } from '../types';
+import type { DailyForecast } from './types';
 
 export type GuideTone = 'morning' | 'day' | 'night';
 export type ReadyTone = 'warm' | 'cool' | 'purple' | 'green';

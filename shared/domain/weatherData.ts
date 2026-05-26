@@ -1,4 +1,4 @@
-import type { WeatherData } from '../types';
+import type { WeatherData } from './types';
 
 export const DEFAULT_WEATHER_CODE = 800;
 export const DEFAULT_WEATHER_DESC = '-';

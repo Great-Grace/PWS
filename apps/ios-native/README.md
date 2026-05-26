@@ -1,6 +1,6 @@
 # PWS Native iOS Preview
 
-SwiftUI-first native iOS migration target for PWS. This preview app runs beside the Expo/RN app until parity is approved.
+SwiftUI-first native iOS app surface for PWS.
 
 Bundle id: `woos.owndo`
 Final bundle id placeholder: `com.wxxtae.pws`
@@ -40,7 +40,7 @@ xcodebuild build -project apps/ios-native/PWSNativePreview.xcodeproj -scheme PWS
 
 ## Scope
 
-- SwiftUI native preview.
+- SwiftUI native app.
 - No React Native runtime, Expo runtime, Metro, or JS bundle.
 - Preserve `DESIGN.md` and strict-copy nodes before iOS-native refinement.
-- Reuse RN/Supabase contracts for auth, users, weather, feedback, history, and local tester behavior.
+- Reuse shared/Supabase contracts for auth, users, weather, feedback, history, and local tester behavior.

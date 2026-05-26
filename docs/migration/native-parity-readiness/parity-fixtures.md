@@ -11,7 +11,7 @@ Evidence status: `prior-evidence`
 ## Coverage
 - Android is the current native behavior reference for most domain logic.
 - iOS now has tester-auth, Keychain-backed session-clearing, weather request/cache, profile request/client, feedback normalization, and history-count contract coverage. Runtime orchestration plus auth/weather/feedback remote adapters are still gaps.
-- RN/Expo remains a legacy/reference behavior source until native parity is accepted.
+- Historical cross-platform behavior is no longer a workspace source; parity references now live in shared contracts and native tests.
 
 ## Sanitization
 - Fixture data intentionally contains no live credentials, password values, session values, privileged backend keys, or private backend URLs.

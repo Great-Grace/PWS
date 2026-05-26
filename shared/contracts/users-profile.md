@@ -2,7 +2,7 @@
 
 ## Owner
 - Table: `public.users`.
-- RN reference: `src/stores/authStore.ts`, `src/screens/OnboardingScreen.tsx`, `src/screens/SettingsScreen.tsx`.
+- Shared onboarding reference: `shared/domain/onboarding.ts`.
 - Native reference: `apps/android-native/app/src/main/java/com/wxxtae/pws/nativepreview/domain/NativeSupabaseProfileClient.kt`.
 - Security reference: `supabase/pws_security_baseline.sql`, `supabase/migrations/20260504055409_operational_security_hardening.sql`.
 

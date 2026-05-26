@@ -68,7 +68,7 @@ TestFlight builds must come from the native iOS project:
 open apps/ios-native/PWSNativePreview.xcodeproj
 ```
 
-Archive the `PWSNativePreview` target. Do not use Expo/EAS for TestFlight. If the login button says `앱 시작하기`, the uploaded build is stale or came from the archived Expo/RN surface under `legacy/expo-rn`.
+Archive the `PWSNativePreview` target. Do not use old cross-platform build commands for TestFlight. If the login button says `앱 시작하기`, the uploaded build is stale or came from an old commit.
 
 ## QA Matrix
 

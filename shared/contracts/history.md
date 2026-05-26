@@ -2,7 +2,7 @@
 
 ## Owner
 - Data source: `public.feedback_entries`.
-- RN reference: `src/stores/feedbackStore.ts`, `src/screens/HistoryScreen.tsx`.
+- Shared reference: `shared/domain/formulas.ts`.
 - Native reference: `apps/android-native/app/src/main/java/com/wxxtae/pws/nativepreview/domain/FeedbackRepository.kt`, `apps/android-native/app/src/main/java/com/wxxtae/pws/nativepreview/domain/HistorySummary.kt`.
 
 ## Query

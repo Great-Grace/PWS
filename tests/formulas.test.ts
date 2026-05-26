@@ -11,7 +11,7 @@ import {
   initWeights,
   resolveWeights,
   updateWeights,
-} from '../legacy/expo-rn/src/utils/formulas';
+} from '../shared/domain/formulas';
 
 assert.equal(getDefaultSlot(5), 'evening');
 assert.equal(getDefaultSlot(6), 'morning');

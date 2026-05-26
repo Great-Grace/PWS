@@ -123,9 +123,9 @@ if (!BuildConfig.DEBUG && primaryFailure != null) {
 - Severity: LOW
 - Category: OWASP A06 Vulnerable and Outdated Components
 - Status: Mitigated for license review; vulnerability audit follow-up remains
-- Evidence: `npm audit --omit=dev` passes on 2026-05-17 KST after pinning transitive `postcss` to `8.5.10` via npm override. `npm run release:sbom` generated a passing npm lockfile inventory with zero unknown license entries. `docs/migration/native-parity-readiness/native-dependency-license-review.md` documents Android release runtime dependencies and confirms the iOS native project has no Swift Package/CocoaPods/Carthage dependencies.
+- Evidence: `npm audit --omit=dev` passes after removing the old cross-platform runtime packages from the root npm workspace. `npm run release:sbom` generated a passing npm lockfile inventory with zero unknown license entries. `docs/migration/native-parity-readiness/native-dependency-license-review.md` documents Android release runtime dependencies and confirms the iOS native project has no Swift Package/CocoaPods/Carthage dependencies.
 - Impact: npm and native license-review blockers are closed for the release-readiness lane, but Android native dependencies still do not have a dedicated vulnerability-audit command comparable to `npm audit`.
-- Remediation: keep the PostCSS override until Expo/Metro carries a patched version directly, and add a native dependency vulnerability audit lane before production signoff.
+- Remediation: add a native dependency vulnerability audit lane before production signoff.
 
 ## Checklist
 

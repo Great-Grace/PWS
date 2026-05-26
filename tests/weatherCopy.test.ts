@@ -4,7 +4,7 @@ import {
   getOutfitGuideByTemp,
   getWeatherGuideRows,
   getWeatherReadyCards,
-} from '../legacy/expo-rn/src/utils/weatherCopy';
+} from '../shared/domain/weatherCopy';
 
 assert.equal(
   getFeelGuideMessage(null),

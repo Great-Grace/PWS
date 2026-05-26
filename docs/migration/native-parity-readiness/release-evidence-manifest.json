@@ -10,16 +10,6 @@
       "completedAt": "2026-05-24T14:20:00+09:00"
     },
     {
-      "command": "npx expo-doctor",
-      "status": "pass",
-      "completedAt": "2026-05-24T14:23:00+09:00"
-    },
-    {
-      "command": "npx expo install --check",
-      "status": "pass",
-      "completedAt": "2026-05-24T14:23:00+09:00"
-    },
-    {
       "command": "npm run typecheck",
       "status": "pass",
       "completedAt": "2026-05-24T14:20:00+09:00"
@@ -87,18 +77,11 @@
       "note": "iOS simulator build passed after changing runtime refresh to load weather and feedback independently."
     },
     {
-      "command": "npm audit fix + targeted xcode uuid override + npm audit --omit=dev",
+      "command": "npm audit --omit=dev after root dependency trim",
       "status": "pass",
-      "completedAt": "2026-05-24T14:20:00+09:00",
+      "completedAt": "2026-05-27T00:00:00+09:00",
       "artifact": "package.json",
-      "note": "Non-forced audit fix cleared ws/brace-expansion advisories, a targeted xcode->uuid 11.1.1 override cleared the remaining Expo xcode uuid advisory, and npm audit --omit=dev returned zero vulnerabilities."
-    },
-    {
-      "command": "npx expo-doctor + npx expo install --check",
-      "status": "pass",
-      "completedAt": "2026-05-24T14:23:00+09:00",
-      "artifact": "metro.config.js",
-      "note": "Added a minimal Expo Metro default config that extends expo/metro-config per Expo guidance; expo-doctor then passed 17/17 checks and expo install --check reported dependencies up to date."
+      "note": "The old cross-platform runtime dependency graph was removed from the root npm workspace, and npm audit returned zero vulnerabilities."
     },
     {
       "command": "XcodeBuildMCP test_sim",
