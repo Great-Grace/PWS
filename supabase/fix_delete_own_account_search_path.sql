@@ -1,7 +1,16 @@
--- Fix delete_own_account SECURITY DEFINER search_path hardening
+-- Fix delete_own_account RPC search_path hardening and public-schema exposure.
 -- Run in Supabase SQL Editor.
 
-create or replace function public.delete_own_account()
+begin;
+
+create schema if not exists private;
+alter schema private owner to postgres;
+
+revoke all on schema private from public;
+revoke all on schema private from anon;
+revoke all on schema private from authenticated;
+
+create or replace function private.delete_own_account()
 returns void
 language plpgsql
 security definer
@@ -28,19 +37,37 @@ begin
 end;
 $$;
 
+create or replace function public.delete_own_account()
+returns void
+language sql
+security invoker
+set search_path = ''
+as $$
+  select private.delete_own_account();
+$$;
+
 revoke all on function public.delete_own_account() from public;
 revoke all on function public.delete_own_account() from anon;
 revoke all on function public.delete_own_account() from authenticated;
+revoke all on function private.delete_own_account() from public;
+revoke all on function private.delete_own_account() from anon;
+revoke all on function private.delete_own_account() from authenticated;
+
+grant usage on schema private to authenticated;
+grant execute on function private.delete_own_account() to authenticated;
 grant execute on function public.delete_own_account() to authenticated;
 
+commit;
+
 -- Verify. Expected:
--- security_definer = true
--- config should include search_path="" or equivalent empty search_path.
+-- public.delete_own_account: security_definer = false
+-- private.delete_own_account: security_definer = true
+-- config should include search_path="" or equivalent empty search_path for both.
 select n.nspname as schema,
        p.proname as function,
        p.prosecdef as security_definer,
        p.proconfig as config
 from pg_proc p
 join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public'
+where n.nspname in ('public', 'private')
   and p.proname = 'delete_own_account';

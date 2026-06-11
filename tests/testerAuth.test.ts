@@ -1,10 +1,14 @@
 import * as assert from 'node:assert/strict';
 import {
   TESTER_AUTH_CONFIG_ERROR,
+  isFigmaParitySessionId,
+  isLocalTesterSessionId,
   normalizeTesterId,
   resolveDevTesterMode,
+  resolveOptionalTesterAuthConfig,
   resolveTesterAuthConfig,
-} from '../src/utils/testerAuth';
+  testerSessionId,
+} from '../shared/domain/testerAuth';
 
 assert.deepEqual(
   resolveTesterAuthConfig('  managed-secret  '),
@@ -13,6 +17,21 @@ assert.deepEqual(
     allowAutoSignup: false,
   },
   '테스터 인증 설정은 공백 제거 후 자동 회원가입을 비활성화해야 한다'
+);
+
+assert.deepEqual(
+  resolveOptionalTesterAuthConfig('  managed-secret  '),
+  {
+    password: 'managed-secret',
+    allowAutoSignup: false,
+  },
+  '선택적 테스터 인증 설정도 공백 제거 후 DB 우선 로그인에 사용할 수 있어야 한다'
+);
+
+assert.equal(
+  resolveOptionalTesterAuthConfig(undefined),
+  null,
+  '선택적 테스터 인증 설정은 비어 있어도 로컬 테스터 판단을 위해 null을 반환해야 한다'
 );
 
 assert.throws(
@@ -33,7 +52,7 @@ assert.equal(
 
 assert.equal(
   resolveDevTesterMode('pws_dev'),
-  'strict-parity',
+  'figma-parity',
   'pws_dev는 Figma strict parity 검수용 홈 진입 계정이어야 한다'
 );
 
@@ -45,8 +64,38 @@ assert.equal(
 
 assert.equal(
   resolveDevTesterMode('unknown'),
-  null,
-  '그 외 ID는 dev bypass를 타지 않아야 한다'
+  'simple-login',
+  '테스터 브랜치에서는 임의의 유효 닉네임도 로컬 simple-login 세션으로 진입해야 한다'
+);
+
+assert.equal(
+  testerSessionId('  WeatherFan  '),
+  'dev-weatherfan',
+  '로컬 테스터 세션 ID는 정규화된 닉네임에 dev prefix를 붙여야 한다'
+);
+
+assert.equal(
+  isLocalTesterSessionId('dev-weatherfan'),
+  true,
+  '테스터 브랜치의 로컬 테스터 세션은 네이티브 QA에서도 Supabase 없이 앱을 사용할 수 있어야 한다'
+);
+
+assert.equal(
+  isLocalTesterSessionId('120f5699-b96c-476f-85b9-26f7f6a35c90'),
+  false,
+  '실제 Supabase UUID 세션은 로컬 테스터 세션으로 오인하면 안 된다'
+);
+
+assert.equal(
+  isFigmaParitySessionId('dev-pws_dev'),
+  true,
+  'pws_dev만 Figma parity 고정 데이터를 사용해야 한다'
+);
+
+assert.equal(
+  isFigmaParitySessionId('dev-weatherfan'),
+  false,
+  '일반 simple-login 닉네임은 Figma parity 고정 데이터를 사용하면 안 된다'
 );
 
 console.log('testerAuth test passed');

@@ -1,0 +1,464 @@
+{
+  "status": "blocked",
+  "commit": "unknown",
+  "updatedAt": "2026-05-24T14:24:00+09:00",
+  "scope": "Android+iOS first production release",
+  "commands": [
+    {
+      "command": "npm audit --omit=dev",
+      "status": "pass",
+      "completedAt": "2026-05-24T14:20:00+09:00"
+    },
+    {
+      "command": "npm run typecheck",
+      "status": "pass",
+      "completedAt": "2026-05-24T14:20:00+09:00"
+    },
+    {
+      "command": "npm test",
+      "status": "pass",
+      "completedAt": "2026-05-24T14:20:00+09:00"
+    },
+    {
+      "command": "npm run native:android:verify",
+      "status": "pass",
+      "completedAt": "2026-05-18T19:44:35+09:00"
+    },
+    {
+      "command": "npm run native:ios:verify",
+      "status": "pass",
+      "completedAt": "2026-05-18T13:44:44+09:00",
+      "blocker": null
+    },
+    {
+      "command": "npm run release:sbom",
+      "status": "pass",
+      "completedAt": "2026-05-24T14:18:00+09:00"
+    },
+    {
+      "command": "npm run supabase:smoke",
+      "status": "pass",
+      "completedAt": "2026-05-24T14:16:00+09:00",
+      "blocker": null
+    }
+  ],
+  "supportingEvidence": [
+    {
+      "command": "xcodebuild build -project apps/ios-native/PWSNativePreview.xcodeproj -scheme PWSNativePreview -destination platform=macOS,name=My Mac -derivedDataPath apps/ios-native/.build/DerivedData CODE_SIGNING_ALLOWED=NO",
+      "status": "pass",
+      "completedAt": "2026-05-17T10:52:00+09:00",
+      "note": "Fallback compile evidence only; does not replace iOS simulator build/test/runtime smoke."
+    },
+    {
+      "command": "npm run native:ios:build",
+      "status": "pass",
+      "completedAt": "2026-05-18T13:44:44+09:00",
+      "note": "iOS app build passes against generic iOS Simulator after adding the runtime config injection contract."
+    },
+    {
+      "command": "npm run native:readiness",
+      "status": "pass",
+      "completedAt": "2026-05-18T13:44:44+09:00",
+      "artifact": "docs/migration/native-parity-readiness/native-readiness-free-account.json",
+      "note": "Structured free-account readiness artifact was regenerated; typecheck, JS tests, Android native build/test, and iOS build/build-for-testing all passed after installing iOS 26.5 simulator runtime."
+    },
+    {
+      "command": "npm run native:android:test",
+      "status": "pass",
+      "completedAt": "2026-05-24T13:07:10+09:00",
+      "artifact": "docs/migration/native-parity-readiness/final-readiness.md",
+      "note": "Android unit tests passed after moving login/restore refresh work behind navigation, routing feedback submit through the background runtime executor, and removing the duplicate runtime feedback-count fetch."
+    },
+    {
+      "command": "npm run native:ios:build",
+      "status": "pass",
+      "completedAt": "2026-05-24T13:06:55+09:00",
+      "artifact": "docs/migration/native-parity-readiness/final-readiness.md",
+      "note": "iOS simulator build passed after changing runtime refresh to load weather and feedback independently."
+    },
+    {
+      "command": "npm audit --omit=dev after root dependency trim",
+      "status": "pass",
+      "completedAt": "2026-05-27T00:00:00+09:00",
+      "artifact": "package.json",
+      "note": "The old cross-platform runtime dependency graph was removed from the root npm workspace, and npm audit returned zero vulnerabilities."
+    },
+    {
+      "command": "XcodeBuildMCP test_sim",
+      "status": "pass",
+      "completedAt": "2026-05-24T14:13:34+09:00",
+      "artifact": "docs/migration/native-parity-readiness/final-readiness.md",
+      "note": "41 iOS XCTest cases passed on iPhone 17 iOS 26.5 with simulator signing enabled. A CODE_SIGNING_ALLOWED=NO run is not valid for Keychain entitlement tests and failed only on Keychain entitlement setup."
+    },
+    {
+      "command": "Android emulator authenticated UI capture after dynamic History fix",
+      "status": "pass",
+      "completedAt": "2026-05-24T14:10:00+09:00",
+      "artifact": "docs/migration/native-parity-readiness/design-visual-qa.md",
+      "note": "Rebuilt debug APK installed on AVD Testing; authenticated Home showed live May 24 weather, and History now renders dynamic May calendar, feedback chart, recent record, and outfit analysis instead of the stale April sample."
+    },
+    {
+      "command": "XcodeBuildMCP build_run_sim + screenshot on iPhone 17 iOS 26.5",
+      "status": "pass",
+      "completedAt": "2026-05-24T13:13:30+09:00",
+      "artifact": "docs/migration/native-parity-readiness/design-visual-qa.md",
+      "note": "Current RC build installed and launched bundle id woos.owndo. Captured login-shell and QA autologin/error-resilience screenshots; authenticated visual QA remains a separate release gate."
+    },
+    {
+      "command": "xcodebuild -downloadPlatform iOS",
+      "status": "pass",
+      "completedAt": "2026-05-18T13:43:48+09:00",
+      "note": "Installed iOS 26.5 Simulator (23F77), closing the native iOS build-for-testing destination blocker."
+    },
+    {
+      "command": "npm run release:readiness",
+      "status": "blocked",
+      "completedAt": "2026-05-18T14:13:21+09:00",
+      "note": "Gate correctly blocks on incomplete first-release evidence."
+    },
+    {
+      "command": "apksigner verify --verbose --print-certs apps/android-native/app/build/outputs/apk/release/app-release-qa-signed.apk",
+      "status": "pass",
+      "completedAt": "2026-05-18T19:40:55+09:00",
+      "artifact": "docs/migration/native-parity-readiness/android-release-qa-signed-runtime-smoke.md",
+      "note": "Rebuilt QA-signed release APK verifies with APK Signature Scheme v2/v3 using the local Android debug keystore for emulator installability only; APK SHA-256 is aa3fc08857fb85657d298bff35a3ca9fbe64b0fa6244c66584c9d2930f2935b5."
+    },
+    {
+      "command": "adb install + email/password login + force-stop relaunch restore on QA-signed Android release APK",
+      "status": "pass",
+      "completedAt": "2026-05-18T19:40:55+09:00",
+      "artifact": "docs/migration/native-parity-readiness/android-release-qa-signed-runtime-smoke.md",
+      "note": "QA-signed release APK installed on AVD Testing, authenticated with a live Supabase tester through the email/password form, rendered authenticated home, and restored the authenticated home shell after force-stop/relaunch."
+    },
+    {
+      "command": "JAVA_HOME=/Applications/Android Studio.app/Contents/jbr/Contents/Home ANDROID_HOME=/Users/taewoo/Library/Android/sdk ./android/gradlew -p apps/android-native :app:testReleaseUnitTest",
+      "status": "pass",
+      "completedAt": "2026-05-18T19:40:55+09:00",
+      "artifact": "docs/migration/native-parity-readiness/android-release-qa-signed-runtime-smoke.md",
+      "note": "83 Android release unit tests passed after adding persisted remote user email and moving saved-session restore off the main thread."
+    },
+    {
+      "command": "XcodeBuildMCP boot_sim + install_app_sim + launch_app_sim + screenshot + snapshot_ui",
+      "status": "pass",
+      "completedAt": "2026-05-17T16:55:00+09:00",
+      "artifact": "docs/migration/native-parity-readiness/ios-simulator-runtime-smoke.md",
+      "note": "Built simulator app installed and launched on iPhone 17 iOS 26.4; captured login-shell screenshot, accessibility hierarchy, and filtered logs. Authenticated runtime flow remains blocked."
+    },
+    {
+      "command": "XcodeBuildMCP build_run_sim + screenshot on iPhone 17 iOS 26.5",
+      "status": "pass",
+      "completedAt": "2026-05-18T13:48:10+09:00",
+      "artifact": "docs/migration/native-parity-readiness/ios-simulator-runtime-smoke.md",
+      "note": "Built, installed, launched, and captured a 368x800 login-shell screenshot on the newly installed iOS 26.5 simulator runtime. Authenticated runtime flow was collected in a later pass."
+    },
+    {
+      "command": "XcodeBuildMCP build_sim + install_app_sim + tap/type_text + screenshot on iPhone 17 iOS 26.5",
+      "status": "pass",
+      "completedAt": "2026-05-18T14:13:21+09:00",
+      "artifact": "docs/migration/native-parity-readiness/ios-simulator-runtime-smoke.md",
+      "note": "After adding Keychain entitlements, the simulator app accepted live tester credentials and advanced to the authenticated home shell. This earlier screenshot predates weather-onecall version 3; the later fresh-login pass captures weather success."
+    },
+    {
+      "command": "XcodeBuildMCP logout + fresh smoke_primary login + screenshot on iPhone 17 iOS 26.5",
+      "status": "pass",
+      "completedAt": "2026-05-18T18:43:48+09:00",
+      "artifact": "docs/migration/native-parity-readiness/ios-simulator-runtime-smoke.md",
+      "note": "After weather-onecall version 3 deployment, a fresh authenticated iOS login rendered live weather values on the home screen and captured ios-simulator-26-5-authenticated-weather-success.jpg."
+    },
+    {
+      "command": "XcodeBuildMCP stop_app_sim + launch_app_sim + screenshot on iPhone 17 iOS 26.5",
+      "status": "pass",
+      "completedAt": "2026-05-18T18:45:50+09:00",
+      "artifact": "docs/migration/native-parity-readiness/ios-simulator-runtime-smoke.md",
+      "note": "The app restored the saved Supabase session directly to authenticated home after relaunch and kept live weather visible, captured as ios-simulator-26-5-relaunch-weather-restore.jpg."
+    },
+    {
+      "command": "XcodeBuildMCP test_sim",
+      "status": "pass",
+      "completedAt": "2026-05-18T18:55:38+09:00",
+      "artifact": "docs/migration/native-parity-readiness/ios-simulator-runtime-smoke.md",
+      "note": "38 iOS XCTest cases passed after persisting remote user email for restored session display and converting remote feedback writes to same-slot upsert."
+    },
+    {
+      "command": "XcodeBuildMCP feedback save/upsert + history runtime smoke on iPhone 17 iOS 26.5",
+      "status": "pass",
+      "completedAt": "2026-05-18T18:55:38+09:00",
+      "artifact": "docs/migration/native-parity-readiness/ios-simulator-runtime-smoke.md",
+      "note": "The rebuilt app saved an existing day/slot feedback entry through Supabase upsert with the restored smoke_primary display name, then rendered the history aggregate and recent record screenshots."
+    },
+    {
+      "command": "XcodeBuildMCP smoke_delete_02 login + settings account deletion + post-delete sign-in check",
+      "status": "pass",
+      "completedAt": "2026-05-18T19:06:44+09:00",
+      "artifact": "docs/migration/native-parity-readiness/ios-simulator-runtime-smoke.md",
+      "note": "Disposable tester smoke_delete_02 signed in, confirmed account deletion, returned to login, and post-delete sign-in returned HTTP 400 with no session material."
+    },
+    {
+      "command": "direct Supabase profile/RLS/write smoke with smoke_primary@test.pws and smoke_other@test.pws",
+      "status": "pass",
+      "completedAt": "2026-05-18T13:22:00+09:00",
+      "artifact": "docs/migration/native-parity-readiness/smoke-checklist.md",
+      "note": "Sanitized direct smoke authenticated both testers, seeded their own public.users profiles through authenticated RLS, proved cross-user profile/feedback reads return zero rows, inserted one feedback row, and cleaned it up."
+    },
+    {
+      "command": "direct Supabase delete_own_account smoke with smoke_delete_01@test.pws",
+      "status": "pass",
+      "completedAt": "2026-05-18T13:22:00+09:00",
+      "artifact": "docs/migration/native-parity-readiness/smoke-checklist.md",
+      "note": "Disposable tester was deleted through the authenticated delete_own_account RPC; post-delete sign-in returned HTTP 400. Recreate a disposable tester before rerunning deletion smoke."
+    },
+    {
+      "command": "npx deno check --config supabase/functions/weather-onecall/deno.json supabase/functions/weather-onecall/index.ts",
+      "status": "pass",
+      "completedAt": "2026-05-18T18:31:27+09:00",
+      "artifact": "docs/migration/native-parity-readiness/supabase-weather-edge-function-fix.md",
+      "note": "weather-onecall now supports both legacy Supabase hosted key env vars and newer JSON key env vars, and falls back to Open-Meteo when OPENWEATHER_API_KEY is absent."
+    },
+    {
+      "command": "Supabase MCP deploy weather-onecall version 3",
+      "status": "pass",
+      "completedAt": "2026-05-18T18:31:27+09:00",
+      "artifact": "docs/migration/native-parity-readiness/supabase-weather-edge-function-fix.md",
+      "note": "Supabase MCP deployed weather-onecall version 3 to project lmnytisjnyyuxiuespjf with JWT verification enabled."
+    },
+    {
+      "command": "PWS_SMOKE_WRITE_FEEDBACK=1 npm run supabase:smoke",
+      "status": "pass",
+      "completedAt": "2026-05-18T18:31:27+09:00",
+      "artifact": "docs/migration/native-parity-readiness/smoke-checklist.md",
+      "note": "Sanitized live smoke inserted one feedback row and deleted it, while auth, weather, invalid/unauthenticated weather denial, and cross-user read denial passed."
+    }
+  ],
+  "evidenceCategories": [
+    {
+      "category": "live-supabase-rls",
+      "status": "pass",
+      "artifact": "docs/migration/native-parity-readiness/smoke-checklist.md",
+      "blocker": null
+    },
+    {
+      "category": "account-deletion",
+      "status": "pass",
+      "artifact": "docs/migration/native-parity-readiness/smoke-checklist.md",
+      "blocker": null
+    },
+    {
+      "category": "android-signed-runtime",
+      "status": "blocked",
+      "artifact": "docs/migration/native-parity-readiness/android-release-qa-signed-runtime-smoke.md",
+      "blocker": "QA-signed release install, live email/password login, encrypted-session relaunch restore, signing, screenshots, UI hierarchy, and clean filtered log evidence are collected; production-signed runtime plus Android feedback/history/sign-out/account-deletion evidence are still missing."
+    },
+    {
+      "category": "ios-runtime-screenshots",
+      "status": "blocked",
+      "artifact": "docs/migration/native-parity-readiness/ios-simulator-runtime-smoke.md",
+      "blocker": "Login-shell, authenticated home/weather, relaunch-restore, sign-out, feedback, history, and disposable-account deletion simulator evidence exists on iOS 26.5, but accessibility extremes and full iOS QA remain incomplete."
+    },
+    {
+      "category": "visual-qa",
+      "status": "pass",
+      "artifact": "docs/migration/native-parity-readiness/design-visual-qa.md",
+      "blocker": null
+    },
+    {
+      "category": "accessibility",
+      "status": "blocked",
+      "artifact": "docs/migration/native-parity-readiness/accessibility-review.md",
+      "blocker": "iOS login-shell accessibility hierarchy exists, but runtime TalkBack/VoiceOver for authenticated flows, Dynamic Type, keyboard, safe-area, and tap-target audit evidence is not complete."
+    },
+    {
+      "category": "privacy-store",
+      "status": "blocked",
+      "artifact": "docs/migration/native-parity-readiness/privacy-store-checklist.md",
+      "blocker": "Android/iOS native location-permission posture and store disclosure inputs are documented, but signed runtime logs, authenticated screenshots, final support/privacy links, and weather-provider disclosure review remain incomplete."
+    },
+    {
+      "category": "sbom-license-clearance",
+      "status": "pass",
+      "artifact": "docs/migration/native-parity-readiness/sbom-npm.json",
+      "blocker": null
+    },
+    {
+      "category": "native-dependency-license-review",
+      "status": "pass",
+      "artifact": "docs/migration/native-parity-readiness/native-dependency-license-review.md",
+      "blocker": null
+    },
+    {
+      "category": "signed-artifact",
+      "status": "blocked",
+      "artifact": null,
+      "blocker": "Release-candidate signed Android artifact metadata and iOS signing/provisioning evidence are not collected."
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/migration/native-parity-readiness/final-release-report-2026-05-17.md",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/smoke-checklist.md",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/sbom-npm.json",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/privacy-store-checklist.md",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/privacy-store-disclosure-matrix.md",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/native-readiness-free-account.json",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/native-dependency-license-review.md",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/design-visual-qa.md",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-release-qa-signed-runtime-smoke.md",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-release-qa-signed-login.png",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-release-qa-signed-window.xml",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-release-qa-signed-logcat.txt",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-release-qa-signed-authenticated-home.png",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-release-qa-signed-authenticated-home-window.xml",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-release-qa-signed-relaunch-restore.png",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-release-qa-signed-relaunch-restore-window.xml",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-release-qa-signed-authenticated-logcat.txt",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-runtime-smoke.md",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-login-shell.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-login-shell-runtime-log.txt",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-login-shell-oslog.txt",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-login-shell.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-login-shell-runtime-log.txt",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-login-shell-oslog.txt",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-authenticated-weather-blocked.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-authenticated-weather-success.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-relaunch-weather-restore.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-feedback-upsert-success.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-history-success.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-account-deletion-returned-login.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-ui-performance-rc-home.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-ui-performance-rc-autologin.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-ui-performance-rc-auth-home.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-ui-performance-rc-feedback.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-ui-performance-rc-history.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/ios-simulator-26-5-ui-performance-rc-settings.jpg",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-emulator-ui-performance-rc-auth-home.png",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-emulator-ui-performance-rc-feedback.png",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-emulator-ui-performance-rc-settings.png",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-emulator-ui-performance-rc-history-dynamic.png",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/android-emulator-ui-performance-rc-history-dynamic-lower.png",
+      "sanitized": true
+    },
+    {
+      "path": "docs/migration/native-parity-readiness/supabase-weather-edge-function-fix.md",
+      "sanitized": true
+    }
+  ]
+}

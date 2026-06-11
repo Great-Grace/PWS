@@ -4,7 +4,7 @@ import {
   DEFAULT_WEATHER_DESC,
   DEFAULT_WEATHER_ICON,
   buildWeatherDataFromOneCall,
-} from '../src/utils/weatherData';
+} from '../shared/domain/weatherData';
 
 const raw = {
   current: {

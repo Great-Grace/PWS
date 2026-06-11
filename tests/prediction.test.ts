@@ -1,5 +1,5 @@
 import * as assert from 'node:assert/strict';
-import { resolvePredictionConfidence } from '../src/utils/prediction';
+import { resolvePredictionConfidence } from '../shared/domain/prediction';
 
 assert.equal(
   resolvePredictionConfidence(100, false),
