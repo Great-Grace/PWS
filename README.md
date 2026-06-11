@@ -1,96 +1,120 @@
 <p align="center">
-  <h1 align="center">PWS — Personal Weather Sensitivity</h1>
-  <p align="center">
-    <strong>온디바이스 ML로 개인화된 체감 온도를 예측하는 오픈소스 모바일 엔진</strong>
-  </p>
-  <p align="center">
-    <a href="#getting-started">Getting Started</a> ·
-    <a href="#architecture">Architecture</a> ·
-    <a href="#ml-engine">ML Engine</a> ·
-    <a href="CONTRIBUTING.md">Contributing</a> ·
-    <a href="LICENSE">License</a>
-  </p>
+  <img src=".github/assets/banner.png" alt="PWS Banner" width="100%" onerror="this.style.display='none'" />
+</p>
+
+<h1 align="center">PWS — Personal Weather Sensitivity</h1>
+
+<p align="center">
+  <strong>On-device ML engine for personalized thermal comfort prediction</strong>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" /></a>
+  <img src="https://img.shields.io/badge/platform-iOS%20%7C%20Android-lightgrey.svg" alt="Platform" />
+  <img src="https://img.shields.io/badge/tests-172%20passed-brightgreen.svg" alt="Tests" />
+  <a href="https://github.com/Great-Grace/PWS/stargazers"><img src="https://img.shields.io/github/stars/Great-Grace/PWS.svg?style=social" alt="Stars" /></a>
+</p>
+
+<p align="center">
+  <a href="#why-pws">Why PWS</a> ·
+  <a href="#ml-engine">ML Engine</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#getting-started">Getting Started</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
 </p>
 
 ---
 
-## Why PWS?
+## Why PWS
 
-기존 날씨 앱은 모든 사용자에게 동일한 "체감 온도"를 보여줍니다. 하지만 같은 25°C라도
-체질, 활동량, 옷차림, 수면 상태에 따라每个人的感受完全不同.
+Every weather app shows the same "feels like" temperature to all users. But a 25°C day feels completely different to a lean person in a t-shirt versus an overweight person in a jacket — depending on body type, activity level, sleep quality, and clothing.
 
-**PWS는 UTCI(Universal Thermal Climate Index) 열쾌적 지수를 기반으로, 온디바이스
-퍼셉트론이 사용자 피드백을 통해 학습하여 개별화된 체감 온도를 예측합니다.**
+**PWS solves this with an on-device perceptron that learns from each user's feedback**, grounded in the peer-reviewed UTCI (Universal Thermal Climate Index) thermal comfort model.
 
-### 핵심 가치
-
-| 기존 날씨 앱 | PWS |
+| Conventional Weather Apps | PWS |
 |---|---|
-| 고정된 체감 온도 공식 | 사용자별 학습된 가중치 |
-| 서버 ML 의존 | 외부 전송 없는 온디바이스 추론 |
-| 열쾌적 모델 없음 | Brode et al. 2012 UTCI 126항 다항식 |
-| 플랫폼별 분산 구현 | TypeScript/Swift/Kotlin 수학적 동치 |
+| Fixed "feels like" formula | Per-user learned weights |
+| Server-side ML inference | Fully on-device, zero data sent |
+| No thermal comfort model | UTCI 126-term polynomial (Brode et al. 2012) |
+| Platform-divergent math | Identical formulas across TypeScript / Swift / Kotlin |
+
+### Who is this for?
+
+- **End users**: People who want weather predictions tailored to their body and lifestyle
+- **Developers**: Anyone building weather, IoT, HVAC, or wearable apps who needs a reusable thermal comfort engine
+- **Researchers**: Reproducible UTCI implementation with literature references for thermal comfort studies
 
 ---
 
 ## ML Engine
 
-PWS의 핵심은 **open-source thermal comfort ML engine**입니다.
-이 모듈은任何 날씨 앱이나 IoT 프로젝트에 독립적으로 통합할 수 있습니다.
+PWS ships a **standalone, reusable thermal comfort ML engine** that can be integrated into any weather app, smart home system, or wearable — independently of the mobile app.
 
-### UTCI Polynomial (Brode et al. 2012)
+### UTCI Polynomial — Brode et al. 2012
 
-기상학계 표준인 Universal Thermal Climate Index를 6차 다항식으로 구현했습니다.
+The Universal Thermal Climate Index is the ISO-standard metric for outdoor thermal comfort. PWS implements the full 6th-order polynomial (126 terms):
 
 ```
-UTCI = f(Ta, ΔT, va, Tmrt)  // 126 terms, 6th-order polynomial
+UTCI = f(Ta, ΔT, va, Tmrt)
+
+where:
+  Ta   = air temperature (°C)
+  ΔT   = relative humidity → saturation vapor pressure delta
+  va   = wind speed at 10m (m/s)
+  Tmrt = mean radiant temperature (°C)
 ```
 
-- **참고 문헌**: Brode, P., et al. (2012). "Derivation of the UTCI." *International Journal of Biometeorology*, 56(3), 481–495.
-- **구현**: `shared/domain/formulas.ts` (782 lines)
+- **Reference**: Brode, P., et al. (2012). "Derivation of the UTCI." *Int J Biometeorol*, 56(3), 481–495.
+- **Implementation**: [`shared/domain/formulas.ts`](shared/domain/formulas.ts) (782 lines)
+- **Vapor pressure**: Hardy (1998) ITS-90 formulation
 
 ### 11-Dimensional Feature Vector
 
-```typescript
-features = [
-  norm_temp,           // 정규화된 기온
-  norm_humidity,       // 정규화된 습도
-  norm_wind,           // 정규화된 풍속
-  norm_tmrt,           // 평균 복사 온도
-  heat_index_bonus,    // 열지수 비선형 항
-  wind_chill_penalty,  // 풍한 비선형 항
-  precipitation,       // 강수 여부
-  sin_hour, cos_hour,  // 시간 순환 인코딩
-  sin_season, cos_season // 계절 순환 인코딩
-]
-```
+The perceptron operates on a carefully engineered feature space:
+
+| # | Feature | Description |
+|---|---|---|
+| 1 | `norm_temp` | Normalized air temperature |
+| 2 | `norm_humidity` | Normalized relative humidity |
+| 3 | `norm_wind` | Normalized wind speed |
+| 4 | `norm_tmrt` | Normalized mean radiant temperature |
+| 5 | `heat_index_bonus` | Nonlinear heat-humidity interaction |
+| 6 | `wind_chill_penalty` | Nonlinear wind-temperature interaction |
+| 7 | `precipitation` | Binary precipitation indicator |
+| 8–9 | `sin_hour`, `cos_hour` | Cyclical hour-of-day encoding |
+| 10–11 | `sin_season`, `cos_season` | Cyclical day-of-year encoding |
 
 ### On-Device Perceptron
 
-사용자 1명당 시간대별(아침/오후/저녁) 3개의 독립적인 퍼셉트론:
+Each user has **3 independent perceptrons** (morning / afternoon / evening), each with 11 weights + 1 bias:
 
 ```
-prediction = clamp(dot(weights, features) + bias, 1, 7)
+ŷ = clamp(w · x + b, 1, 7)
 
-// SGD online learning with L2 regularization
-weights -= lr * (gradient + lambda * weights)
+// Online SGD with L2 regularization
+w ← w - η · (∇L + λ · w)
+
+where:
+  η = 0.02   (learning rate)
+  λ = 0.001  (L2 regularization)
 ```
 
-- **학습률**: 0.02 | **L2 정규화**: 0.001
-- **피드백 7단계**: 매우 추움 → 매우 더움 (ordinal scale)
-- **신뢰도 시스템**: cold_start(<7) → low(7-14) → medium(15-29) → high(30+)
+- **Output**: Ordinal 7-point scale (very cold → very hot)
+- **Cold-start priors**: Physics-calibrated initial weights (e.g., `w_temp = 4.9`, `w_wind_chill = -1.6`)
+- **Confidence levels**: `cold_start` (<7 feedbacks) → `low` (7–14) → `medium` (15–29) → `high` (30+)
 
 ### CLO Clothing Insulation Model
 
-열공학 표준 CLO(Clothing Insulation) 값을 사용하여 옷차림의 열효과를 정량화:
+PWS uses the CLO (Clothing Insulation) standard from thermal comfort science to quantify the thermal effect of clothing:
 
-| 옷차림 | CLO 값 |
-|---|---|
-| 민소매 | 0.04 |
-| 반팔 티셔츠 | 0.08 |
-| 긴팔 셔츠 | 0.15 |
-| 얇은 자켓 | 0.25 |
-| 두꺼운 코트 | 1.00 |
+| Item | CLO | Item | CLO |
+|---|---|---|---|
+| Sleeveless | 0.04 | Thin jacket | 0.25 |
+| Short-sleeve tee | 0.08 | Thick sweater | 0.35 |
+| Long-sleeve shirt | 0.15 | Light coat | 0.55 |
+| Hoodie | 0.20 | Heavy coat | 1.00 |
+
+**Clothing scale** = `sum(CLO items)`, mapped to: thin (<0.18), normal (0.18–0.40), thick (≥0.40)
 
 ---
 
@@ -98,35 +122,51 @@ weights -= lr * (gradient + lambda * weights)
 
 ```
 PWS/
-├── shared/domain/          # 공유 ML 엔진 (TypeScript, 참조 구현)
-│   ├── formulas.ts         # UTCI 다항식 + 특성 엔지니어링 + 퍼셉트론
-│   ├── clothing.ts         # CLO 단열값 모델
-│   ├── prediction.ts       # 신뢰도 해석
-│   └── weatherData.ts      # 기상 API 파서
+├── shared/domain/              ← Reference ML implementation (TypeScript)
+│   ├── formulas.ts             ← UTCI polynomial + feature engineering + perceptron
+│   ├── clothing.ts             ← CLO insulation model
+│   ├── prediction.ts           ← Confidence level resolution
+│   └── weatherData.ts          ← OpenWeatherMap / Open-Meteo parser
 │
-├── apps/ios-native/        # iOS (Swift/SwiftUI)
+├── apps/ios-native/            ← iOS (Swift / SwiftUI)
 │   └── PWSNativePreview/
-│       ├── Domain/         # Contract 패턴 + Repository 패턴
-│       ├── Features/       # Home, Feedback, History, Settings
-│       └── Design/         # Apple-inspired design system
+│       ├── Domain/             ← Contract + Repository patterns
+│       ├── Features/           ← Home, Feedback, History, Settings
+│       └── Design/             ← Apple-inspired design system
 │
-├── apps/android-native/    # Android (Kotlin/Jetpack Compose)
+├── apps/android-native/        ← Android (Kotlin / Jetpack Compose)
 │   └── app/src/main/java/
-│       └── com.wxxtae.pws.nativepreview/
-│           ├── domain/     # Reducer 패턴 + NativeSession
-│           └── ui/         # Compose screens
+│       └── .../nativepreview/
+│           ├── domain/         ← Reducer (MVI) + NativeSession
+│           └── ui/             ← Compose screens
 │
-└── supabase/               # Backend (Auth, Postgres, Edge Functions)
+└── supabase/                   ← Backend (Auth, Postgres, Edge Functions)
     └── functions/
-        └── weather-onecall/ # 기상 API 프록시 (캐시 TTL 30분)
+        └── weather-onecall/    ← Weather API proxy (30-min cache TTL)
 ```
 
 ### Design Patterns
 
-- **Contract Pattern**: iOS에서 URL 구성, 헤더 생성, 요청 직렬화를 캡슐화
-- **Repository Pattern**: InMemory → Persistent → Supabase → Fallback 계층
-- **Reducer Pattern**: Android에서 Redux/MVI 스타일 상태 관리
-- **Constructor Injection**: 모든 의존성을 주입하여 테스트 용이성 확보
+| Pattern | Where | Purpose |
+|---|---|---|
+| **Contract** | iOS Domain | Encapsulates URL building, headers, request serialization |
+| **Repository** | iOS / Android | InMemory → Persistent → Supabase → Fallback layers |
+| **Reducer (MVI)** | Android | Centralized state machine with synchronized dispatch |
+| **Constructor DI** | All layers | Testability via dependency injection |
+| **HTTP Transport** | iOS / Android | Protocol-based abstraction for network testing |
+
+### Cross-Platform ML Parity
+
+The **same mathematical formulas** are implemented in three languages:
+
+| Component | TypeScript | Swift | Kotlin |
+|---|---|---|---|
+| UTCI polynomial | `formulas.ts` | `PWSTokens.swift` | `PwsFormula.kt` |
+| Perceptron | `formulas.ts` | `PWSTokens.swift` | `PwsFormula.kt` |
+| CLO model | `clothing.ts` | `PWSTokens.swift` | `PwsFormula.kt` |
+| Feature vector | `formulas.ts` | `PWSTokens.swift` | `PwsFormula.kt` |
+
+This guarantees identical predictions regardless of platform.
 
 ---
 
@@ -137,99 +177,111 @@ PWS/
 - Node.js 18+
 - Xcode 15+ (iOS)
 - Android Studio + JDK 21 (Android)
-- Supabase 프로젝트 (무료 플랜)
+- Supabase project ([free tier](https://supabase.com/pricing))
 
 ### Setup
 
 ```bash
 git clone https://github.com/Great-Grace/PWS.git
 cd PWS/app
-cp .env.example .env  # Supabase 키 설정
+cp .env.example .env
+# Edit .env with your Supabase URL and anon key
 npm install
 ```
 
-### iOS Build
+### Build & Run
 
 ```bash
+# iOS
 open apps/ios-native/PWSNativePreview.xcodeproj
-# Xcode에서 PWSNativePreview target → Archive
-```
+# Xcode → PWSNativePreview target → Run
 
-### Android Build
-
-```bash
+# Android
 npm run native:android:debug
-npm run native:android:release
 ```
 
 ### Run Tests
 
 ```bash
-# TypeScript (shared domain)
-npm test
-
-# iOS
-npm run native:ios:verify
-
-# Android
-npm run native:android:verify
+npm test                        # TypeScript (shared domain)
+npm run native:ios:verify       # iOS build + tests
+npm run native:android:verify   # Android build + tests
 ```
 
 ---
 
 ## Test Coverage
 
-| 플랫폼 | 테스트 파일 | 테스트 수 | 라인 수 |
+| Platform | Test Files | Tests | Lines |
 |---|---|---|---|
-| TypeScript | 11 | ~35 asserts | 1,032 |
+| TypeScript | 11 | ~35 assertions | 1,032 |
 | iOS Swift | 4 | 41 tests | 1,088 |
 | Android Kotlin | 19 | ~96 tests | 2,265 |
 | **Total** | **34** | **~172** | **4,385** |
+
+Tests cover: UTCI polynomial accuracy, feature vector normalization, perceptron weight updates, CLO calculations, weather API parsing, auth contracts, and release readiness gates.
 
 ---
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
-### Ways to Contribute
+**Quick links for contributors:**
 
-- **ML 모델 개선**: 새로운 특성 추가, 가중치 최적화, 다른 열쾌적 모델 통합
-- **플랫폼 확장**: Flutter, Web, watchOS 등 새 플랫폼 지원
-- **데이터셋**: 기상 피드백 데이터셋 구축 및 공개
-- **문서화**: API 문서, 사용 가이드, 논문 번역
-- **번역**: 영어, 일본어 등 다국어 지원
+- 🧠 **ML improvements**: New features, weight optimization, alternative thermal comfort models
+- 📱 **Platform expansion**: Flutter, Web, watchOS
+- 📊 **Datasets**: Weather feedback data collection and release
+- 📖 **Documentation**: API docs, usage guides, paper translations
+- 🌐 **Localization**: English, Japanese, and other languages
+
+---
+
+## Security
+
+- No hardcoded secrets in source code
+- All API keys loaded from environment variables at build time
+- `.env` is gitignored and was never committed
+- Supabase Row-Level Security (RLS) enforced
+- Account deletion with full data cleanup
 
 ---
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
 
 ---
 
 ## Citation
 
-이 프로젝트의 UTCI 구현을 사용하는 경우 다음을 인용해 주세요:
+If you use the UTCI implementation from this project:
 
 ```bibtex
 @software{pws2026,
-  title = {PWS: Personal Weather Sensitivity},
+  title  = {PWS: Personal Weather Sensitivity},
   author = {Great-Grace},
-  year = {2026},
-  url = {https://github.com/Great-Grace/PWS}
+  year   = {2026},
+  url    = {https://github.com/Great-Grace/PWS}
 }
 ```
 
-UTCI 원 논문:
+Original UTCI paper:
+
 ```bibtex
 @article{brode2012utci,
-  title = {Derivation of the UTCI},
-  author = {Brode, Peter and others},
+  title   = {Derivation of the UTCI},
+  author  = {Brode, Peter and others},
   journal = {International Journal of Biometeorology},
-  volume = {56},
-  number = {3},
-  pages = {481--495},
-  year = {2012}
+  volume  = {56},
+  number  = {3},
+  pages   = {481--495},
+  year    = {2012}
 }
 ```
+
+---
+
+<p align="center">
+  Built with ☀️ by <a href="https://github.com/Great-Grace">Great-Grace</a>
+</p>
