@@ -236,12 +236,12 @@ protocol PredictionWeightsStore {
 // MARK: - In-Memory Weights Store (DEBUG only)
 
 #if DEBUG
-struct InMemoryPredictionWeightsStore: PredictionWeightsStore {
+final class InMemoryPredictionWeightsStore: PredictionWeightsStore {
     private var stored: [Float]?
 
     func loadWeights() -> [Float]? { stored }
 
-    mutating func saveWeights(_ weights: [Float]) {
+    func saveWeights(_ weights: [Float]) {
         stored = weights
     }
 }
