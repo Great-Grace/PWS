@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-14",
+  "sourceOfTruth": [
+    "shared/contracts/auth-session.md",
+    "shared/contracts/weather-onecall.md",
+    "shared/contracts/feedback.md",
+    "shared/contracts/history.md",
+    "shared/contracts/users-profile.md",
+    ".omx/plans/test-spec-native-parity-production.md"
+  ],
+  "fixtures": [
+    {
+      "id": "pws-date-boundary-v1",
+      "domain": "pws-date-boundary",
+      "sourceReference": "shared/contracts/feedback.md#slots-and-date",
+      "given": {
+        "localTime": "2026-05-06T04:59:00+09:00",
+        "boundaryHour": 5
+      },
+      "expected": {
+        "pwsDate": "2026-05-05",
+        "slotFallback": "afternoon"
+      },
+      "platformCoverage": {
+        "android": "Covered by PwsFormula tests; keep as reference behavior.",
+        "ios": "Gap: Swift feedback date-boundary behavior still needs an explicit 05:00 boundary test."
+      },
+      "notes": "PWS day should not roll over until the configured early-morning boundary."
+    },
+    {
+      "id": "weather-onecall-cache-request-v1",
+      "domain": "weather-onecall-cache-request",
+      "sourceReference": "shared/contracts/weather-onecall.md#request",
+      "given": {
+        "method": "POST",
+        "body": {
+          "lat": 37.5665,
+          "lng": 126.978
+        },
+        "headers": [
+          "Content-Type",
+          "Accept",
+          "apikey",
+          "Authorization"
+        ]
+      },
+      "expected": {
+        "endpoint": "/functions/v1/weather-onecall",
+        "cacheTtlMinutes": 30,
+        "coordinateRoundingDecimals": 2
+      },
+      "platformCoverage": {
+        "android": "Covered by SupabaseWeatherRemoteSource tests.",
+        "ios": "Covered by WeatherOneCallContractTests for request shape, headers, coordinate validation, and cache TTL."
+      },
+      "notes": "Auth headers are required for remote weather; fixtures intentionally omit token values."
+    },
+    {
+      "id": "prediction-feedback-formula-v1",
+      "domain": "prediction-feedback-formula",
+      "sourceReference": "shared/contracts/feedback.md#computed-fields",
+      "given": {
+        "feelScore": 5,
+        "humidFeel": 3,
+        "windFeel": 1,
+        "clothing": 2,
+        "activity": 2,
+        "optionalSignalsPresent": false
+      },
+      "expected": {
+        "scaleRanges": {
+          "feelScore": "1..7",
+          "humidFeel": "1..5",
+          "windFeel": "0..3",
+          "clothing": "1..3",
+          "activity": "1..3"
+        },
+        "computedFieldsRequired": [
+          "adjusted_feel",
+          "personal_feel",
+          "weighted_feel",
+          "env_base"
+        ]
+      },
+      "platformCoverage": {
+        "android": "Covered by PwsFormula and FeedbackRepository tests.",
+        "ios": "Partially covered by FeedbackContractTests for accepted ranges and fallback slot; computed-field parity remains a gap."
+      },
+      "notes": "Fixture freezes field presence and accepted ranges; exact model weights remain implementation-owned."
+    },
+    {
+      "id": "feedback-history-counts-v1",
+      "domain": "feedback-history-counts",
+      "sourceReference": "shared/contracts/history.md",
+      "given": {
+        "feedbackRows": [
+          {
+            "feedback_date": "2026-05-06",
+            "feedback_slot": "morning"
+          },
+          {
+            "feedback_date": "2026-05-06",
+            "feedback_slot": "evening"
+          }
+        ]
+      },
+      "expected": {
+        "todaySubmittedSlots": [
+          "morning",
+          "evening"
+        ],
+        "todayCount": 2,
+        "historyIncludesToday": true
+      },
+      "platformCoverage": {
+        "android": "Covered by FeedbackRepository and HistorySummary tests.",
+        "ios": "Covered by FeedbackContractTests for inclusive history filtering, slot counts, summary values, and in-memory submit reflection."
+      },
+      "notes": "History and today status must agree after submit/refresh."
+    },
+    {
+      "id": "tester-auth-fallback-v1",
+      "domain": "tester-auth-fallback",
+      "sourceReference": "shared/contracts/auth-session.md#local-tester-fallback",
+      "given": {
+        "testerIdInput": " TaeWoo ",
+        "remotePasswordConfigured": false
+      },
+      "expected": {
+        "normalizedTesterId": "taewoo",
+        "testerEmail": "taewoo@test.pws",
+        "localSessionId": "dev-taewoo",
+        "remoteWriteAllowed": false
+      },
+      "platformCoverage": {
+        "android": "Covered by NativeTesterAuth and TesterAuth tests.",
+        "ios": "Covered by TesterAuthTests."
+      },
+      "notes": "Local tester fallback must never masquerade as a remotely authenticated Supabase session."
+    },
+    {
+      "id": "session-clearing-v1",
+      "domain": "session-clearing",
+      "sourceReference": "shared/contracts/auth-session.md#native-persistence",
+      "given": {
+        "storedKeys": [
+          "supabase.access_token",
+          "supabase.refresh_token",
+          "supabase.expires_at_epoch_seconds",
+          "supabase.user_id"
+        ],
+        "action": "signOut"
+      },
+      "expected": {
+        "storedKeysAfterSignOut": [],
+        "validAccessTokenAfterSignOut": null,
+        "returnsToTesterOrLoginState": true
+      },
+      "platformCoverage": {
+        "android": "Covered by NativeSupabaseSession tests.",
+        "ios": "Covered by TesterAuthTests for session persistence, expiry skew, and sign-out clearing against the in-memory store."
+      },
+      "notes": "No access or refresh token value is stored in this manifest."
+    },
+    {
+      "id": "runtime-reducer-transition-v1",
+      "domain": "runtime-reducer-transition",
+      "sourceReference": ".omx/plans/test-spec-native-parity-production.md#shared-golden--domain-parity",
+      "given": {
+        "sequence": [
+          "launch",
+          "testerLogin",
+          "profileComplete",
+          "weatherRefresh",
+          "feedbackSubmit",
+          "signOut"
+        ]
+      },
+      "expected": {
+        "terminalState": "signedOut",
+        "clearsSession": true,
+        "doesNotLeakBackendError": true,
+        "keepsUserSafeCopy": true
+      },
+      "platformCoverage": {
+        "android": "Covered by PwsNativeRuntime and UI state tests.",
+        "ios": "Must be covered as Swift runtime/state orchestration lands."
+      },
+      "notes": "Reducer transitions should be equivalent even if UI composition differs by platform."
+    }
+  ]
+}

@@ -179,10 +179,19 @@ on public.tester_feedback (user_id, created_at desc);
 --    Critical rules:
 --    - no user_id argument
 --    - only auth.uid()
---    - SECURITY DEFINER with empty search_path and schema-qualified tables
+--    - SECURITY DEFINER implementation stays outside public schema
+--    - public RPC is a narrow SECURITY INVOKER wrapper
+--    - empty search_path and schema-qualified tables
 --    - only authenticated can execute
 -- -----------------------------------------------------------------------------
-create or replace function public.delete_own_account()
+create schema if not exists private;
+alter schema private owner to postgres;
+
+revoke all on schema private from public;
+revoke all on schema private from anon;
+revoke all on schema private from authenticated;
+
+create or replace function private.delete_own_account()
 returns void
 language plpgsql
 security definer
@@ -209,9 +218,24 @@ begin
 end;
 $$;
 
+create or replace function public.delete_own_account()
+returns void
+language sql
+security invoker
+set search_path = ''
+as $$
+  select private.delete_own_account();
+$$;
+
 revoke all on function public.delete_own_account() from public;
 revoke all on function public.delete_own_account() from anon;
 revoke all on function public.delete_own_account() from authenticated;
+revoke all on function private.delete_own_account() from public;
+revoke all on function private.delete_own_account() from anon;
+revoke all on function private.delete_own_account() from authenticated;
+
+grant usage on schema private to authenticated;
+grant execute on function private.delete_own_account() to authenticated;
 grant execute on function public.delete_own_account() to authenticated;
 
 commit;

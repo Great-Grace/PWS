@@ -26,14 +26,18 @@ where schemaname = 'public'
   and tablename in ('users', 'feedback_entries', 'weather_cache', 'tester_feedback')
 order by tablename, policyname;
 
--- 4) Function privilege check.
+-- 4) Account deletion RPC shape.
+-- Expected:
+-- - public.delete_own_account is a narrow SECURITY INVOKER wrapper.
+-- - private.delete_own_account is the SECURITY DEFINER implementation.
+-- - both functions pin an empty search_path.
 select n.nspname as schema,
        p.proname as function,
        p.prosecdef as security_definer,
        p.proconfig as config
 from pg_proc p
 join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public'
+where n.nspname in ('public', 'private')
   and p.proname = 'delete_own_account';
 
 -- 5) Public client grants should stay narrow.

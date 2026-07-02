@@ -1,0 +1,54 @@
+name: PWSNativePreview
+options:
+  bundleIdPrefix: woos.owndo
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "26.4"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+targets:
+  PWSNativePreview:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - PWSNativePreview
+    settings:
+      base:
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 23776Z264P
+        PRODUCT_BUNDLE_IDENTIFIER: woos.owndo
+        INFOPLIST_FILE: PWSNativePreview/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: PWSNativePreview/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: PWS Native
+        UILaunchScreen: {}
+  PWSNativePreviewTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - PWSNativePreviewTests
+    dependencies:
+      - target: PWSNativePreview
+    settings:
+      base:
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 23776Z264P
+        PRODUCT_BUNDLE_IDENTIFIER: woos.owndo.tests
+        INFOPLIST_FILE: PWSNativePreviewTests/Info.plist
+schemes:
+  PWSNativePreview:
+    build:
+      targets:
+        PWSNativePreview: all
+    run:
+      config: Debug
+      executable: PWSNativePreview
+    test:
+      config: Debug
+      targets:
+        - PWSNativePreviewTests

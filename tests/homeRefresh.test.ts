@@ -1,5 +1,5 @@
 import * as assert from 'node:assert/strict';
-import { refreshHomeScreenData } from '../src/utils/homeRefresh';
+import { refreshHomeScreenData } from '../shared/domain/homeRefresh';
 
 async function main() {
   const calls: string[] = [];
