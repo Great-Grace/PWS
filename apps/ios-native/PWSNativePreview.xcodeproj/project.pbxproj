@@ -88,9 +88,7 @@
 		BA98B9B9809AA0FC914B72EE /* LoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginScreen.swift; sourceTree = "<group>"; };
 		BF951DA1A7E8F834B09B981D /* PWSNativePreviewApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PWSNativePreviewApp.swift; sourceTree = "<group>"; };
 		C508420EB4AB46C20A6C05AB /* FeelTrajectoryChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FeelTrajectoryChart.swift; path = PWSNativePreview/Design/FeelTrajectoryChart.swift; sourceTree = SOURCE_ROOT; };
-		C66BA057EE7C856D2BA4426B /* PWSConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PWSConfig.swift; sourceTree = "<group>"; };
-		D22844B0B83699EC0A58F0E2 /* AvatarAssetResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AvatarAssetResolver.swift; path = PWSNativePreview/Design/AvatarAssetResolver.swift; sourceTree = SOURCE_ROOT; };
-		D47A46BA8B9676B982729F95 /* PredictionStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PredictionStripView.swift; path = PWSNativePreview/Design/PredictionStripView.swift; sourceTree = SOURCE_ROOT; };
+		C66BA057EE7C856D2BA4426B /* PWSConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PWSConfig.swift; sourceTree = "<group>"; };		D47A46BA8B9676B982729F95 /* PredictionStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PredictionStripView.swift; path = PWSNativePreview/Design/PredictionStripView.swift; sourceTree = SOURCE_ROOT; };
 		D94B628FB727E06CF23B3C4A /* WeatherOneCallContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherOneCallContractTests.swift; sourceTree = "<group>"; };
 		DA0E0C83CAEB20A7ACDCA5FF /* FeedbackContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackContracts.swift; sourceTree = "<group>"; };
 		E422984B2ECCC7849A28AFC9 /* ProfileContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileContract.swift; sourceTree = "<group>"; };
@@ -271,9 +269,7 @@
 				45FD4D7CB84C68551BD2A1B8 /* SkyGradientSystem.swift */,
 				84C04136A768D45919298A6B /* WeatherOverlayLayer.swift */,
 				31FC452598C37B7C4675B45F /* TimeScrollbar.swift */,
-				645142A29D1AFE5B62511D09 /* AvatarLayer.swift */,
-				D22844B0B83699EC0A58F0E2 /* AvatarAssetResolver.swift */,
-				EA0E40F79821E035F910FE7C /* WeatherSceneView.swift */,
+				645142A29D1AFE5B62511D09 /* AvatarLayer.swift */,				EA0E40F79821E035F910FE7C /* WeatherSceneView.swift */,
 				15F94926A3C6551975747B47 /* FeelGaugeView.swift */,
 				D47A46BA8B9676B982729F95 /* PredictionStripView.swift */,
 				C508420EB4AB46C20A6C05AB /* FeelTrajectoryChart.swift */,
