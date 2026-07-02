@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00F145FC9D14E7C2C391146A /* WeatherSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0E40F79821E035F910FE7C /* WeatherSceneView.swift */; };
 		02FE8E4DEF3B477715E0AD17 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0C75EF93EB09EB6C7AA1F5 /* AppEnvironment.swift */; };
+		04D4403B8AFC1B2891D7D50C /* RecommendationListCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A854E1F9B4742060133D18B /* RecommendationListCard.swift */; };
 		0F482B9610C3F691EC50108A /* FeedbackContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6265382DD406D5247B7F2725 /* FeedbackContractTests.swift */; };
 		151CA127E08E1C78A9E5E749 /* WeatherOneCallContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D94B628FB727E06CF23B3C4A /* WeatherOneCallContractTests.swift */; };
 		152F41ACAB17DAFC83A9B084 /* WeatherOverlayLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C04136A768D45919298A6B /* WeatherOverlayLayer.swift */; };
@@ -24,11 +25,12 @@
 		6824F20DE269BFCB08E2B58A /* WeatherDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 216F7F256618587705E3CA67 /* WeatherDetailScreen.swift */; };
 		71526A3D13F1389E246EE7F3 /* TesterAuthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D123FDBD112ACCAE1AA3DC2 /* TesterAuthTests.swift */; };
 		71D04D3CB1CBA27F556B0815 /* AvatarLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 645142A29D1AFE5B62511D09 /* AvatarLayer.swift */; };
-		720A47C08E87F9A77E5C60B4 /* AvatarAssetResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22844B0B83699EC0A58F0E2 /* AvatarAssetResolver.swift */; };
+		720A47C08E87F9A77E5C60B4 /* None in Sources */ = {isa = PBXBuildFile; fileRef = D22844B0B83699EC0A58F0E2; };
 		7C7E19F477979966E1F2064B /* ProfileContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3D9FEEDEAAC25B0BFB4C1B /* ProfileContractTests.swift */; };
 		80641A0BDC8B1DA0E4D20805 /* PwsTabShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A8A43697D6C50E211C6051D /* PwsTabShell.swift */; };
 		80E543EBAE2D64868A6ED832 /* SkyGradientSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45FD4D7CB84C68551BD2A1B8 /* SkyGradientSystem.swift */; };
 		83A063D335AF61ED77867186 /* PWSComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60B67618AC3EC0DB825B612C /* PWSComponents.swift */; };
+		83A14DC8ADC5DA29CEB95FED /* OutfitGuideCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9524D73ADD3780DA09B65CE /* OutfitGuideCard.swift */; };
 		A6984CF1949EBAE7DF783EC2 /* FeelTrajectoryChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = C508420EB4AB46C20A6C05AB /* FeelTrajectoryChart.swift */; };
 		A7D0679138D9035309C2198F /* NativeKeyValueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B266056F408798D1BC46F89F /* NativeKeyValueStore.swift */; };
 		AC705C3F981EBED00790F402 /* WeatherOneCallContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C2FB3DC4E77564937A19796 /* WeatherOneCallContract.swift */; };
@@ -39,6 +41,7 @@
 		DD229BD334830ECCAF33A3EC /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23968C02BA64F80DB1E11D8A /* SettingsScreen.swift */; };
 		E1344E2E0302B8E0DE6EA60E /* FeedbackContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0E0C83CAEB20A7ACDCA5FF /* FeedbackContracts.swift */; };
 		E63E4F4C4E459FBA24671358 /* HistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B734D869983DD552AF7D211 /* HistoryScreen.swift */; };
+		E8EC49F1AFF6A6EA5F8F6072 /* FeedbackCTACard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F240C68FDD901782F0F27A /* FeedbackCTACard.swift */; };
 		EB3A2807C7F49C1C99E9D27D /* PWSTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B046D6EC680DD10BB935388 /* PWSTokens.swift */; };
 		FB06DA6F041261F5374428DE /* PWSConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66BA057EE7C856D2BA4426B /* PWSConfig.swift */; };
 		FBC2207BEB06546B1F95AA2E /* ProfileContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = E422984B2ECCC7849A28AFC9 /* ProfileContract.swift */; };
@@ -66,6 +69,7 @@
 		216F7F256618587705E3CA67 /* WeatherDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDetailScreen.swift; sourceTree = "<group>"; };
 		23968C02BA64F80DB1E11D8A /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		31FC452598C37B7C4675B45F /* TimeScrollbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TimeScrollbar.swift; path = PWSNativePreview/Design/TimeScrollbar.swift; sourceTree = SOURCE_ROOT; };
+		3A854E1F9B4742060133D18B /* RecommendationListCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RecommendationListCard.swift; path = PWSNativePreview/Features/Home/Views/RecommendationListCard.swift; sourceTree = SOURCE_ROOT; };
 		3B734D869983DD552AF7D211 /* HistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryScreen.swift; sourceTree = "<group>"; };
 		3F78DF0B1CA289E277605370 /* HomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreen.swift; sourceTree = "<group>"; };
 		45FD4D7CB84C68551BD2A1B8 /* SkyGradientSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SkyGradientSystem.swift; path = PWSNativePreview/Design/SkyGradientSystem.swift; sourceTree = SOURCE_ROOT; };
@@ -88,12 +92,15 @@
 		BA98B9B9809AA0FC914B72EE /* LoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginScreen.swift; sourceTree = "<group>"; };
 		BF951DA1A7E8F834B09B981D /* PWSNativePreviewApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PWSNativePreviewApp.swift; sourceTree = "<group>"; };
 		C508420EB4AB46C20A6C05AB /* FeelTrajectoryChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FeelTrajectoryChart.swift; path = PWSNativePreview/Design/FeelTrajectoryChart.swift; sourceTree = SOURCE_ROOT; };
-		C66BA057EE7C856D2BA4426B /* PWSConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PWSConfig.swift; sourceTree = "<group>"; };		D47A46BA8B9676B982729F95 /* PredictionStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PredictionStripView.swift; path = PWSNativePreview/Design/PredictionStripView.swift; sourceTree = SOURCE_ROOT; };
+		C66BA057EE7C856D2BA4426B /* PWSConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PWSConfig.swift; sourceTree = "<group>"; };
+		D47A46BA8B9676B982729F95 /* PredictionStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PredictionStripView.swift; path = PWSNativePreview/Design/PredictionStripView.swift; sourceTree = SOURCE_ROOT; };
 		D94B628FB727E06CF23B3C4A /* WeatherOneCallContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherOneCallContractTests.swift; sourceTree = "<group>"; };
 		DA0E0C83CAEB20A7ACDCA5FF /* FeedbackContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackContracts.swift; sourceTree = "<group>"; };
 		E422984B2ECCC7849A28AFC9 /* ProfileContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileContract.swift; sourceTree = "<group>"; };
 		EA0E40F79821E035F910FE7C /* WeatherSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WeatherSceneView.swift; path = PWSNativePreview/Design/WeatherSceneView.swift; sourceTree = SOURCE_ROOT; };
 		F1CAE313035CB86BB98BBD11 /* PWSNativePreviewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PWSNativePreviewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9524D73ADD3780DA09B65CE /* OutfitGuideCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = OutfitGuideCard.swift; path = PWSNativePreview/Features/Home/Views/OutfitGuideCard.swift; sourceTree = SOURCE_ROOT; };
+		F9F240C68FDD901782F0F27A /* FeedbackCTACard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FeedbackCTACard.swift; path = PWSNativePreview/Features/Home/Views/FeedbackCTACard.swift; sourceTree = SOURCE_ROOT; };
 		FCD244CE89F3EB598C30D39D /* KeychainPredictionWeightsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KeychainPredictionWeightsStore.swift; path = PWSNativePreview/Domain/Prediction/KeychainPredictionWeightsStore.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -269,7 +276,8 @@
 				45FD4D7CB84C68551BD2A1B8 /* SkyGradientSystem.swift */,
 				84C04136A768D45919298A6B /* WeatherOverlayLayer.swift */,
 				31FC452598C37B7C4675B45F /* TimeScrollbar.swift */,
-				645142A29D1AFE5B62511D09 /* AvatarLayer.swift */,				EA0E40F79821E035F910FE7C /* WeatherSceneView.swift */,
+				645142A29D1AFE5B62511D09 /* AvatarLayer.swift */,
+				EA0E40F79821E035F910FE7C /* WeatherSceneView.swift */,
 				15F94926A3C6551975747B47 /* FeelGaugeView.swift */,
 				D47A46BA8B9676B982729F95 /* PredictionStripView.swift */,
 				C508420EB4AB46C20A6C05AB /* FeelTrajectoryChart.swift */,
@@ -277,6 +285,9 @@
 				7F074AEDB482F47BC949466F /* PwsFormulaEngine.swift */,
 				81D340E0B24CC4620531470E /* PwsPredictionService.swift */,
 				FCD244CE89F3EB598C30D39D /* KeychainPredictionWeightsStore.swift */,
+				F9524D73ADD3780DA09B65CE /* OutfitGuideCard.swift */,
+				F9F240C68FDD901782F0F27A /* FeedbackCTACard.swift */,
+				3A854E1F9B4742060133D18B /* RecommendationListCard.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -422,7 +433,7 @@
 				152F41ACAB17DAFC83A9B084 /* WeatherOverlayLayer.swift in Sources */,
 				C1E34066A244BAC473FD4832 /* TimeScrollbar.swift in Sources */,
 				71D04D3CB1CBA27F556B0815 /* AvatarLayer.swift in Sources */,
-				720A47C08E87F9A77E5C60B4 /* AvatarAssetResolver.swift in Sources */,
+				720A47C08E87F9A77E5C60B4 /* None in Sources */,
 				00F145FC9D14E7C2C391146A /* WeatherSceneView.swift in Sources */,
 				5CB14DE68FB81BEC9A668B13 /* FeelGaugeView.swift in Sources */,
 				1BD04411A9388ED1527E3BDC /* PredictionStripView.swift in Sources */,
@@ -431,6 +442,9 @@
 				42D047568D2649224CBA7FDC /* PwsFormulaEngine.swift in Sources */,
 				3A78481EBBE2BD713A98DF57 /* PwsPredictionService.swift in Sources */,
 				2F2C40C08DB36B4B609E60C1 /* KeychainPredictionWeightsStore.swift in Sources */,
+				83A14DC8ADC5DA29CEB95FED /* OutfitGuideCard.swift in Sources */,
+				E8EC49F1AFF6A6EA5F8F6072 /* FeedbackCTACard.swift in Sources */,
+				04D4403B8AFC1B2891D7D50C /* RecommendationListCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
