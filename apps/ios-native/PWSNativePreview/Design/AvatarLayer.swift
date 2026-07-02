@@ -65,8 +65,6 @@ struct AvatarResolver {
         tempC: Double,
         feelScore: Double
     ) -> AvatarConfig {
-        let timePhase = AvatarTimePhase.from(hour: hour)
-        let tempBand = AvatarTempBand.from(tempC: tempC)
         let mood = AvatarMood.from(feelScore: feelScore)
 
         return AvatarConfig(
@@ -176,11 +174,7 @@ struct AvatarLayer: View {
     }
 
     private var faceAssetName: String {
-        let time = AvatarTimePhase.from(hour: hour)
-        let tempBand = AvatarTempBand.from(tempC: tempC)
-        let mood = AvatarMood.from(feelScore: feelScore)
-        // 표정은 mood 기반으로 에셋 이름 생성
-        switch mood {
+        switch AvatarMood.from(feelScore: feelScore) {
         case .freezing: return "avatar_face_cold_pain"
         case .cold:     return "avatar_face_cold_pain"
         case .neutral:  return "avatar_face_comfortable"
@@ -190,10 +184,7 @@ struct AvatarLayer: View {
     }
 
     private var poseAssetName: String {
-        let time = AvatarTimePhase.from(hour: hour)
-        let tempBand = AvatarTempBand.from(tempC: tempC)
-        // 포즈는 시간+기온 기반으로 에셋 이름 생성
-        switch (time, tempBand) {
+        switch (AvatarTimePhase.from(hour: hour), AvatarTempBand.from(tempC: tempC)) {
         case (_, .freezing): return "avatar_pose_shivering"
         case (_, .cold):     return "avatar_pose_shivering"
         case (_, .hot):      return "avatar_pose_wiping"
