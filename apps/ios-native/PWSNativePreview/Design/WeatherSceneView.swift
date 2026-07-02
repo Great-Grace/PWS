@@ -37,12 +37,8 @@ struct WeatherSceneView: View {
 
     var body: some View {
         ZStack {
-            // Layer 0: Sky Gradient
-            SkyGradientView(
-                hour: selectedHour,
-                weatherCode: selectedTimeWeather.code,
-                tempC: selectedTimeWeather.temp
-            )
+            // Layer 0: Sky Background (이미지 에셋 있으면 사용, 없으면 코드 그라디언트)
+            skyBackgroundLayer
 
             // Layer 1: Weather Overlay (비/눈/안개/구름)
             WeatherOverlayLayer(weatherCode: selectedTimeWeather.code)
@@ -89,7 +85,7 @@ struct WeatherSceneView: View {
             if let prediction = predictionResult {
                 FeelGaugeView(
                     feelScore: prediction.overall,
-                    confidence: prediction.confidence.rawValue,
+                    confidence: prediction.confidence,
                     label: nil
                 )
                 .padding(.horizontal, PWSTokens.spacing24)
@@ -100,7 +96,7 @@ struct WeatherSceneView: View {
                 morning: predictionResult?.bySlot[.morning].map { slotFeel in
                     PredictionStripView.SlotPrediction(
                         feel: slotFeel,
-                        confidence: predictionResult?.confidence.rawValue ?? "cold_start",
+                        confidence: predictionResult?.confidence ?? .cold_start,
                         temp: hourlyForecasts.first(where: { abs($0.hour - 8) < 2 })?.temp,
                         weatherCode: hourlyForecasts.first(where: { abs($0.hour - 8) < 2 })?.weatherCode
                     )
@@ -108,7 +104,7 @@ struct WeatherSceneView: View {
                 afternoon: predictionResult?.bySlot[.afternoon].map { slotFeel in
                     PredictionStripView.SlotPrediction(
                         feel: slotFeel,
-                        confidence: predictionResult?.confidence.rawValue ?? "cold_start",
+                        confidence: predictionResult?.confidence ?? .cold_start,
                         temp: hourlyForecasts.first(where: { abs($0.hour - 14) < 2 })?.temp,
                         weatherCode: hourlyForecasts.first(where: { abs($0.hour - 14) < 2 })?.weatherCode
                     )
@@ -116,7 +112,7 @@ struct WeatherSceneView: View {
                 evening: predictionResult?.bySlot[.evening].map { slotFeel in
                     PredictionStripView.SlotPrediction(
                         feel: slotFeel,
-                        confidence: predictionResult?.confidence.rawValue ?? "cold_start",
+                        confidence: predictionResult?.confidence ?? .cold_start,
                         temp: hourlyForecasts.first(where: { abs($0.hour - 20) < 2 })?.temp,
                         weatherCode: hourlyForecasts.first(where: { abs($0.hour - 20) < 2 })?.weatherCode
                     )
@@ -161,6 +157,54 @@ struct WeatherSceneView: View {
         case .medium:     return 0.7
         case .high:       return 1.0
         }
+    }
+
+    // MARK: - Sky Background (이미지 우선, 코드 폴백)
+
+    private var skyBackgroundLayer: some View {
+        let timePhase = SkyTimePhase.from(hour: selectedHour)
+        let skyImageName = "sky_\(timePhase.rawValue)_clear"
+
+        if let skyImage = UIImage(named: skyImageName) {
+            return AnyView(
+                Image(uiImage: skyImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .ignoresSafeArea()
+                    .overlay(
+                        // 날씨 상태에 따른 tint overlay
+                        weatherTintOverlay
+                    )
+            )
+        } else {
+            return AnyView(
+                SkyGradientView(
+                    hour: selectedHour,
+                    weatherCode: selectedTimeWeather.code,
+                    tempC: selectedTimeWeather.temp
+                )
+            )
+        }
+    }
+
+    private var weatherTintOverlay: some View {
+        Group {
+            switch selectedTimeWeather.code {
+            case 200...299: // 뇌우
+                Color.black.opacity(0.4)
+            case 300...599: // 비
+                Color.gray.opacity(0.3)
+            case 600...699: // 눈
+                Color.white.opacity(0.2)
+            case 700...799: // 안개
+                Color.gray.opacity(0.2)
+            case 803...899: // 흐림
+                Color.gray.opacity(0.15)
+            default:
+                Color.clear
+            }
+        }
+        .animation(.easeInOut(duration: 1.5), value: selectedTimeWeather.code)
     }
 
     // MARK: - Compact Weather Header
@@ -215,7 +259,7 @@ struct WeatherSceneView: View {
     }
 
     private var weatherDescription: String {
-        if let desc = weatherState.data?.current.weatherDesc, desc != "-" {
+        if let desc = weatherState.data?.current.weatherDescription, desc != "-" {
             return desc
         }
         return emojiForCode(selectedTimeWeather.code)

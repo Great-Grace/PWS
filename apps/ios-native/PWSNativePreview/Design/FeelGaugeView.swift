@@ -5,7 +5,7 @@ import SwiftUI
 
 struct FeelGaugeView: View {
     let feelScore: Double       // 연속값 1.0~7.0
-    let confidence: String      // cold_start | low | medium | high
+    let confidence: PredictionConfidence
     let label: String?          // 커스텀 라벨 (nil이면 자동)
 
     @State private var animatedScore: Double = 4.0
@@ -40,11 +40,10 @@ struct FeelGaugeView: View {
 
     private var confidenceWidth: CGFloat {
         switch confidence {
-        case "cold_start": return 0.3
-        case "low":        return 0.5
-        case "medium":     return 0.75
-        case "high":       return 1.0
-        default:           return 0.5
+        case .cold_start: return 0.3
+        case .low:        return 0.5
+        case .medium:     return 0.75
+        case .high:       return 1.0
         }
     }
 
@@ -185,21 +184,19 @@ struct FeelGaugeView: View {
 
     private var confidenceColor: Color {
         switch confidence {
-        case "cold_start": return .gray
-        case "low":        return .orange
-        case "medium":     return .yellow
-        case "high":       return .green
-        default:           return .gray
+        case .cold_start: return .gray
+        case .low:        return .orange
+        case .medium:     return .yellow
+        case .high:       return .green
         }
     }
 
     private var confidenceLabel: String {
         switch confidence {
-        case "cold_start": return "학습 중"
-        case "low":        return "낮음"
-        case "medium":     return "보통"
-        case "high":       return "높음"
-        default:           return "보통"
+        case .cold_start: return "학습 중"
+        case .low:        return "낮음"
+        case .medium:     return "보통"
+        case .high:       return "높음"
         }
     }
 }

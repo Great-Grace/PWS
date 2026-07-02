@@ -11,15 +11,15 @@ struct SkyGradientColors {
     let atmosphere: Color // 전체 tint (기온 효과)
 }
 
-enum SkyTimePhase: CaseIterable {
-    case deepNight    // 00-05
-    case dawn         // 05-07
-    case morning      // 07-10
-    case midday       // 10-14
-    case afternoon    // 14-17
-    case goldenHour   // 17-19
-    case dusk         // 19-21
-    case night        // 21-24
+enum SkyTimePhase: String, CaseIterable {
+    case deepNight = "night"    // 00-05
+    case dawn       // 05-07
+    case morning    // 07-10
+    case midday     // 10-14
+    case afternoon  // 14-17
+    case goldenHour = "sunset"  // 17-19
+    case dusk       // 19-21
+    case night      // 21-24
 
     static func from(hour: Double) -> SkyTimePhase {
         switch hour {

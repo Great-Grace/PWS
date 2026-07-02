@@ -72,7 +72,7 @@ struct AssetCatalog {
 
 // MARK: - Weather Condition
 
-enum WeatherCondition {
+enum WeatherCondition: String {
     case clear
     case cloudy
     case rainy

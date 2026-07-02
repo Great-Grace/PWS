@@ -12,7 +12,7 @@ struct PredictionStripView: View {
 
     struct SlotPrediction {
         let feel: Double           // 연속값 1~7
-        let confidence: String     // cold_start | low | medium | high
+        let confidence: PredictionConfidence
         let temp: Double?          // 예상 기온
         let weatherCode: Int?      // 예상 날씨
     }
@@ -122,15 +122,14 @@ struct PredictionStripView: View {
 
     // MARK: - Confidence Bar
 
-    private func confidenceBar(level: String) -> some View {
+    private func confidenceBar(level: PredictionConfidence) -> some View {
         let segments = 4
         let filled: Int
         switch level {
-        case "cold_start": filled = 1
-        case "low":        filled = 2
-        case "medium":     filled = 3
-        case "high":       filled = 4
-        default:           filled = 2
+        case .cold_start: filled = 1
+        case .low:        filled = 2
+        case .medium:     filled = 3
+        case .high:       filled = 4
         }
 
         return HStack(spacing: 3) {

@@ -175,6 +175,36 @@ struct AvatarLayer: View {
         AvatarResolver.resolve(hour: hour, tempC: tempC, feelScore: feelScore)
     }
 
+    private var faceAssetName: String {
+        let time = AvatarTimePhase.from(hour: hour)
+        let tempBand = AvatarTempBand.from(tempC: tempC)
+        let mood = AvatarMood.from(feelScore: feelScore)
+        // 표정은 mood 기반으로 에셋 이름 생성
+        switch mood {
+        case .freezing: return "avatar_face_cold_pain"
+        case .cold:     return "avatar_face_cold_pain"
+        case .neutral:  return "avatar_face_comfortable"
+        case .warm:     return "avatar_face_sweating"
+        case .hot:      return "avatar_face_hot_pain"
+        }
+    }
+
+    private var poseAssetName: String {
+        let time = AvatarTimePhase.from(hour: hour)
+        let tempBand = AvatarTempBand.from(tempC: tempC)
+        // 포즈는 시간+기온 기반으로 에셋 이름 생성
+        switch (time, tempBand) {
+        case (_, .freezing): return "avatar_pose_shivering"
+        case (_, .cold):     return "avatar_pose_shivering"
+        case (_, .hot):      return "avatar_pose_wiping"
+        case (_, .warm):     return "avatar_pose_fanning"
+        case (.morning, _):  return "avatar_pose_standing"
+        case (.day, _):      return "avatar_pose_standing"
+        case (.evening, _):  return "avatar_pose_standing"
+        case (.night, _):    return "avatar_pose_standing"
+        }
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             ZStack {
@@ -194,19 +224,36 @@ struct AvatarLayer: View {
                     )
                     .frame(width: 160, height: 160)
 
-                // 아바타 본체 (SF Symbol 기반)
+                // 아바타 본체 (에셋 있으면 이미지, 없으면 emoji/SF Symbol)
                 VStack(spacing: 4) {
-                    // 표정
-                    Text(config.expression)
-                        .font(.system(size: 48))
-                        .scaleEffect(breatheScale)
-                        .contentTransition(.opacity)
+                    // 표정 — 이미지 에셋 우선, 없으면 emoji
+                    if let faceImage = UIImage(named: faceAssetName) {
+                        Image(uiImage: faceImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 80, height: 80)
+                            .scaleEffect(breatheScale)
+                            .contentTransition(.opacity)
+                    } else {
+                        Text(config.expression)
+                            .font(.system(size: 48))
+                            .scaleEffect(breatheScale)
+                            .contentTransition(.opacity)
+                    }
 
-                    // 포즈 아이콘
-                    Image(systemName: config.pose)
-                        .font(.system(size: 36, weight: .light))
-                        .foregroundStyle(config.tintColor)
-                        .contentTransition(.opacity)
+                    // 포즈 — 이미지 에셋 우선, 없으면 SF Symbol
+                    if let poseImage = UIImage(named: poseAssetName) {
+                        Image(uiImage: poseImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 64, height: 64)
+                            .contentTransition(.opacity)
+                    } else {
+                        Image(systemName: config.pose)
+                            .font(.system(size: 36, weight: .light))
+                            .foregroundStyle(config.tintColor)
+                            .contentTransition(.opacity)
+                    }
                 }
                 .accessibilityLabel(config.description)
             }
