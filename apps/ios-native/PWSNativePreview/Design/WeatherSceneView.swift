@@ -66,7 +66,6 @@ struct WeatherSceneView<Content: View>: View {
                         Spacer()
                         
                         AvatarLayer(hour: selectedHour, tempC: selectedTimeWeather.temp, feelScore: currentFeelScore)
-                            .scaleEffect(1.2) // 아바타를 더 큼지막하게 표시
                         
                         Spacer()
                         

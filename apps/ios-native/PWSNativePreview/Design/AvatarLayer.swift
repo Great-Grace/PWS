@@ -83,18 +83,18 @@ struct AvatarLayer: View {
                                 .clear,
                             ],
                             center: .center,
-                            startRadius: 40,
-                            endRadius: 120
+                            startRadius: 50,
+                            endRadius: 140
                         )
                     )
-                    .frame(width: 240, height: 240)
+                    .frame(width: 280, height: 280)
 
                 // 아바타 (풀바디)
                 if let poseImage = UIImage(named: poseAssetName) {
                     Image(uiImage: poseImage)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 200, height: 200)
+                        .frame(width: 240, height: 240)
                         .offset(y: floatOffset)
                         .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 10)
                 } else {
