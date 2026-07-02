@@ -1,24 +1,31 @@
 import SwiftUI
 
 enum PWSTokens {
-    static let actionBlue = Color(red: 0.00, green: 0.65, blue: 0.96)
-    static let actionBluePressed = Color(red: 0.08, green: 0.36, blue: 0.99)
-    static let pageBackground = Color(red: 0.98, green: 0.98, blue: 0.98)
-    static let panelBackground = Color.white
-    static let secondaryPanelBackground = Color(red: 0.96, green: 0.96, blue: 0.96)
-    static let warmPanelBackground = Color(red: 0.98, green: 0.98, blue: 0.98)
-    static let primaryText = Color(red: 0.11, green: 0.10, blue: 0.09)
-    static let secondaryText = Color(red: 0.34, green: 0.33, blue: 0.30)
-    static let tertiaryText = Color(red: 0.47, green: 0.44, blue: 0.42)
-    static let mutedText = Color(red: 0.65, green: 0.63, blue: 0.61)
-    static let border = Color(red: 0.96, green: 0.96, blue: 0.96)
-    static let strongBorder = Color(red: 0.91, green: 0.90, blue: 0.89)
-    static let divider = Color(red: 0.91, green: 0.90, blue: 0.89)
-    static let success = Color(red: 0.12, green: 0.48, blue: 0.32)
-    static let warning = Color(red: 0.68, green: 0.36, blue: 0.04)
-    static let gradientStart = Color(red: 0.00, green: 0.65, blue: 0.96)
-    static let gradientEnd = Color(red: 0.08, green: 0.36, blue: 0.99)
-    static let redText = Color(red: 0.91, green: 0.00, blue: 0.04)
+    static func dynamic(light: Color, dark: Color) -> Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? UIColor(dark) : UIColor(light)
+        })
+    }
+
+    static let actionBlue = dynamic(light: Color(red: 0.00, green: 0.65, blue: 0.96), dark: Color(red: 0.15, green: 0.70, blue: 0.98))
+    static let actionBluePressed = dynamic(light: Color(red: 0.08, green: 0.36, blue: 0.99), dark: Color(red: 0.10, green: 0.40, blue: 1.0))
+    static let pageBackground = dynamic(light: Color(red: 0.98, green: 0.98, blue: 0.98), dark: Color(red: 0.06, green: 0.06, blue: 0.06))
+    static let panelBackground = dynamic(light: .white, dark: Color(red: 0.12, green: 0.12, blue: 0.12))
+    static let secondaryPanelBackground = dynamic(light: Color(red: 0.96, green: 0.96, blue: 0.96), dark: Color(red: 0.18, green: 0.18, blue: 0.18))
+    static let warmPanelBackground = dynamic(light: Color(red: 0.98, green: 0.98, blue: 0.98), dark: Color(red: 0.15, green: 0.15, blue: 0.15))
+    static let primaryText = dynamic(light: Color(red: 0.11, green: 0.10, blue: 0.09), dark: Color(red: 0.95, green: 0.95, blue: 0.95))
+    static let secondaryText = dynamic(light: Color(red: 0.34, green: 0.33, blue: 0.30), dark: Color(red: 0.75, green: 0.75, blue: 0.75))
+    static let tertiaryText = dynamic(light: Color(red: 0.47, green: 0.44, blue: 0.42), dark: Color(red: 0.6, green: 0.6, blue: 0.6))
+    static let mutedText = dynamic(light: Color(red: 0.65, green: 0.63, blue: 0.61), dark: Color(red: 0.45, green: 0.45, blue: 0.45))
+    static let border = dynamic(light: Color(red: 0.96, green: 0.96, blue: 0.96), dark: Color(red: 0.22, green: 0.22, blue: 0.22))
+    static let strongBorder = dynamic(light: Color(red: 0.91, green: 0.90, blue: 0.89), dark: Color(red: 0.3, green: 0.3, blue: 0.3))
+    static let divider = dynamic(light: Color(red: 0.91, green: 0.90, blue: 0.89), dark: Color(red: 0.25, green: 0.25, blue: 0.25))
+    static let success = dynamic(light: Color(red: 0.12, green: 0.48, blue: 0.32), dark: Color(red: 0.20, green: 0.60, blue: 0.40))
+    static let warning = dynamic(light: Color(red: 0.68, green: 0.36, blue: 0.04), dark: Color(red: 0.80, green: 0.45, blue: 0.10))
+    static let gradientStart = dynamic(light: Color(red: 0.00, green: 0.65, blue: 0.96), dark: Color(red: 0.10, green: 0.75, blue: 1.0))
+    static let gradientEnd = dynamic(light: Color(red: 0.08, green: 0.36, blue: 0.99), dark: Color(red: 0.18, green: 0.45, blue: 1.0))
+    static let redText = dynamic(light: Color(red: 0.91, green: 0.00, blue: 0.04), dark: Color(red: 1.0, green: 0.30, blue: 0.35))
+    
     static let spacing4: CGFloat = 4
     static let spacing8: CGFloat = 8
     static let spacing12: CGFloat = 12

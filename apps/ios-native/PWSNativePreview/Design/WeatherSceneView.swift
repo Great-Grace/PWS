@@ -1,25 +1,22 @@
 import SwiftUI
 
-// MARK: - Weather Scene View
-// SkyGradient + WeatherOverlay + Avatar + TimeScrollbar + Prediction Views
-// HomeScreen의 hero 영역을 대체
-
-struct WeatherSceneView: View {
+struct WeatherSceneView<Content: View>: View {
     let weatherState: WeatherRepositoryState
     let feedbackState: FeedbackRepositoryState
     let predictionResult: PredictionResult?
     @Binding var selectedHour: Double
+    @ViewBuilder let bottomContent: Content
 
-    private var currentTemp: Double {
-        weatherState.data?.current.temp ?? 20
-    }
-
-    private var currentWeatherCode: Int {
-        weatherState.data?.current.weatherCode ?? 800
-    }
+    private var currentTemp: Double { weatherState.data?.current.temp ?? 20 }
+    private var currentWeatherCode: Int { weatherState.data?.current.weatherCode ?? 800 }
 
     private var currentFeelScore: Double {
-        predictionResult?.overall ?? weatherState.data?.current.feelsLike ?? currentTemp
+        if let prediction = predictionResult {
+            if selectedHour < 10 { return prediction.bySlot[.morning] ?? prediction.overall }
+            else if selectedHour < 18 { return prediction.bySlot[.afternoon] ?? prediction.overall }
+            else { return prediction.bySlot[.evening] ?? prediction.overall }
+        }
+        return weatherState.data?.current.feelsLike ?? currentTemp
     }
 
     private var hourlyForecasts: [HourlyForecastSnapshot] {
@@ -27,7 +24,6 @@ struct WeatherSceneView: View {
         return HourlyForecastSnapshot.from(nativeHourly: hourly)
     }
 
-    /// 선택 시간대의 날씨 데이터 보간
     private var selectedTimeWeather: (temp: Double, code: Int, humidity: Int, wind: Double) {
         if let closest = hourlyForecasts.min(by: { abs($0.hour - selectedHour) < abs($1.hour - selectedHour) }) {
             return (closest.temp, closest.weatherCode, closest.humidity, closest.windSpeed)
@@ -37,234 +33,119 @@ struct WeatherSceneView: View {
 
     var body: some View {
         ZStack {
-            // Layer 0: Sky Background (이미지 에셋 있으면 사용, 없으면 코드 그라디언트)
+            // 풀스크린 배경
             skyBackgroundLayer
+            WeatherOverlayLayer(weatherCode: selectedTimeWeather.code).allowsHitTesting(false)
+            TemperatureBreathEffect(tempC: selectedTimeWeather.temp).allowsHitTesting(false)
 
-            // Layer 1: Weather Overlay (비/눈/안개/구름)
-            WeatherOverlayLayer(weatherCode: selectedTimeWeather.code)
-                .allowsHitTesting(false)
+            ScrollView {
+                VStack(spacing: 0) {
+                    // 상단 Hero 영역
+                    VStack(spacing: 0) {
+                        TimeScrollbar(selectedHour: $selectedHour, hourlyForecasts: hourlyForecasts)
+                            .padding(.top, 60)
+                            .padding(.bottom, 24)
 
-            // Layer 2: Temperature Atmosphere (추위/더위 효과)
-            TemperatureBreathEffect(tempC: selectedTimeWeather.temp)
-                .allowsHitTesting(false)
+                        compactWeatherHeader
+                        
+                        if let error = weatherState.error {
+                            PWSStatusBanner(title: "날씨 오류", message: error, kind: .warning)
+                                .padding(.horizontal, 24)
+                        }
+                        
+                        Spacer()
+                        
+                        AvatarLayer(hour: selectedHour, tempC: selectedTimeWeather.temp, feelScore: currentFeelScore)
+                            .scaleEffect(1.2) // 아바타를 더 큼지막하게 표시
+                        
+                        Spacer()
+                        
+                        if let prediction = predictionResult {
+                            FeelGaugeView(feelScore: currentFeelScore, confidence: prediction.confidence, label: nil)
+                                .padding(.horizontal, 32)
+                                .padding(.bottom, 32)
+                        }
+                    }
+                    .frame(minHeight: 480) // Hero 영역 최소 높이
 
-            // Layer 3: Avatar
-            VStack {
-                Spacer(minLength: 40)
-                AvatarLayer(
-                    hour: selectedHour,
-                    tempC: selectedTimeWeather.temp,
-                    feelScore: currentFeelScore
-                )
-                .padding(.top, 20)
-                Spacer()
-            }
-
-            // Layer 4: Compact weather info overlay
-            VStack {
-                compactWeatherHeader
-                Spacer()
-            }
-
-            // Layer 5: Time Scrollbar (하단)
-            VStack {
-                Spacer()
-                TimeScrollbar(
-                    selectedHour: $selectedHour,
-                    hourlyForecasts: hourlyForecasts
-                )
-                .padding(.bottom, 8)
-            }
-        }
-        .frame(height: 420)
-        .clipShape(RoundedRectangle(cornerRadius: 0))
-
-        // Prediction views below the scene
-        VStack(spacing: PWSTokens.spacing16) {
-            // 체감 게이지
-            if let prediction = predictionResult {
-                FeelGaugeView(
-                    feelScore: prediction.overall,
-                    confidence: prediction.confidence,
-                    label: nil
-                )
-                .padding(.horizontal, PWSTokens.spacing24)
-            }
-
-            // 시간대별 예측 스트립
-            PredictionStripView(
-                morning: predictionResult?.bySlot[.morning].map { slotFeel in
-                    PredictionStripView.SlotPrediction(
-                        feel: slotFeel,
-                        confidence: predictionResult?.confidence ?? .cold_start,
-                        temp: hourlyForecasts.first(where: { abs($0.hour - 8) < 2 })?.temp,
-                        weatherCode: hourlyForecasts.first(where: { abs($0.hour - 8) < 2 })?.weatherCode
-                    )
-                },
-                afternoon: predictionResult?.bySlot[.afternoon].map { slotFeel in
-                    PredictionStripView.SlotPrediction(
-                        feel: slotFeel,
-                        confidence: predictionResult?.confidence ?? .cold_start,
-                        temp: hourlyForecasts.first(where: { abs($0.hour - 14) < 2 })?.temp,
-                        weatherCode: hourlyForecasts.first(where: { abs($0.hour - 14) < 2 })?.weatherCode
-                    )
-                },
-                evening: predictionResult?.bySlot[.evening].map { slotFeel in
-                    PredictionStripView.SlotPrediction(
-                        feel: slotFeel,
-                        confidence: predictionResult?.confidence ?? .cold_start,
-                        temp: hourlyForecasts.first(where: { abs($0.hour - 20) < 2 })?.temp,
-                        weatherCode: hourlyForecasts.first(where: { abs($0.hour - 20) < 2 })?.weatherCode
-                    )
+                    // 하단 기능 카드 영역
+                    VStack(spacing: 16) {
+                        bottomContent
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 40)
                 }
-            )
-
-            // 체감 변화 곡선 (피드백 데이터가 있을 때만)
-            if feedbackState.feedbackCount > 0 {
-                FeelTrajectoryChart(
-                    dataPoints: buildTrajectoryPoints(),
-                    currentHour: Double(Calendar.current.component(.hour, from: Date()))
-                )
-                .padding(.horizontal, PWSTokens.spacing24)
             }
+            .scrollIndicators(.hidden)
         }
+        .ignoresSafeArea()
     }
-
-    // MARK: - Trajectory Points from prediction
-
-    private func buildTrajectoryPoints() -> [FeelTrajectoryChart.TrajectoryPoint] {
-        let slots: [(Double, Double?)] = [
-            (8, predictionResult?.bySlot[.morning]),
-            (14, predictionResult?.bySlot[.afternoon]),
-            (20, predictionResult?.bySlot[.evening]),
-        ]
-
-        return slots.compactMap { hour, feel in
-            guard let feel else { return nil }
-            return FeelTrajectoryChart.TrajectoryPoint(
-                hour: hour,
-                feel: feel,
-                confidence: confidenceDouble(predictionResult?.confidence ?? .cold_start),
-                weatherCode: hourlyForecasts.min(by: { abs($0.hour - hour) < abs($1.hour - hour) })?.weatherCode
-            )
-        }
-    }
-
-    private func confidenceDouble(_ c: PredictionConfidence) -> Double {
-        switch c {
-        case .cold_start: return 0.2
-        case .low:        return 0.4
-        case .medium:     return 0.7
-        case .high:       return 1.0
-        }
-    }
-
-    // MARK: - Sky Background (이미지 우선, 코드 폴백)
 
     private var skyBackgroundLayer: some View {
         let timePhase = SkyTimePhase.from(hour: selectedHour)
         let skyImageName = "sky_\(timePhase.rawValue)_clear"
-
         if let skyImage = UIImage(named: skyImageName) {
             return AnyView(
                 Image(uiImage: skyImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .ignoresSafeArea()
-                    .overlay(
-                        // 날씨 상태에 따른 tint overlay
-                        weatherTintOverlay
-                    )
+                    .overlay(weatherTintOverlay)
             )
         } else {
-            return AnyView(
-                SkyGradientView(
-                    hour: selectedHour,
-                    weatherCode: selectedTimeWeather.code,
-                    tempC: selectedTimeWeather.temp
-                )
-            )
+            return AnyView(SkyGradientView(hour: selectedHour, weatherCode: selectedTimeWeather.code, tempC: selectedTimeWeather.temp))
         }
     }
 
     private var weatherTintOverlay: some View {
         Group {
             switch selectedTimeWeather.code {
-            case 200...299: // 뇌우
-                Color.black.opacity(0.4)
-            case 300...599: // 비
-                Color.gray.opacity(0.3)
-            case 600...699: // 눈
-                Color.white.opacity(0.2)
-            case 700...799: // 안개
-                Color.gray.opacity(0.2)
-            case 803...899: // 흐림
-                Color.gray.opacity(0.15)
-            default:
-                Color.clear
+            case 200...299: Color.black.opacity(0.4)
+            case 300...599: Color.gray.opacity(0.3)
+            case 600...699: Color.white.opacity(0.2)
+            case 700...799: Color.gray.opacity(0.2)
+            case 803...899: Color.gray.opacity(0.15)
+            default: Color.clear
             }
         }
         .animation(.easeInOut(duration: 1.5), value: selectedTimeWeather.code)
     }
 
-    // MARK: - Compact Weather Header
-
     private var compactWeatherHeader: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(locationLabel)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.7))
-                Text(timeLabel)
-                    .font(.system(size: 12))
-                    .foregroundStyle(.white.opacity(0.5))
+        VStack(spacing: 8) {
+            Text(locationLabel + " · " + timeLabel)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.9))
+            
+            HStack(alignment: .lastTextBaseline, spacing: 12) {
+                Text("\(Int(selectedTimeWeather.temp.rounded()))°")
+                    .font(.system(size: 64, weight: .bold))
+                    .foregroundStyle(.white)
+                Text(weatherDescription)
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.95))
             }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 4) {
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text("\(Int(selectedTimeWeather.temp.rounded()))°")
-                        .font(.system(size: 42, weight: .bold))
-                        .foregroundStyle(.white)
-                    Text(weatherDescription)
-                        .font(.system(size: 16))
-                        .foregroundStyle(.white.opacity(0.8))
-                }
-
-                HStack(spacing: 12) {
-                    Label("체감 \(Int(currentFeelScore.rounded()))°", systemImage: "thermometer.medium")
-                    Label("습도 \(selectedTimeWeather.humidity)%", systemImage: "humidity")
-                    Label(String(format: "바람 %.1fm/s", selectedTimeWeather.wind), systemImage: "wind")
-                }
-                .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.7))
+            
+            HStack(spacing: 16) {
+                Label("습도 \(selectedTimeWeather.humidity)%", systemImage: "drop.fill")
+                Label(String(format: "바람 %.1fm/s", selectedTimeWeather.wind), systemImage: "wind")
             }
+            .font(.system(size: 14, weight: .medium))
+            .foregroundStyle(.white.opacity(0.85))
         }
-        .padding(.horizontal, PWSTokens.spacing24)
-        .padding(.top, PWSTokens.spacing16)
     }
 
-    // MARK: - Helpers
-
-    private var locationLabel: String {
-        "서울특별시"
-    }
-
+    private var locationLabel: String { "서울특별시" }
     private var timeLabel: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "M월 d일 EEEE"
         formatter.locale = Locale(identifier: "ko_KR")
         return formatter.string(from: Date())
     }
-
     private var weatherDescription: String {
-        if let desc = weatherState.data?.current.weatherDescription, desc != "-" {
-            return desc
-        }
+        if let desc = weatherState.data?.current.weatherDescription, desc != "-" { return desc }
         return emojiForCode(selectedTimeWeather.code)
     }
-
     private func emojiForCode(_ code: Int) -> String {
         if code >= 200 && code < 300 { return "뇌우" }
         if code >= 300 && code < 400 { return "이슬비" }
