@@ -1,5 +1,15 @@
 import SwiftUI
 
+// DateFormatter는 제네릭 타입 밖에 정의 (Swift 제한)
+private enum WeatherSceneDateFormatter {
+    static let shared: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "M월 d일 EEEE"
+        f.locale = Locale(identifier: "ko_KR")
+        return f
+    }()
+}
+
 struct WeatherSceneView<Content: View>: View {
     let weatherState: WeatherRepositoryState
     let feedbackState: FeedbackRepositoryState
@@ -83,7 +93,7 @@ struct WeatherSceneView<Content: View>: View {
 
     private var skyBackgroundLayer: some View {
         let timePhase = SkyTimePhase.from(hour: selectedHour)
-        let skyImageName = "sky_\(timePhase.rawValue)_clear"
+        let skyImageName = timePhase.skyImageName
         if let skyImage = UIImage(named: skyImageName) {
             return AnyView(
                 Image(uiImage: skyImage)
@@ -136,13 +146,7 @@ struct WeatherSceneView<Content: View>: View {
     }
 
     private var locationLabel: String { "서울특별시" }
-    private static let dateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "M월 d일 EEEE"
-        f.locale = Locale(identifier: "ko_KR")
-        return f
-    }()
-    private var timeLabel: String { Self.dateFormatter.string(from: Date()) }
+    private var timeLabel: String { WeatherSceneDateFormatter.shared.string(from: Date()) }
     private var weatherDescription: String {
         if let desc = weatherState.data?.current.weatherDescription, desc != "-" { return desc }
         return emojiForCode(selectedTimeWeather.code)
