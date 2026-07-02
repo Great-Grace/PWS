@@ -4,6 +4,15 @@ struct HomeScreen: View {
     let environment: AppEnvironment
     let session: PWSSession
     let weatherState: WeatherRepositoryState
+    let feedbackState: FeedbackRepositoryState
+    let predictionResult: PredictionResult?
+
+    /// Weather Scene V2 feature flag
+    private static let useWeatherSceneV2: Bool = {
+        ProcessInfo.processInfo.environment["PWS_WEATHER_SCENE_V2"] == "1"
+    }()
+
+    @State private var selectedHour: Double = Double(Calendar.current.component(.hour, from: Date()))
 
     private let guideRows = [
         GuideRow(time: "아침 (05-18시)", message: "조금 쌀쌀 할 수 있겠어요", fill: Color(red: 0.94, green: 0.98, blue: 1.00), border: Color(red: 0.72, green: 0.90, blue: 1.00).opacity(0.5)),
@@ -20,30 +29,67 @@ struct HomeScreen: View {
 
     var body: some View {
         NavigationStack {
-            PWSStrictScreen {
-                weatherHero
-                outfitGuide
-                feedbackCTA
-                recommendationsSection
-                NavigationLink {
-                    WeatherDetailScreen()
-                } label: {
-                    PWSGradientActionCard(
-                        title: "다른 지역 날씨",
-                        subtitle: "다른 지역 날씨와 옷차림 확인하기",
-                        systemImage: "mappin.circle"
-                    )
+            if Self.useWeatherSceneV2 {
+                // V2: Dynamic weather scene background
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        WeatherSceneView(
+                            weatherState: weatherState,
+                            feedbackState: feedbackState,
+                            predictionResult: predictionResult,
+                            selectedHour: $selectedHour
+                        )
+                        outfitGuide
+                        feedbackCTA
+                        recommendationsSection
+                        NavigationLink {
+                            WeatherDetailScreen()
+                        } label: {
+                            PWSGradientActionCard(
+                                title: "다른 지역 날씨",
+                                subtitle: "다른 지역 날씨와 옷차림 확인하기",
+                                systemImage: "mappin.circle"
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("다른 지역 날씨")
+                        .padding(.horizontal, PWSTokens.spacing24)
+                        .padding(.top, PWSTokens.spacing16)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, PWSTokens.spacing16)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("다른 지역 날씨")
-                .padding(.horizontal, PWSTokens.spacing24)
-                .padding(.top, PWSTokens.spacing16)
+                .scrollIndicators(.hidden)
+                .ignoresSafeArea(edges: .top)
+                .navigationBarTitleDisplayMode(.inline)
+            } else {
+                // V1: Original white panel layout
+                PWSStrictScreen {
+                    weatherHeroLegacy
+                    outfitGuide
+                    feedbackCTA
+                    recommendationsSection
+                    NavigationLink {
+                        WeatherDetailScreen()
+                    } label: {
+                        PWSGradientActionCard(
+                            title: "다른 지역 날씨",
+                            subtitle: "다른 지역 날씨와 옷차림 확인하기",
+                            systemImage: "mappin.circle"
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("다른 지역 날씨")
+                    .padding(.horizontal, PWSTokens.spacing24)
+                    .padding(.top, PWSTokens.spacing16)
+                }
+                .navigationBarTitleDisplayMode(.inline)
             }
-            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
-    private var weatherHero: some View {
+    // V1 Legacy: Original white panel hero
+    private var weatherHeroLegacy: some View {
         VStack(alignment: .leading, spacing: PWSTokens.spacing14) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: PWSTokens.spacing4) {

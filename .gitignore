@@ -39,3 +39,4 @@ yarn-error.*
 
 # Supabase CLI local state
 supabase/.temp/
+.tmp-tests/

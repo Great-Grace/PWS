@@ -7,9 +7,12 @@ struct PwsTabShell: View {
     @State private var selectedTab: PwsAppTab = .home
     @State private var feedbackState = FeedbackRepositoryState()
     @State private var weatherState = WeatherRepositoryState()
+    @State private var predictionResult: PredictionResult?
     @State private var isAuthenticating = false
     @State private var authErrorMessage: String?
     @State private var runtimeErrorMessage: String?
+
+    private let predictionService = PwsPredictionService()
 
     init(environment: AppEnvironment) {
         self.environment = environment
@@ -32,7 +35,7 @@ struct PwsTabShell: View {
                     ZStack {
                         switch selectedTab {
                         case .home:
-                            HomeScreen(environment: environment, session: session, weatherState: weatherState)
+                            HomeScreen(environment: environment, session: session, weatherState: weatherState, feedbackState: feedbackState, predictionResult: predictionResult)
                         case .feedback:
                             FeedbackScreen(session: session, feedbackState: feedbackState) { input in
                                 let state = try await environment.feedbackRepository.submitFeedback(
@@ -189,6 +192,14 @@ struct PwsTabShell: View {
         }
 
         runtimeErrorMessage = didFail ? runtimeLoadErrorMessage : nil
+
+        // Compute prediction
+        predictionResult = predictionService.predict(
+            weather: weatherState.data?.current,
+            hourlyForecasts: weatherState.data?.hourly ?? [],
+            feedbackState: feedbackState,
+            userWeights: nil
+        )
     }
 
     private func fetchWeatherResult() async -> Result<WeatherDataNative, Error> {
