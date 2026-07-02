@@ -102,6 +102,9 @@ struct FeelGaugeView: View {
         .padding(PWSTokens.spacing16)
         .background(.ultraThinMaterial.opacity(0.3))
         .clipShape(RoundedRectangle(cornerRadius: PWSTokens.radius, style: .continuous))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("체감 예측 게이지")
+        .accessibilityValue("\(String(format: "%.1f", animatedScore))점, \(displayLabel), 신뢰도 \(confidenceLabel)")
         .onAppear {
             withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
                 animatedScore = clampedScore

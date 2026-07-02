@@ -12,7 +12,7 @@ struct PwsTabShell: View {
     @State private var authErrorMessage: String?
     @State private var runtimeErrorMessage: String?
 
-    private let predictionService = PwsPredictionService()
+    private let predictionService = PwsPredictionService(weightsStore: KeychainPredictionWeightsStore(keyValueStore: KeychainNativeKeyValueStore()))
 
     init(environment: AppEnvironment) {
         self.environment = environment

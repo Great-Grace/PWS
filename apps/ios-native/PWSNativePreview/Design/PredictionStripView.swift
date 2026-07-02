@@ -115,6 +115,9 @@ struct PredictionStripView: View {
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 20)
         .animation(.easeOut(duration: 0.5).delay(delay), value: appeared)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title) 예측")
+        .accessibilityValue(prediction.map { "\(String(format: "%.1f", $0.feel))점, \(feelLabel($0.feel))" } ?? "데이터 없음")
     }
 
     // MARK: - Confidence Bar

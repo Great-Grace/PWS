@@ -44,6 +44,29 @@ This checklist tracks first-release privacy and store-disclosure evidence for th
 
 Use `docs/migration/native-parity-readiness/privacy-store-disclosure-matrix.md` as the current engineering draft for Android Data Safety and iOS privacy nutrition label inputs. It currently marks account, configured weather location, feedback, support feedback, diagnostics, and account deletion data surfaces, with the exact live evidence still blocked by credentials/signing/runtime constraints.
 
+## Weather Scene V2 Disclosure (2026-07-01)
+
+New features added in Weather Scene V2 require the following privacy disclosures:
+
+### On-Device Prediction Engine
+- **What**: Perceptron-based feel prediction using weather data + user feedback
+- **Data used**: Weather API data (temp, humidity, wind), user feedback entries (feel score, clothing, activity)
+- **Storage**: Learned weight vectors stored in device Keychain (`pws.perceptron.weights`)
+- **Transmission**: No prediction data sent to server. All computation on-device.
+- **Disclosure**: "체감 예측 기능은 기상 데이터와 사용자 피드백을 기반으로 온디바이스에서 학습합니다. 예측 가중치는 기기에만 저장되며 서버로 전송되지 않습니다."
+
+### Weather Scene UI
+- **What**: Dynamic sky background, avatar, weather particles
+- **Data used**: Hourly weather forecast (temp, weather code, humidity, wind)
+- **Transmission**: No additional data collection. Uses existing weather API data.
+- **Disclosure**: No additional disclosure required beyond existing weather data disclosure.
+
+### AI-Generated Assets
+- **What**: Static images for sky backgrounds, avatar poses, face expressions
+- **Data used**: None (pre-generated static assets)
+- **Transmission**: None
+- **Disclosure**: No disclosure required.
+
 ## Decision
 
 First production release remains blocked until this checklist is converted from checklist-level status to evidence-backed pass status in the release evidence manifest.

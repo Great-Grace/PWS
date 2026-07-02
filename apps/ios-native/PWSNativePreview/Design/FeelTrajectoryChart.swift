@@ -54,6 +54,9 @@ struct FeelTrajectoryChart: View {
         .padding(PWSTokens.spacing16)
         .background(.ultraThinMaterial.opacity(0.25))
         .clipShape(RoundedRectangle(cornerRadius: PWSTokens.radius, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("체감 변화 예측 그래프")
+        .accessibilityValue(trajectoryDescription)
         .onAppear {
             withAnimation(.easeOut(duration: 1.0)) {
                 animationProgress = 1.0
@@ -220,6 +223,14 @@ struct FeelTrajectoryChart: View {
             let y = padding + height * (1 - max(0, min(1, (point.feel - 1) / 6)))
             return CGPoint(x: x, y: y)
         }
+    }
+
+    private var trajectoryDescription: String {
+        guard !dataPoints.isEmpty else { return "데이터 없음" }
+        let values = dataPoints.map { $0.feel }
+        let minVal = values.min() ?? 0
+        let maxVal = values.max() ?? 0
+        return "최저 \(String(format: "%.1f", minVal))점부터 최고 \(String(format: "%.1f", maxVal))점까지 변화"
     }
 
     private func pointColor(index: Int) -> Color {

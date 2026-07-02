@@ -60,6 +60,9 @@ struct TimeScrollbar: View {
         }
         .padding(.horizontal, PWSTokens.spacing24)
         .padding(.vertical, PWSTokens.spacing12)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("시간 선택 스크롤바")
+        .accessibilityValue(formatHour(selectedHour))
     }
 
     // MARK: - Time label
