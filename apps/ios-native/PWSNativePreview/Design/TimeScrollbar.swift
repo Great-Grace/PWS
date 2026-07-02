@@ -50,6 +50,8 @@ struct TimeScrollbar: View {
                             withAnimation(.snappy(duration: 0.15)) {
                                 selectedHour = round(selectedHour)
                             }
+                            // 스냅 시 햅틱 피드백
+                            UISelectionFeedbackGenerator().selectionChanged()
                         }
                 )
             }

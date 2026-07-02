@@ -136,12 +136,13 @@ struct WeatherSceneView<Content: View>: View {
     }
 
     private var locationLabel: String { "서울특별시" }
-    private var timeLabel: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M월 d일 EEEE"
-        formatter.locale = Locale(identifier: "ko_KR")
-        return formatter.string(from: Date())
-    }
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "M월 d일 EEEE"
+        f.locale = Locale(identifier: "ko_KR")
+        return f
+    }()
+    private var timeLabel: String { Self.dateFormatter.string(from: Date()) }
     private var weatherDescription: String {
         if let desc = weatherState.data?.current.weatherDescription, desc != "-" { return desc }
         return emojiForCode(selectedTimeWeather.code)

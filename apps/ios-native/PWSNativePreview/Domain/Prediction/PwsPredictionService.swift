@@ -233,8 +233,9 @@ protocol PredictionWeightsStore {
     func saveWeights(_ weights: [Float])
 }
 
-// MARK: - In-Memory Weights Store (for testing / preview)
+// MARK: - In-Memory Weights Store (DEBUG only)
 
+#if DEBUG
 struct InMemoryPredictionWeightsStore: PredictionWeightsStore {
     private var stored: [Float]?
 
@@ -244,3 +245,4 @@ struct InMemoryPredictionWeightsStore: PredictionWeightsStore {
         stored = weights
     }
 }
+#endif

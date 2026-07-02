@@ -276,31 +276,32 @@ struct WeatherOverlayLayer: View {
     let weatherCode: Int
 
     var body: some View {
-        // 모든 오버레이를 ZStack으로 겹쳐서 opacity로 전환
-        // → 날씨 코드 변경 시 부드러운 크로스페이드
+        // opacity 0인 오버레이는 렌더링 안 함 → CPU 절약
         ZStack {
-            // 구름 (흐린 날씨 이상)
-            CloudOverlayView(thin: true)
-                .opacity(cloudOpacity(thin: true))
-
-            CloudOverlayView(thin: false)
-                .opacity(cloudOpacity(thin: false))
-
-            // 비
-            RainOverlayView(intensity: rainIntensity)
-                .opacity(rainOpacity)
-
-            // 눈
-            SnowOverlayView(intensity: snowIntensity)
-                .opacity(snowOpacity)
-
-            // 안개
-            FogOverlayView(opacity: 0.5)
-                .opacity(fogOpacity)
-
-            // 번개 (뇌우)
-            thunderOverlay
-                .opacity(thunderOpacity)
+            if cloudOpacity(thin: true) > 0 {
+                CloudOverlayView(thin: true)
+                    .opacity(cloudOpacity(thin: true))
+            }
+            if cloudOpacity(thin: false) > 0 {
+                CloudOverlayView(thin: false)
+                    .opacity(cloudOpacity(thin: false))
+            }
+            if rainOpacity > 0 {
+                RainOverlayView(intensity: rainIntensity)
+                    .opacity(rainOpacity)
+            }
+            if snowOpacity > 0 {
+                SnowOverlayView(intensity: snowIntensity)
+                    .opacity(snowOpacity)
+            }
+            if fogOpacity > 0 {
+                FogOverlayView(opacity: 0.5)
+                    .opacity(fogOpacity)
+            }
+            if thunderOpacity > 0 {
+                thunderOverlay
+                    .opacity(thunderOpacity)
+            }
         }
         .animation(.easeInOut(duration: 1.5), value: weatherCode)
     }

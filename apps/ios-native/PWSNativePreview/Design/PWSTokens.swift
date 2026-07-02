@@ -25,6 +25,18 @@ enum PWSTokens {
     static let gradientStart = dynamic(light: Color(red: 0.00, green: 0.65, blue: 0.96), dark: Color(red: 0.10, green: 0.75, blue: 1.0))
     static let gradientEnd = dynamic(light: Color(red: 0.08, green: 0.36, blue: 0.99), dark: Color(red: 0.18, green: 0.45, blue: 1.0))
     static let redText = dynamic(light: Color(red: 0.91, green: 0.00, blue: 0.04), dark: Color(red: 1.0, green: 0.30, blue: 0.35))
+
+    // MARK: - 체감 색상 (1~7 스케일, 전 앱 공통)
+    static func feelColor(for score: Double) -> Color {
+        switch score {
+        case ..<2:    return Color(red: 0.3, green: 0.5, blue: 1.0)
+        case ..<3:    return Color(red: 0.4, green: 0.65, blue: 1.0)
+        case ..<4:    return Color(red: 0.3, green: 0.8, blue: 0.6)
+        case ..<5:    return Color(red: 0.4, green: 0.85, blue: 0.4)
+        case ..<6:    return Color(red: 1.0, green: 0.7, blue: 0.3)
+        default:      return Color(red: 1.0, green: 0.4, blue: 0.3)
+        }
+    }
     
     static let spacing4: CGFloat = 4
     static let spacing8: CGFloat = 8

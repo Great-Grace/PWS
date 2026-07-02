@@ -301,13 +301,15 @@ struct TemperatureBreathEffect: View {
     let tempC: Double
 
     var body: some View {
-        // 두 효과를 겹쳐서 opacity로 전환 → 부드러운 크로스페이드
         ZStack {
-            BreathParticles()
-                .opacity(breathOpacity)
-
-            HeatShimmerEffect()
-                .opacity(shimmerOpacity)
+            if breathOpacity > 0 {
+                BreathParticles()
+                    .opacity(breathOpacity)
+            }
+            if shimmerOpacity > 0 {
+                HeatShimmerEffect()
+                    .opacity(shimmerOpacity)
+            }
         }
         .animation(.easeInOut(duration: 0.8), value: tempC)
     }

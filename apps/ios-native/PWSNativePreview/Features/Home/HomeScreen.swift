@@ -6,6 +6,7 @@ struct HomeScreen: View {
     let weatherState: WeatherRepositoryState
     let feedbackState: FeedbackRepositoryState
     let predictionResult: PredictionResult?
+    var onNavigateToFeedback: (() -> Void)?
 
     /// V2 feature flag (안전 롤백용)
     private static let useWeatherSceneV2: Bool = {
@@ -59,8 +60,8 @@ struct HomeScreen: View {
                 PWSStrictScreen {
                     weatherHeroLegacy
                     outfitGuideLegacy
-                    feedbackCTA
-                    recommendationsSection
+                    feedbackCTALegacy
+                    recommendationsSectionLegacy
                 }
                 .navigationBarTitleDisplayMode(.inline)
             }
@@ -104,6 +105,82 @@ struct HomeScreen: View {
         .padding(.top, PWSTokens.spacing16)
     }
 
+    private var feedbackCTALegacy: some View {
+        Button {
+            onNavigateToFeedback?()
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: PWSTokens.spacing4) {
+                    Text("오늘 체감 기록하기")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(PWSTokens.primaryText)
+                    Text("날씨가 어떻게 느껴지셨나요?")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(PWSTokens.secondaryText)
+                }
+                Spacer()
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 36, height: 36)
+                    .background(PWSTokens.secondaryPanelBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: PWSTokens.smallRadius, style: .continuous))
+            }
+            .padding(.horizontal, PWSTokens.spacing16)
+            .padding(.vertical, PWSTokens.spacing14)
+            .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
+            .background(PWSTokens.panelBackground)
+            .clipShape(RoundedRectangle(cornerRadius: PWSTokens.radius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: PWSTokens.radius, style: .continuous)
+                    .stroke(PWSTokens.strongBorder, lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.14), radius: 14, x: 0, y: 8)
+        }
+        .buttonStyle(PWSPressableButtonStyle())
+        .padding(.horizontal, PWSTokens.spacing24)
+        .padding(.top, PWSTokens.spacing16)
+    }
+
+    private var recommendationsSectionLegacy: some View {
+        VStack(alignment: .leading, spacing: PWSTokens.spacing12) {
+            Text("오늘은 이런 준비가 좋아요")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(PWSTokens.primaryText)
+
+            VStack(spacing: PWSTokens.spacing12) {
+                ForEach(recommendations) { item in
+                    HStack(spacing: PWSTokens.spacing12) {
+                        PWSIconSquare(systemName: item.icon, fill: item.iconFill, foreground: item.dot, size: 44)
+                        VStack(alignment: .leading, spacing: PWSTokens.spacing8) {
+                            Text(item.title)
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(PWSTokens.primaryText)
+                            HStack(spacing: PWSTokens.spacing8) {
+                                Circle()
+                                    .fill(item.dot)
+                                    .frame(width: 6, height: 6)
+                                Text(item.detail)
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(PWSTokens.secondaryText)
+                            }
+                        }
+                    }
+                    .padding(PWSTokens.spacing14)
+                    .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
+                    .background(item.fill)
+                    .clipShape(RoundedRectangle(cornerRadius: PWSTokens.compactRadius, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: PWSTokens.compactRadius, style: .continuous)
+                            .stroke(item.fill.opacity(0.8), lineWidth: 1)
+                    }
+                    .shadow(color: .black.opacity(0.06), radius: 3, x: 0, y: 1)
+                }
+            }
+        }
+        .padding(.horizontal, PWSTokens.spacing24)
+        .padding(.top, PWSTokens.spacing20)
+    }
+
     // MARK: - Bottom Glassmorphic Cards
 
     private var outfitGuide: some View {
@@ -137,27 +214,32 @@ struct HomeScreen: View {
     }
 
     private var feedbackCTA: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: PWSTokens.spacing4) {
-                Text("오늘 체감 기록하기")
-                    .font(.system(size: 16, weight: .bold))
+        Button {
+            onNavigateToFeedback?()
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: PWSTokens.spacing4) {
+                    Text("오늘 체감 기록하기")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.white)
+                    Text("날씨가 어떻게 느껴지셨나요?")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.8))
+                }
+                Spacer()
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
-                Text("날씨가 어떻게 느껴지셨나요?")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.8))
+                    .frame(width: 36, height: 36)
+                    .background(.white.opacity(0.2))
+                    .clipShape(RoundedRectangle(cornerRadius: PWSTokens.smallRadius, style: .continuous))
             }
-            Spacer()
-            Image(systemName: "arrow.right")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 36, height: 36)
-                .background(.white.opacity(0.2))
-                .clipShape(RoundedRectangle(cornerRadius: PWSTokens.smallRadius, style: .continuous))
+            .padding(.horizontal, PWSTokens.spacing16)
+            .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: PWSTokens.radius, style: .continuous))
         }
-        .padding(.horizontal, PWSTokens.spacing16)
-        .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: PWSTokens.radius, style: .continuous))
+        .buttonStyle(PWSPressableButtonStyle())
     }
 
     private var recommendationsSection: some View {

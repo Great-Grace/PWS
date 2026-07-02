@@ -35,7 +35,9 @@ struct PwsTabShell: View {
                     ZStack {
                         switch selectedTab {
                         case .home:
-                            HomeScreen(environment: environment, session: session, weatherState: weatherState, feedbackState: feedbackState, predictionResult: predictionResult)
+                            HomeScreen(environment: environment, session: session, weatherState: weatherState, feedbackState: feedbackState, predictionResult: predictionResult) {
+                                withAnimation(.snappy) { selectedTab = .feedback }
+                            }
                         case .feedback:
                             FeedbackScreen(session: session, feedbackState: feedbackState) { input in
                                 let state = try await environment.feedbackRepository.submitFeedback(
