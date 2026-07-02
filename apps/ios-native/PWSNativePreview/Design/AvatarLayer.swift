@@ -65,6 +65,8 @@ struct AvatarResolver {
         tempC: Double,
         feelScore: Double
     ) -> AvatarConfig {
+        let timePhase = AvatarTimePhase.from(hour: hour)
+        let tempBand = AvatarTempBand.from(tempC: tempC)
         let mood = AvatarMood.from(feelScore: feelScore)
 
         return AvatarConfig(
@@ -196,6 +198,16 @@ struct AvatarLayer: View {
         }
     }
 
+    private var outfitAssetName: String {
+        switch AvatarTempBand.from(tempC: tempC) {
+        case .freezing: return "avatar_outfit_winter_padding"
+        case .cold:     return "avatar_outfit_winter_coat"
+        case .mild:     return "avatar_outfit_spring_cardigan"
+        case .warm:     return "avatar_outfit_spring_light"
+        case .hot:      return "avatar_outfit_summer_light"
+        }
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             ZStack {
@@ -251,9 +263,15 @@ struct AvatarLayer: View {
 
             // 옷차림 + 체감 텍스트
             HStack(spacing: 6) {
-                Text(config.outfit)
-                    .font(.system(size: 14))
-                    .contentTransition(.opacity)
+                if let outfitImage = UIImage(named: outfitAssetName) {
+                    Image(uiImage: outfitImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                } else {
+                    Text(config.outfit)
+                        .font(.system(size: 14))
+                }
                 Text(feelText)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.white.opacity(0.8))

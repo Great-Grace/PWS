@@ -40,3 +40,4 @@ yarn-error.*
 # Supabase CLI local state
 supabase/.temp/
 .tmp-tests/
+apps/ios-native/Config/Local.xcconfig
