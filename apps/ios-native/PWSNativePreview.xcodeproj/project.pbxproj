@@ -30,7 +30,20 @@
 		FB06DA6F041261F5374428DE /* PWSConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66BA057EE7C856D2BA4426B /* PWSConfig.swift */; };
 		FBC2207BEB06546B1F95AA2E /* ProfileContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = E422984B2ECCC7849A28AFC9 /* ProfileContract.swift */; };
 		FED48D1932832278B4ED6DC0 /* PWSNativePreviewApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF951DA1A7E8F834B09B981D /* PWSNativePreviewApp.swift */; };
-/* End PBXBuildFile section */
+/* 		59C8EBD5F320565D7CEB2DD0 /* SkyGradientSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59C8EBD5F320565D7CEB2DD0 /* SkyGradientSystem.swift */; };
+		73EE32D3A4E6766A12F72A7D /* WeatherOverlayLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73EE32D3A4E6766A12F72A7D /* WeatherOverlayLayer.swift */; };
+		DF95E829FA175911BCF8F375 /* TimeScrollbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF95E829FA175911BCF8F375 /* TimeScrollbar.swift */; };
+		70695FED4620402E6F7F7BE5 /* AvatarLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70695FED4620402E6F7F7BE5 /* AvatarLayer.swift */; };
+		77CFA68A36B037A1D878FF53 /* AvatarAssetResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77CFA68A36B037A1D878FF53 /* AvatarAssetResolver.swift */; };
+		642013167F2E1A7AEE8D0EA7 /* WeatherSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 642013167F2E1A7AEE8D0EA7 /* WeatherSceneView.swift */; };
+		42797C155D35ACB81F9EAA53 /* FeelGaugeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42797C155D35ACB81F9EAA53 /* FeelGaugeView.swift */; };
+		9C1101FF355733F7ECA3F13B /* PredictionStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C1101FF355733F7ECA3F13B /* PredictionStripView.swift */; };
+		A53D1125C22511E974284D3A /* FeelTrajectoryChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = A53D1125C22511E974284D3A /* FeelTrajectoryChart.swift */; };
+		350A46A26F9484BA5EEE329D /* PredictionChangeReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350A46A26F9484BA5EEE329D /* PredictionChangeReason.swift */; };
+		4A06A29BAF82953A3B68369A /* PwsFormulaEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A06A29BAF82953A3B68369A /* PwsFormulaEngine.swift */; };
+		03D85EE17FBB897967B630E1 /* PwsPredictionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D85EE17FBB897967B630E1 /* PwsPredictionService.swift */; };
+		51AE8C33476E96C74272E274 /* KeychainPredictionWeightsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AE8C33476E96C74272E274 /* KeychainPredictionWeightsStore.swift */; };
+End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		4CC3160A77747CE3CC9C30F9 /* PBXContainerItemProxy */ = {
@@ -71,7 +84,20 @@
 		DA0E0C83CAEB20A7ACDCA5FF /* FeedbackContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackContracts.swift; sourceTree = "<group>"; };
 		E422984B2ECCC7849A28AFC9 /* ProfileContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileContract.swift; sourceTree = "<group>"; };
 		F1CAE313035CB86BB98BBD11 /* PWSNativePreviewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PWSNativePreviewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-/* End PBXFileReference section */
+/* 		59C8EBD5F320565D7CEB2DD0 /* SkyGradientSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyGradientSystem.swift; sourceTree = "<group>"; };
+		73EE32D3A4E6766A12F72A7D /* WeatherOverlayLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherOverlayLayer.swift; sourceTree = "<group>"; };
+		DF95E829FA175911BCF8F375 /* TimeScrollbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeScrollbar.swift; sourceTree = "<group>"; };
+		70695FED4620402E6F7F7BE5 /* AvatarLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarLayer.swift; sourceTree = "<group>"; };
+		77CFA68A36B037A1D878FF53 /* AvatarAssetResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarAssetResolver.swift; sourceTree = "<group>"; };
+		642013167F2E1A7AEE8D0EA7 /* WeatherSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherSceneView.swift; sourceTree = "<group>"; };
+		42797C155D35ACB81F9EAA53 /* FeelGaugeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeelGaugeView.swift; sourceTree = "<group>"; };
+		9C1101FF355733F7ECA3F13B /* PredictionStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionStripView.swift; sourceTree = "<group>"; };
+		A53D1125C22511E974284D3A /* FeelTrajectoryChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeelTrajectoryChart.swift; sourceTree = "<group>"; };
+		350A46A26F9484BA5EEE329D /* PredictionChangeReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionChangeReason.swift; sourceTree = "<group>"; };
+		4A06A29BAF82953A3B68369A /* PwsFormulaEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PwsFormulaEngine.swift; sourceTree = "<group>"; };
+		03D85EE17FBB897967B630E1 /* PwsPredictionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PwsPredictionService.swift; sourceTree = "<group>"; };
+		51AE8C33476E96C74272E274 /* KeychainPredictionWeightsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainPredictionWeightsStore.swift; sourceTree = "<group>"; };
+End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		033C1306AB22ED00A1A8B63D /* Home */ = {
@@ -87,7 +113,8 @@
 			children = (
 				6265382DD406D5247B7F2725 /* FeedbackContractTests.swift */,
 				0D123FDBD112ACCAE1AA3DC2 /* TesterAuthTests.swift */,
-			);
+							480226F9236305DE6C163116 /* Prediction */,
+);
 			path = Domain;
 			sourceTree = "<group>";
 		};
@@ -138,7 +165,17 @@
 			isa = PBXGroup;
 			children = (
 				60B67618AC3EC0DB825B612C /* PWSComponents.swift */,
-				6B046D6EC680DD10BB935388 /* PWSTokens.swift */,
+				6B046D6EC680DD10BB935388 /* PWSTokens.swift */,				59C8EBD5F320565D7CEB2DD0 /* SkyGradientSystem.swift */,
+				73EE32D3A4E6766A12F72A7D /* WeatherOverlayLayer.swift */,
+				DF95E829FA175911BCF8F375 /* TimeScrollbar.swift */,
+				70695FED4620402E6F7F7BE5 /* AvatarLayer.swift */,
+				77CFA68A36B037A1D878FF53 /* AvatarAssetResolver.swift */,
+				642013167F2E1A7AEE8D0EA7 /* WeatherSceneView.swift */,
+				42797C155D35ACB81F9EAA53 /* FeelGaugeView.swift */,
+				9C1101FF355733F7ECA3F13B /* PredictionStripView.swift */,
+				A53D1125C22511E974284D3A /* FeelTrajectoryChart.swift */,
+				350A46A26F9484BA5EEE329D /* PredictionChangeReason.swift */,
+
 			);
 			path = Design;
 			sourceTree = "<group>";
@@ -276,7 +313,17 @@
 			path = PWSNativePreview;
 			sourceTree = "<group>";
 		};
-/* End PBXGroup section */
+/* 		480226F9236305DE6C163116 /* Prediction */ = {
+			isa = PBXGroup;
+			children = (
+				4A06A29BAF82953A3B68369A /* PwsFormulaEngine.swift */,
+				03D85EE17FBB897967B630E1 /* PwsPredictionService.swift */,
+				51AE8C33476E96C74272E274 /* KeychainPredictionWeightsStore.swift */,
+			);
+			path = Prediction;
+			sourceTree = "<group>";
+		};
+End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
 		3ED5959FB323D44D7CBD7A23 /* PWSNativePreviewTests */ = {
@@ -382,7 +429,20 @@
 				DD229BD334830ECCAF33A3EC /* SettingsScreen.swift in Sources */,
 				50B0E91E8D40BCE1C80AED87 /* TesterAuth.swift in Sources */,
 				6824F20DE269BFCB08E2B58A /* WeatherDetailScreen.swift in Sources */,
-				AC705C3F981EBED00790F402 /* WeatherOneCallContract.swift in Sources */,
+				AC705C3F981EBED00790F402 /* WeatherOneCallContract.swift in Sources */,				59C8EBD5F320565D7CEB2DD0 /* SkyGradientSystem.swift in Sources */,
+				73EE32D3A4E6766A12F72A7D /* WeatherOverlayLayer.swift in Sources */,
+				DF95E829FA175911BCF8F375 /* TimeScrollbar.swift in Sources */,
+				70695FED4620402E6F7F7BE5 /* AvatarLayer.swift in Sources */,
+				77CFA68A36B037A1D878FF53 /* AvatarAssetResolver.swift in Sources */,
+				642013167F2E1A7AEE8D0EA7 /* WeatherSceneView.swift in Sources */,
+				42797C155D35ACB81F9EAA53 /* FeelGaugeView.swift in Sources */,
+				9C1101FF355733F7ECA3F13B /* PredictionStripView.swift in Sources */,
+				A53D1125C22511E974284D3A /* FeelTrajectoryChart.swift in Sources */,
+				350A46A26F9484BA5EEE329D /* PredictionChangeReason.swift in Sources */,
+				4A06A29BAF82953A3B68369A /* PwsFormulaEngine.swift in Sources */,
+				03D85EE17FBB897967B630E1 /* PwsPredictionService.swift in Sources */,
+				51AE8C33476E96C74272E274 /* KeychainPredictionWeightsStore.swift in Sources */,
+
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
