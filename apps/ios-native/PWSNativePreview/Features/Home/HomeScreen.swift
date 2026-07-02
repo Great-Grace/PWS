@@ -8,9 +8,9 @@ struct HomeScreen: View {
     let predictionResult: PredictionResult?
     var onNavigateToFeedback: (() -> Void)?
 
-    /// V2 feature flag (안전 롤백용)
+    /// V2 feature flag (기본 활성화, 0이면 V1 폴백)
     private static let useWeatherSceneV2: Bool = {
-        ProcessInfo.processInfo.environment["PWS_WEATHER_SCENE_V2"] == "1"
+        ProcessInfo.processInfo.environment["PWS_WEATHER_SCENE_V2"] != "0"
     }()
 
     @State private var selectedHour: Double = Double(Calendar.current.component(.hour, from: Date()))
