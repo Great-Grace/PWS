@@ -91,19 +91,18 @@ struct WeatherSceneView<Content: View>: View {
         .ignoresSafeArea()
     }
 
+    @ViewBuilder
     private var skyBackgroundLayer: some View {
         let timePhase = SkyTimePhase.from(hour: selectedHour)
         let skyImageName = timePhase.skyImageName
         if let skyImage = UIImage(named: skyImageName) {
-            return AnyView(
-                Image(uiImage: skyImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .ignoresSafeArea()
-                    .overlay(weatherTintOverlay)
-            )
+            Image(uiImage: skyImage)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .ignoresSafeArea()
+                .overlay(weatherTintOverlay)
         } else {
-            return AnyView(SkyGradientView(hour: selectedHour, weatherCode: selectedTimeWeather.code, tempC: selectedTimeWeather.temp))
+            SkyGradientView(hour: selectedHour, weatherCode: selectedTimeWeather.code, tempC: selectedTimeWeather.temp)
         }
     }
 
@@ -149,18 +148,21 @@ struct WeatherSceneView<Content: View>: View {
     private var timeLabel: String { WeatherSceneDateFormatter.shared.string(from: Date()) }
     private var weatherDescription: String {
         if let desc = weatherState.data?.current.weatherDescription, desc != "-" { return desc }
-        return emojiForCode(selectedTimeWeather.code)
+        return textForCode(selectedTimeWeather.code)
     }
-    private func emojiForCode(_ code: Int) -> String {
-        if code >= 200 && code < 300 { return "뇌우" }
-        if code >= 300 && code < 400 { return "이슬비" }
-        if code >= 500 && code < 600 { return "비" }
-        if code >= 600 && code < 700 { return "눈" }
-        if code >= 700 && code < 800 { return "안개" }
-        if code == 800 { return "맑음" }
-        if code == 801 { return "약간 흐림" }
-        if code == 802 { return "부분 흐림" }
-        if code >= 803 { return "흐림" }
-        return "맑음"
+    
+    private func textForCode(_ code: Int) -> String {
+        switch code {
+        case 200..<300: return "뇌우"
+        case 300..<400: return "이슬비"
+        case 500..<600: return "비"
+        case 600..<700: return "눈"
+        case 700..<800: return "안개"
+        case 800:       return "맑음"
+        case 801:       return "약간 흐림"
+        case 802:       return "부분 흐림"
+        case 803...899: return "흐림"
+        default:        return "알 수 없음"
+        }
     }
 }

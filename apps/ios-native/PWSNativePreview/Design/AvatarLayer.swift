@@ -48,119 +48,6 @@ enum AvatarMood {
     }
 }
 
-// MARK: - Avatar Configuration
-
-struct AvatarConfig {
-    let pose: String        // SF Symbol or image name
-    let outfit: String      // outfit layer image name
-    let expression: String  // expression overlay
-    let tintColor: Color
-    let description: String // accessibility
-}
-
-struct AvatarResolver {
-
-    static func resolve(
-        hour: Double,
-        tempC: Double,
-        feelScore: Double
-    ) -> AvatarConfig {
-        let timePhase = AvatarTimePhase.from(hour: hour)
-        let tempBand = AvatarTempBand.from(tempC: tempC)
-        let mood = AvatarMood.from(feelScore: feelScore)
-
-        return AvatarConfig(
-            pose: poseSymbol(for: timePhase),
-            outfit: outfitSymbol(for: tempBand),
-            expression: expressionSymbol(for: mood),
-            tintColor: tintColor(for: mood),
-            description: description(for: timePhase, tempBand: tempBand, mood: mood)
-        )
-    }
-
-    // MARK: - Pose (시간대)
-
-    private static func poseSymbol(for phase: AvatarTimePhase) -> String {
-        switch phase {
-        case .morning: return "figure.stand"      // 아침: 서기
-        case .day:     return "figure.walk"        // 낮: 활기찬 걸음
-        case .evening: return "figure.stand"       // 저녁: 휴식
-        case .night:   return "figure.cooldown"    // 밤: 쿨다운
-        }
-    }
-
-    // MARK: - Outfit (기온)
-
-    private static func outfitSymbol(for band: AvatarTempBand) -> String {
-        switch band {
-        case .freezing: return "❄"     // 두꺼운 패딩
-        case .cold:     return "🧥"    // 코트
-        case .mild:     return "👕"    // 긴팔/셔츠
-        case .warm:     return "👔"    // 반팔
-        case .hot:      return "🩳"    // 얇은 옷
-        }
-    }
-
-    // MARK: - Expression (체감)
-
-    private static func expressionSymbol(for mood: AvatarMood) -> String {
-        switch mood {
-        case .freezing: return "🥶"
-        case .cold:     return "😊" // 추위에 움츠림
-        case .neutral:  return "😌"
-        case .warm:     return "😅"
-        case .hot:      return "🥵"
-        }
-    }
-
-    // MARK: - Tint Color
-
-    private static func tintColor(for mood: AvatarMood) -> Color {
-        switch mood {
-        case .freezing: return Color(red: 0.3, green: 0.6, blue: 1.0)
-        case .cold:     return Color(red: 0.5, green: 0.7, blue: 1.0)
-        case .neutral:  return Color(red: 0.2, green: 0.8, blue: 0.5)
-        case .warm:     return Color(red: 1.0, green: 0.7, blue: 0.3)
-        case .hot:      return Color(red: 1.0, green: 0.4, blue: 0.3)
-        }
-    }
-
-    // MARK: - Accessibility
-
-    private static func description(
-        for time: AvatarTimePhase,
-        tempBand: AvatarTempBand,
-        mood: AvatarMood
-    ) -> String {
-        let timeStr: String
-        switch time {
-        case .morning: timeStr = "아침"
-        case .day:     timeStr = "낮"
-        case .evening: timeStr = "저녁"
-        case .night:   timeStr = "밤"
-        }
-
-        let tempStr: String
-        switch tempBand {
-        case .freezing: tempStr = "매우 추운"
-        case .cold:     tempStr = "추운"
-        case .mild:     tempStr = "선선한"
-        case .warm:     tempStr = "따뜻한"
-        case .hot:      tempStr = "더운"
-        }
-
-        let moodStr: String
-        switch mood {
-        case .freezing: moodStr = "추위에 떨고 있는"
-        case .cold:     moodStr = "조금 추워하는"
-        case .neutral:  moodStr = "편안한"
-        case .warm:     moodStr = "조금 더워하는"
-        case .hot:      moodStr = "더위에 지친"
-        }
-
-        return "\(timeStr) \(tempStr) 날씨에 \(moodStr) 모습"
-    }
-}
 
 // MARK: - Avatar View
 
@@ -169,21 +56,7 @@ struct AvatarLayer: View {
     let tempC: Double
     let feelScore: Double
 
-    @State private var breatheScale: CGFloat = 1.0
-
-    private var config: AvatarConfig {
-        AvatarResolver.resolve(hour: hour, tempC: tempC, feelScore: feelScore)
-    }
-
-    private var faceAssetName: String {
-        switch AvatarMood.from(feelScore: feelScore) {
-        case .freezing: return "avatar_face_cold_pain"
-        case .cold:     return "avatar_face_cold_pain"
-        case .neutral:  return "avatar_face_comfortable"
-        case .warm:     return "avatar_face_sweating"
-        case .hot:      return "avatar_face_hot_pain"
-        }
-    }
+    @State private var floatOffset: CGFloat = 0
 
     private var poseAssetName: String {
         switch (AvatarTimePhase.from(hour: hour), AvatarTempBand.from(tempC: tempC)) {
@@ -198,108 +71,68 @@ struct AvatarLayer: View {
         }
     }
 
-    private var outfitAssetName: String {
-        switch AvatarTempBand.from(tempC: tempC) {
-        case .freezing: return "avatar_outfit_winter_padding"
-        case .cold:     return "avatar_outfit_winter_coat"
-        case .mild:     return "avatar_outfit_spring_cardigan"
-        case .warm:     return "avatar_outfit_spring_light"
-        case .hot:      return "avatar_outfit_summer_light"
-        }
-    }
-
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             ZStack {
-                // 배경 글로우
+                // 부드러운 배경 글로우
                 Circle()
                     .fill(
                         RadialGradient(
                             colors: [
-                                config.tintColor.opacity(0.2),
-                                config.tintColor.opacity(0.05),
+                                .white.opacity(0.15),
                                 .clear,
                             ],
                             center: .center,
-                            startRadius: 20,
-                            endRadius: 80
+                            startRadius: 40,
+                            endRadius: 120
                         )
                     )
-                    .frame(width: 160, height: 160)
+                    .frame(width: 240, height: 240)
 
-                // 아바타 본체 (에셋 있으면 이미지, 없으면 emoji/SF Symbol)
-                VStack(spacing: 4) {
-                    // 표정 — 이미지 에셋 우선, 없으면 emoji
-                    if let faceImage = UIImage(named: faceAssetName) {
-                        Image(uiImage: faceImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 80, height: 80)
-                            .scaleEffect(breatheScale)
-                            .contentTransition(.opacity)
-                    } else {
-                        Text(config.expression)
-                            .font(.system(size: 48))
-                            .scaleEffect(breatheScale)
-                            .contentTransition(.opacity)
-                    }
-
-                    // 포즈 — 이미지 에셋 우선, 없으면 SF Symbol
-                    if let poseImage = UIImage(named: poseAssetName) {
-                        Image(uiImage: poseImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 64, height: 64)
-                            .contentTransition(.opacity)
-                    } else {
-                        Image(systemName: config.pose)
-                            .font(.system(size: 36, weight: .light))
-                            .foregroundStyle(config.tintColor)
-                            .contentTransition(.opacity)
-                    }
-                }
-                .accessibilityLabel(config.description)
-            }
-
-            // 옷차림 + 체감 텍스트
-            HStack(spacing: 6) {
-                if let outfitImage = UIImage(named: outfitAssetName) {
-                    Image(uiImage: outfitImage)
+                // 아바타 (풀바디)
+                if let poseImage = UIImage(named: poseAssetName) {
+                    Image(uiImage: poseImage)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 20, height: 20)
+                        .frame(width: 200, height: 200)
+                        .offset(y: floatOffset)
+                        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 10)
                 } else {
-                    Text(config.outfit)
-                        .font(.system(size: 14))
+                    // Fallback
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 100))
+                        .foregroundStyle(.white.opacity(0.5))
                 }
-                Text(feelText)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .contentTransition(.opacity)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(.ultraThinMaterial)
-            .clipShape(Capsule())
+            .accessibilityLabel("현재 아바타 모습")
+
+            // 체감 상태 텍스트
+            Text(feelText)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(.ultraThinMaterial)
+                .clipShape(Capsule())
+                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
         }
         .onAppear {
             withAnimation(
-                .easeInOut(duration: 2.5)
+                .easeInOut(duration: 2.0)
                 .repeatForever(autoreverses: true)
             ) {
-                breatheScale = 1.05
+                floatOffset = -8 // 둥둥 떠다니는 애니메이션
             }
         }
-        .animation(.easeInOut(duration: 0.5), value: tempC)
     }
 
     private var feelText: String {
         switch AvatarMood.from(feelScore: feelScore) {
-        case .freezing: return "매우 추워요"
-        case .cold:     return "쌀쌀해요"
-        case .neutral:  return "쾌적해요"
-        case .warm:     return "따뜻해요"
-        case .hot:      return "더워요"
+        case .freezing: return "너무 추워요"
+        case .cold:     return "쌀쌀하네요"
+        case .neutral:  return "기분 좋은 날씨예요"
+        case .warm:     return "조금 더워요"
+        case .hot:      return "너무 더워요"
         }
     }
 }

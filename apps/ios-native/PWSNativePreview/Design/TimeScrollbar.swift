@@ -112,8 +112,9 @@ struct TimeScrollbar: View {
     private func weatherIcons(width: CGFloat, height: CGFloat) -> some View {
         ForEach(Array(hourlyForecasts.enumerated()), id: \.offset) { _, forecast in
             let x = hourToX(forecast.hour, width: width)
-            Text(emojiForCode(forecast.weatherCode))
-                .font(.system(size: 10))
+            Image(systemName: symbolForCode(forecast.weatherCode))
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white)
                 .position(x: x, y: height * 0.25)
         }
     }
@@ -171,17 +172,19 @@ struct TimeScrollbar: View {
         return "\(h)시"
     }
 
-    private func emojiForCode(_ code: Int) -> String {
-        if code >= 200 && code < 300 { return "⛈" }
-        if code >= 300 && code < 400 { return "🌦" }
-        if code >= 500 && code < 600 { return "🌧" }
-        if code >= 600 && code < 700 { return "❄" }
-        if code >= 700 && code < 800 { return "🌫" }
-        if code == 800 { return "☀" }
-        if code == 801 { return "🌤" }
-        if code == 802 { return "⛅" }
-        if code >= 803 { return "☁" }
-        return "🌡"
+    private func symbolForCode(_ code: Int) -> String {
+        switch code {
+        case 200..<300: return "cloud.bolt.rain.fill"
+        case 300..<400: return "cloud.drizzle.fill"
+        case 500..<600: return "cloud.rain.fill"
+        case 600..<700: return "cloud.snow.fill"
+        case 700..<800: return "cloud.fog.fill"
+        case 800:       return "sun.max.fill"
+        case 801:       return "cloud.sun.fill"
+        case 802:       return "cloud.fill"
+        case 803...899: return "smoke.fill"
+        default:        return "thermometer"
+        }
     }
 
     private var currentForecast: HourlyForecastSnapshot? {
@@ -220,21 +223,4 @@ struct HourlyForecastSnapshot: Equatable {
     }
 }
 
-// MARK: - Current Time Indicator
 
-struct CurrentTimeMarker: View {
-    var body: some View {
-        let hour = Double(Calendar.current.component(.hour, from: Date()))
-            + Double(Calendar.current.component(.minute, from: Date())) / 60
-        let _ = hour // 사용: 현재 시간 마커 표시용
-
-        Circle()
-            .fill(.white)
-            .frame(width: 8, height: 8)
-            .overlay(
-                Circle()
-                    .stroke(.white.opacity(0.5), lineWidth: 2)
-                    .frame(width: 14, height: 14)
-            )
-    }
-}
